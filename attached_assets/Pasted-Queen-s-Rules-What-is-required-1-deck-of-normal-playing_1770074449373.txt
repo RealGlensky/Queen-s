@@ -1,0 +1,58 @@
+Queen’s Rules
+
+What is required
+	⁃	1 deck of normal playing cards for every 2 players, so if there’s 1-2 players, it’s 1 deck; 3-4 players, 2 decks; 5-6 players, 3 decks; etc.
+
+Starting the game:
+	⁃	a player is chosen at random to be the dealer
+	⁃	the dealer shuffles the cards and then splits the deck
+	⁃	then the dealer deals 13 cards to all players and turns over the last card face up on the table starting the “pick up” pile in the middle of the table
+	⁃	the rest of the cards are then left face down beside the pick up pile in the middle of the table
+	⁃	If the dealer cut the deck perfectly, meaning that they don’t have to pick up more cards from the deck to complete dealing and starting the “pick up” pile, and that there’s no cards left in their hand from the initial cut after completing dealing and starting the “pick up” pile, the player is awarded 100 points
+
+Playing:
+	⁃	The player to the left of the dealer then starts a turn by picking up a card either from the top of the deck, or the “pick up” pile. But in order to pick up the “pick up” pile, the player needs 2 cards matching the card on top of the “pick up” pile (for instance if the “pick up” pile card is an 8, then the player needs two 8s to be able to pick up the “pick up” pile and then complete a set)
+	⁃	after picking up, a player can lay down cards in 2 ways. The first way is to lay a new set of cards down on the table in front of them. The second way is to add a matching card to an existing set. A set is a group of 3 or more cards of the same number (i.e., three 8s). Once a set is on the table, a player can add any additional matching cards they pick up (if they pick up another 8), to the set
+	⁃	To end their turn, a player must discard a pile face up to the top of the “pick up” pile
+	⁃	Then this continues going clockwise until 1 player is out of cards. In order to go out, the player must have no cards left in their hand at the end of their turn. BUT, in order to go out, as per any other turn, a player must discard one card to end their turn. This means that having no cards in their hand is determined only once a player discards, not during their turn, as the turn isn’t officially over until they’ve discarded.
+	⁃	Note: as a courtesy, when a player only has one card left in their hand after discarding, they must declare it to the table that they are on their last card
+
+Scoring:
+	⁃	After the round is over, the player who went out, counts their points. Then the player to their left counsellor points and so on.
+	⁃	All points for any card that is included in a set that is laid out in front of the flare on the table, is positive. However, for any card and the players still has in their hand after the round, the points count as negative
+	⁃	The point allocations are as follows:
+	⁃	Wild cards are worth 20 points each
+	⁃	Jokers are worth 50 points each
+	⁃	The queen of spades is worth 100 points each
+	⁃	No: insects, because of their importance, the queen of spades must always be on top of the set when laid on the table
+	⁃	Any face card that is not the queen of spades or any 10 is worth 10 points
+	⁃	All aces are worth 20 points
+	⁃	All other cards are worth five points each (ones, threes, fours, fives, sixes, sevens, eight, nines)
+	⁃	The scores from each round are cumulative building with the objective being as defined below, to be the first to match or surpassed the point threshold
+
+Wild cards:
+	⁃	all 2s are wild cards
+	⁃	In order to complete a set of three the maximum number of wildcard that can be used is one (i.e., if a player wants to make a set of 4s, they may use three 4s, two 4s and one 2)
+	⁃	Note: as long as the player has two cards of a matching number than they can use as many twos as they want in the set (i.e. two 4s ca be used with one or more 2s to make a set of three or more
+
+The “pick up” pile:
+	⁃	as players continue to take turns and end their turn, my placing a card face up on top of the pick up tile, the pick up pile will continue to grow until a player is able to pick up the pile
+	⁃	The way a player picked up a pile is by using the card that is on top of the pile to complete a set. They do not already have. For instance, if it gets to a players term, and there is an 8 on top of the pile, and they do not have a set of 8s in front of them, if they have two 8s in their hand, they can use it to pick up the pile and complete a set of 8s
+	⁃	When a player picks up the pile, they do not just pick up the card that is on top of the pile. They pick up the entire pile and that then goes to their hand.
+	⁃	In addition to completing a set with two cards that match the card on top of the pick up pile, a player can use one card that matches the card on top of the pick up aisle as well as one wild card
+	⁃	Now, there is a nuance to be “pick up“ pile. A player can “block” the person playing after them (to their left) from picking up the “pickup” pile by playing a card that matches one of the sets the other player whose turn is next has already laid down on the table. (For instance, if the is the player to the left of player whose turn currently is has a set of 7s on the table, then the player whose turn is when ending their turn by laying a card on top of the pick up pile can block the next player from picking it up by discarding a 7 on top of the pick up pile. Note, that this is in line with the rule that players can only pick up from the pick up pile to complete a set, which they do not already have
+
+Objective:
+	⁃	The objective of the game is to be the first player to reach or surpass the points target for the game. For instance, if the game is to be played to 1000, then the first player to score 1000 or more points wins.
+	⁃	Note: this is why, especially in the later rounds in the game, can be not only important but strategic to prioritize getting as many of your sets down on the table as quick as you can, even above holding cards in your hand in hopes of completing sets worth more points, because as described whatever player goes out to end, the turn gets to count their points first, and we have no negative points. So if it’s a close game and all players or any number of players is close to the threshold, by going out they get to count their points first, and if they reach across the threshold, then it doesn’t matter how many points and the other players scores, the game is over.
+	⁃	Points thresholds:
+	⁃	if the game is being played by only solo players, the threshold is 1000 points
+	⁃	If the game is being played by teams that each have two players, then the threshold is 1500 points
+	⁃	if the game is being played by teams that each have three players, then the threshold is 2000 points
+
+Teams:
+	⁃	In addition to being a gameplay by a group of solo players, the game can be played in teams of two or three
+	⁃	When the game is being played in teams, teammates may not sit beside each other. This is to avoid any table talk or unfair advantage by passing cards to each other via the pick up pile when a player discard at the end of their turn. The way table seating is decided when there is teams, is that if N is the number of teams, then between any two teammates, sat at the table, there must be N-1 other players (meaning players on another team)
+	⁃	The same as in solo play, each team will only have one collection of sets. Meaning that all completed sets must be in front of one designated player on that team.
+	⁃	The same as solo play, all sets in order to be laid down, must be collected by an individual player, either with three or more of the same card or two or more of the same card plus one wild card (i.e. 3 or more 9s, or 2 or more 9s and at least one wild card)
+	⁃	The key difference when playing with teams, though, is that once your teammate has laid a set down for your team, in addition to that player being able to add any matching cards to the set that they pick up, any other team members can add any matching cards that they have or pick up to the set as well. That is why in team play, it is often very important to put your sets down as soon as you complete them so that you can help your teammates get rid of their cards too in hopes of adding more points and going out faster. Whereas in solo play, it might be more strategically had contagious to not lay your sets down early on at least so that you can’t get blocked from picking up the pile 
