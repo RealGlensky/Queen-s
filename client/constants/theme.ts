@@ -1,30 +1,52 @@
 import { Platform } from "react-native";
 
-const tintColorLight = "#007AFF";
-const tintColorDark = "#0A84FF";
+export const GameColors = {
+  casinoGreen: "#0B5D1E",
+  casinoGreenDark: "#073D14",
+  richWood: "#3E2723",
+  richWoodLight: "#5D4037",
+  gold: "#D4AF37",
+  goldLight: "#E8C54D",
+  goldDark: "#B8972F",
+  cardFace: "#FFFFFF",
+  cardBack: "#8B0000",
+  redSuit: "#C41E3A",
+  blackSuit: "#1C1C1C",
+  feltTexture: "#0A5A1C",
+};
 
 export const Colors = {
   light: {
-    text: "#11181C",
-    buttonText: "#FFFFFF",
-    tabIconDefault: "#687076",
-    tabIconSelected: tintColorLight,
-    link: "#007AFF",
-    backgroundRoot: "#FFFFFF", // Elevation 0
-    backgroundDefault: "#F2F2F2", // Elevation 1
-    backgroundSecondary: "#E6E6E6", // Elevation 2
-    backgroundTertiary: "#D9D9D9", // Elevation 3
-  },
-  dark: {
-    text: "#ECEDEE",
+    text: "#FFFFFF",
+    textSecondary: "#B0B0B0",
     buttonText: "#FFFFFF",
     tabIconDefault: "#9BA1A6",
-    tabIconSelected: tintColorDark,
-    link: "#0A84FF",
-    backgroundRoot: "#1F2123", // Elevation 0
-    backgroundDefault: "#2A2C2E", // Elevation 1
-    backgroundSecondary: "#353739", // Elevation 2
-    backgroundTertiary: "#404244", // Elevation 3
+    tabIconSelected: GameColors.gold,
+    link: GameColors.gold,
+    backgroundRoot: "#1A1A1A",
+    backgroundDefault: "#2C2C2C",
+    backgroundSecondary: "#353739",
+    backgroundTertiary: "#404244",
+    border: "rgba(212, 175, 55, 0.3)",
+    success: "#4CAF50",
+    warning: "#FF9800",
+    error: "#F44336",
+  },
+  dark: {
+    text: "#FFFFFF",
+    textSecondary: "#B0B0B0",
+    buttonText: "#FFFFFF",
+    tabIconDefault: "#9BA1A6",
+    tabIconSelected: GameColors.gold,
+    link: GameColors.gold,
+    backgroundRoot: "#1A1A1A",
+    backgroundDefault: "#2C2C2C",
+    backgroundSecondary: "#353739",
+    backgroundTertiary: "#404244",
+    border: "rgba(212, 175, 55, 0.3)",
+    success: "#4CAF50",
+    warning: "#FF9800",
+    error: "#F44336",
   },
 };
 
@@ -54,24 +76,29 @@ export const BorderRadius = {
 };
 
 export const Typography = {
-  h1: {
-    fontSize: 32,
-    lineHeight: 40,
+  hero: {
+    fontSize: 48,
+    lineHeight: 56,
     fontWeight: "700" as const,
   },
-  h2: {
+  h1: {
     fontSize: 28,
     lineHeight: 36,
     fontWeight: "700" as const,
   },
+  h2: {
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: "600" as const,
+  },
   h3: {
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 18,
+    lineHeight: 26,
     fontWeight: "600" as const,
   },
   h4: {
-    fontSize: 20,
-    lineHeight: 28,
+    fontSize: 16,
+    lineHeight: 24,
     fontWeight: "600" as const,
   },
   body: {
@@ -80,9 +107,14 @@ export const Typography = {
     fontWeight: "400" as const,
   },
   small: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "400" as const,
+  },
+  button: {
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "600" as const,
   },
   link: {
     fontSize: 16,
@@ -93,13 +125,9 @@ export const Typography = {
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: "system-ui",
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: "ui-serif",
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: "ui-rounded",
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: "ui-monospace",
   },
   default: {
@@ -116,3 +144,11 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const CardDimensions = {
+  width: 60,
+  height: 84,
+  borderRadius: 6,
+  smallWidth: 45,
+  smallHeight: 63,
+};
