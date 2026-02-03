@@ -6,7 +6,6 @@ import Animated, {
   withSpring,
   WithSpringConfig,
 } from "react-native-reanimated";
-import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, CardDimensions } from "@/constants/theme";
 import type { PlayingCard as PlayingCardType, Suit } from "@shared/gameTypes";
@@ -121,11 +120,17 @@ export function PlayingCard({
     >
       {card.isJoker ? (
         <View style={styles.jokerContent}>
-          <Feather
-            name="star"
-            size={size === "small" ? 20 : 28}
-            color={card.jokerColor === "red" ? GameColors.redSuit : GameColors.blackSuit}
-          />
+          <ThemedText
+            style={[
+              styles.jokerText,
+              {
+                color: card.jokerColor === "red" ? GameColors.redSuit : GameColors.blackSuit,
+                fontSize: size === "small" ? 10 : 12,
+              },
+            ]}
+          >
+            JOKER
+          </ThemedText>
         </View>
       ) : (
         <>
@@ -235,5 +240,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  jokerText: {
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: 1,
   },
 });
