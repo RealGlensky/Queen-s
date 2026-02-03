@@ -322,9 +322,9 @@ const styles = StyleSheet.create({
   roomCode: {
     color: GameColors.gold,
     fontSize: 32,
+    lineHeight: 44,
     fontWeight: "700",
     letterSpacing: 6,
-    includeFontPadding: false,
   },
   copyButton: {
     width: 36,
