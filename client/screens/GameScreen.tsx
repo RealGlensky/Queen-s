@@ -15,7 +15,7 @@ import { CardSet } from "@/components/CardSet";
 import { CardPile } from "@/components/CardPile";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { GameButton } from "@/components/GameButton";
-import { GameColors, Spacing, BorderRadius, CardDimensions } from "@/constants/theme";
+import { GameColors, Spacing, BorderRadius, CardDimensions, PLAYER_COLORS } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
 import type { PlayingCard as PlayingCardType, CardSet as CardSetType, Player } from "@shared/gameTypes";
@@ -121,6 +121,8 @@ export default function GameScreen() {
   }
 
   const otherPlayers = gameState.players.filter((p) => p.id !== myPlayer.id);
+  const myPlayerIndex = gameState.players.findIndex((p) => p.id === myPlayer.id);
+  const myPlayerColor = PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length];
   const topCard = gameState.pickupPile.length > 0 
     ? gameState.pickupPile[gameState.pickupPile.length - 1] 
     : null;
@@ -171,8 +173,11 @@ export default function GameScreen() {
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.myScoreContainer}>
-          <ThemedText style={styles.myScoreLabel}>You</ThemedText>
-          <ThemedText style={styles.myScoreValue}>{myPlayer.totalScore} pts</ThemedText>
+          <View style={[styles.myColorDot, { backgroundColor: myPlayerColor }]} />
+          <View>
+            <ThemedText style={styles.myScoreLabel}>You</ThemedText>
+            <ThemedText style={styles.myScoreValue}>{myPlayer.totalScore} pts</ThemedText>
+          </View>
         </View>
         <View style={styles.roundInfo}>
           <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
@@ -189,21 +194,25 @@ export default function GameScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.opponentsScroll}
         >
-          {otherPlayers.map((player) => (
-            <View key={player.id} style={styles.opponentContainer}>
-              <PlayerAvatar
-                displayName={player.displayName}
-                isCurrentTurn={gameState.currentPlayerId === player.id}
-                isDealer={gameState.dealerId === player.id}
-                team={player.odexTeam}
-                cardCount={player.hand.length}
-                score={player.totalScore}
-                hasLastCard={player.hasLastCard}
-                isConnected={player.isConnected}
-                size="small"
-              />
-            </View>
-          ))}
+          {otherPlayers.map((player) => {
+            const playerIndex = gameState.players.findIndex((p) => p.id === player.id);
+            return (
+              <View key={player.id} style={styles.opponentContainer}>
+                <PlayerAvatar
+                  displayName={player.displayName}
+                  isCurrentTurn={gameState.currentPlayerId === player.id}
+                  isDealer={gameState.dealerId === player.id}
+                  team={player.odexTeam}
+                  cardCount={player.hand.length}
+                  score={player.totalScore}
+                  playerColor={PLAYER_COLORS[playerIndex % PLAYER_COLORS.length]}
+                  hasLastCard={player.hasLastCard}
+                  isConnected={player.isConnected}
+                  size="small"
+                />
+              </View>
+            );
+          })}
         </ScrollView>
       </View>
 
@@ -347,8 +356,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   myScoreContainer: {
+    flexDirection: "row",
     alignItems: "center",
-    minWidth: 44,
+    gap: Spacing.xs,
+  },
+  myColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   myScoreLabel: {
     color: "rgba(255,255,255,0.6)",
@@ -372,8 +387,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   opponentsArea: {
-    height: 110,
-    marginTop: Spacing.sm,
+    minHeight: 100,
+    marginTop: Spacing.md,
+    paddingBottom: Spacing.xs,
   },
   opponentsScroll: {
     paddingHorizontal: Spacing.lg,

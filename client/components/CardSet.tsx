@@ -8,16 +8,7 @@ import Animated, {
 import { PlayingCard } from "@/components/PlayingCard";
 import { ThemedText } from "@/components/ThemedText";
 import type { CardSet as CardSetType } from "@shared/gameTypes";
-import { GameColors, CardDimensions, Spacing, BorderRadius } from "@/constants/theme";
-
-const PLAYER_COLORS = [
-  "#4CAF50", // Green - Player 1 (you)
-  "#2196F3", // Blue - Player 2
-  "#FF9800", // Orange - Player 3
-  "#E91E63", // Pink - Player 4
-  "#9C27B0", // Purple - Player 5
-  "#00BCD4", // Cyan - Player 6
-];
+import { GameColors, CardDimensions, Spacing, BorderRadius, PLAYER_COLORS } from "@/constants/theme";
 
 interface CardSetProps {
   set: CardSetType;

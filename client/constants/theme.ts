@@ -152,3 +152,12 @@ export const CardDimensions = {
   smallWidth: 45,
   smallHeight: 63,
 };
+
+export const PLAYER_COLORS = [
+  "#4CAF50", // Green - Player 1 (you)
+  "#2196F3", // Blue - Player 2
+  "#FF9800", // Orange - Player 3
+  "#E91E63", // Pink - Player 4
+  "#9C27B0", // Purple - Player 5
+  "#00BCD4", // Cyan - Player 6
+];

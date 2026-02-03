@@ -11,6 +11,7 @@ interface PlayerAvatarProps {
   team?: number;
   cardCount?: number;
   score?: number;
+  playerColor?: string;
   hasLastCard?: boolean;
   isConnected?: boolean;
   size?: "small" | "normal" | "large";
@@ -29,6 +30,7 @@ export function PlayerAvatar({
   team,
   cardCount,
   score,
+  playerColor,
   hasLastCard = false,
   isConnected = true,
   size = "normal",
@@ -49,9 +51,11 @@ export function PlayerAvatar({
             borderRadius: avatarSize / 2,
             borderColor: isCurrentTurn
               ? GameColors.gold
-              : team
-                ? teamColors[team as keyof typeof teamColors]
-                : "transparent",
+              : playerColor
+                ? playerColor
+                : team
+                  ? teamColors[team as keyof typeof teamColors]
+                  : "rgba(255,255,255,0.3)",
             opacity: isConnected ? 1 : 0.5,
           },
         ]}
