@@ -10,6 +10,7 @@ interface PlayerAvatarProps {
   isDealer?: boolean;
   team?: number;
   cardCount?: number;
+  score?: number;
   hasLastCard?: boolean;
   isConnected?: boolean;
   size?: "small" | "normal" | "large";
@@ -27,6 +28,7 @@ export function PlayerAvatar({
   isDealer = false,
   team,
   cardCount,
+  score,
   hasLastCard = false,
   isConnected = true,
   size = "normal",
@@ -97,6 +99,9 @@ export function PlayerAvatar({
           <ThemedText style={styles.cardCount}>{cardCount}</ThemedText>
         </View>
       ) : null}
+      {score !== undefined ? (
+        <ThemedText style={styles.score}>{score} pts</ThemedText>
+      ) : null}
     </View>
   );
 }
@@ -164,5 +169,10 @@ const styles = StyleSheet.create({
   cardCount: {
     color: "rgba(255,255,255,0.6)",
     fontSize: 10,
+  },
+  score: {
+    color: GameColors.gold,
+    fontSize: 10,
+    fontWeight: "600",
   },
 });

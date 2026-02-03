@@ -170,9 +170,10 @@ export default function GameScreen() {
       <View style={styles.feltTexture} />
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <Pressable style={styles.headerButton}>
-          <Feather name="menu" size={24} color="#FFFFFF" />
-        </Pressable>
+        <View style={styles.myScoreContainer}>
+          <ThemedText style={styles.myScoreLabel}>You</ThemedText>
+          <ThemedText style={styles.myScoreValue}>{myPlayer.totalScore} pts</ThemedText>
+        </View>
         <View style={styles.roundInfo}>
           <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
           <ThemedText style={styles.thresholdText}>Goal: {gameState.pointThreshold}</ThemedText>
@@ -196,6 +197,7 @@ export default function GameScreen() {
                 isDealer={gameState.dealerId === player.id}
                 team={player.odexTeam}
                 cardCount={player.hand.length}
+                score={player.totalScore}
                 hasLastCard={player.hasLastCard}
                 isConnected={player.isConnected}
                 size="small"
@@ -343,6 +345,19 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: "center",
     alignItems: "center",
+  },
+  myScoreContainer: {
+    alignItems: "center",
+    minWidth: 44,
+  },
+  myScoreLabel: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 10,
+  },
+  myScoreValue: {
+    color: GameColors.gold,
+    fontSize: 14,
+    fontWeight: "700",
   },
   roundInfo: {
     alignItems: "center",
