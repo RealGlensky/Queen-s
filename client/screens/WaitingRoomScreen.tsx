@@ -36,6 +36,8 @@ export default function WaitingRoomScreen() {
     joinRoom,
     startGame,
     leaveRoom,
+    addAIPlayer,
+    removeAIPlayer,
   } = useGameSocket();
 
   const [isStarting, setIsStarting] = useState(false);
@@ -70,8 +72,21 @@ export default function WaitingRoomScreen() {
     navigation.goBack();
   };
 
+  const handleAddAI = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    addAIPlayer();
+  };
+
+  const handleRemoveAI = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    removeAIPlayer();
+  };
+
   const canStartGame = isHost && players.length >= 2 && 
     (gameMode !== "2v2" || players.length === 4);
+  
+  const hasAIPlayers = players.some(p => p.displayName.startsWith("Bot "));
+  const canAddAI = isHost && players.length < (roomInfo?.maxPlayers || maxPlayers || 4);
 
   const renderPlayer = useCallback(({ item, index }: { item: Player; index: number }) => (
     <View style={styles.playerItem}>
@@ -179,16 +194,39 @@ export default function WaitingRoomScreen() {
 
         <View style={styles.actions}>
           {isHost ? (
-            <GameButton
-              label={isStarting ? "Starting..." : "Start Game"}
-              icon="play"
-              variant="primary"
-              size="large"
-              disabled={!canStartGame || isStarting}
-              loading={isStarting}
-              onPress={handleStartGame}
-              style={styles.startButton}
-            />
+            <>
+              <View style={styles.aiButtonsRow}>
+                <GameButton
+                  label="Add AI"
+                  icon="cpu"
+                  variant="secondary"
+                  size="normal"
+                  disabled={!canAddAI}
+                  onPress={handleAddAI}
+                  style={styles.aiButton}
+                />
+                {hasAIPlayers ? (
+                  <GameButton
+                    label="Remove AI"
+                    icon="user-minus"
+                    variant="outline"
+                    size="normal"
+                    onPress={handleRemoveAI}
+                    style={styles.aiButton}
+                  />
+                ) : null}
+              </View>
+              <GameButton
+                label={isStarting ? "Starting..." : "Start Game"}
+                icon="play"
+                variant="primary"
+                size="large"
+                disabled={!canStartGame || isStarting}
+                loading={isStarting}
+                onPress={handleStartGame}
+                style={styles.startButton}
+              />
+            </>
           ) : (
             <View style={styles.waitingMessage}>
               <Feather name="clock" size={20} color="rgba(255,255,255,0.6)" />
@@ -317,6 +355,14 @@ const styles = StyleSheet.create({
   actions: {
     gap: Spacing.lg,
     paddingTop: Spacing.xl,
+  },
+  aiButtonsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    justifyContent: "center",
+  },
+  aiButton: {
+    flex: 1,
   },
   startButton: {
     width: "100%",

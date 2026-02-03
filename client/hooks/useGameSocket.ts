@@ -29,6 +29,8 @@ interface UseGameSocketReturn {
   joinRoom: (displayName: string, roomCode: string) => void;
   leaveRoom: () => void;
   startGame: () => void;
+  addAIPlayer: () => void;
+  removeAIPlayer: () => void;
   drawFromDeck: () => void;
   pickupPile: (cardIds: string[]) => void;
   laySet: (cardIds: string[]) => void;
@@ -151,6 +153,16 @@ export function useGameSocket(): UseGameSocketReturn {
     socketRef.current.emit("start_game");
   }, []);
 
+  const addAIPlayer = useCallback(() => {
+    if (!socketRef.current) return;
+    socketRef.current.emit("add_ai_player");
+  }, []);
+
+  const removeAIPlayer = useCallback(() => {
+    if (!socketRef.current) return;
+    socketRef.current.emit("remove_ai_player");
+  }, []);
+
   const drawFromDeck = useCallback(() => {
     if (!socketRef.current) return;
     socketRef.current.emit("game_action", {
@@ -218,6 +230,8 @@ export function useGameSocket(): UseGameSocketReturn {
     joinRoom,
     leaveRoom,
     startGame,
+    addAIPlayer,
+    removeAIPlayer,
     drawFromDeck,
     pickupPile,
     laySet,
