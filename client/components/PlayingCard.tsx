@@ -156,7 +156,11 @@ export function PlayingCard({
             <ThemedText
               style={[
                 styles.centerSuit,
-                { color: suitColor, fontSize: size === "small" ? 24 : 32 },
+                { 
+                  color: suitColor, 
+                  fontSize: size === "small" ? 24 : 32,
+                  lineHeight: size === "small" ? 32 : 44,
+                },
               ]}
             >
               {suitSymbol}
@@ -225,7 +229,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 8,
   },
   rank: {
     fontWeight: "700",
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
   },
   centerSuit: {
     fontWeight: "400",
-    includeFontPadding: false,
+    lineHeight: 44,
     textAlignVertical: "center",
   },
   jokerContent: {
