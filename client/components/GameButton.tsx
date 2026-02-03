@@ -49,9 +49,13 @@ export function GameButton({
     scale.value = withSpring(1, { damping: 15, stiffness: 200 });
   };
 
-  const handlePress = async () => {
+  const handlePress = () => {
     if (disabled || loading || !onPress) return;
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch (e) {
+      // Haptics not available on web
+    }
     onPress();
   };
 

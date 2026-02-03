@@ -343,11 +343,21 @@ export function setupSocketHandlers(io: Server) {
     socket.on("game_action", (action: any) => {
       const roomCode = socketToRoom.get(socket.id);
       const playerId = socketToPlayer.get(socket.id);
+      
+      console.log("Game action received:", action.type, "from player:", playerId);
 
-      if (!roomCode || !playerId) return;
+      if (!roomCode || !playerId) {
+        console.log("No roomCode or playerId");
+        return;
+      }
 
       const room = rooms.get(roomCode);
-      if (!room || !room.gameState) return;
+      if (!room || !room.gameState) {
+        console.log("No room or gameState");
+        return;
+      }
+      
+      console.log("Current player:", room.gameState.currentPlayerId, "Turn phase:", room.gameState.turnPhase);
 
       let newState: GameState | null = null;
 
@@ -365,7 +375,9 @@ export function setupSocketHandlers(io: Server) {
           newState = processAddToSet(room.gameState, playerId, action.setId, action.cardId);
           break;
         case "discard":
+          console.log("Discard action - cardId:", action.cardId);
           newState = processDiscard(room.gameState, playerId, action.cardId);
+          console.log("Discard result:", newState ? "success" : "failed");
           break;
         case "declare_last_card":
           newState = processDeclareLastCard(room.gameState, playerId);
@@ -373,6 +385,7 @@ export function setupSocketHandlers(io: Server) {
       }
 
       if (!newState) {
+        console.log("Action failed - returning error");
         sendMessage(socket, {
           type: "action_result",
           payload: { success: false, error: "Invalid action" },

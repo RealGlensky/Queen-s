@@ -94,9 +94,9 @@ export default function GameScreen() {
     setSelectedCards([]);
   };
 
-  const handleDiscard = async () => {
+  const handleDiscard = () => {
     if (selectedCards.length !== 1) return;
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    console.log("Discarding card:", selectedCards[0]);
     discard(selectedCards[0]);
     setSelectedCards([]);
   };
@@ -253,7 +253,7 @@ export default function GameScreen() {
               onPress={handleLaySet}
             />
           ) : null}
-          {isMyTurn && gameState.turnPhase === "discard" && selectedCards.length === 1 ? (
+          {isMyTurn && (gameState.turnPhase === "play" || gameState.turnPhase === "discard") && selectedCards.length === 1 ? (
             <GameButton
               label="Discard"
               icon="corner-down-left"
