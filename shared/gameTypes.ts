@@ -63,6 +63,7 @@ export type GameActionType =
   | 'declare_last_card';
 
 export interface GameAction {
+  id: string; // Unique ID to prevent missing actions
   type: GameActionType;
   playerId: string;
   cards?: PlayingCard[];

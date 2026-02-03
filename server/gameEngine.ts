@@ -152,6 +152,7 @@ export function processDrawFromDeck(state: GameState, playerId: string): GameSta
   state.turnPhase = "play";
   
   state.lastAction = {
+    id: uuidv4(),
     type: 'draw_deck',
     playerId,
     timestamp: Date.now(),
@@ -237,6 +238,7 @@ export function processPickupPile(
   state.turnPhase = "play";
   
   state.lastAction = {
+    id: uuidv4(),
     type: 'pickup_pile',
     playerId,
     cards: pileCards,
@@ -288,6 +290,7 @@ export function processLaySet(
   player.sets.push(newSet);
   
   state.lastAction = {
+    id: uuidv4(),
     type: 'lay_set',
     playerId,
     cards: sortedCards,
@@ -350,6 +353,7 @@ export function processAddToSet(
   }
   
   state.lastAction = {
+    id: uuidv4(),
     type: 'add_to_set',
     playerId,
     cards: [card],
@@ -378,6 +382,7 @@ export function processDiscard(
   state.pickupPile.push(discardedCard);
   
   state.lastAction = {
+    id: uuidv4(),
     type: 'discard',
     playerId,
     cards: [discardedCard],
@@ -409,6 +414,7 @@ export function processDeclareLastCard(
     player.hasLastCard = true;
     
     state.lastAction = {
+      id: uuidv4(),
       type: 'declare_last_card',
       playerId,
       timestamp: Date.now(),

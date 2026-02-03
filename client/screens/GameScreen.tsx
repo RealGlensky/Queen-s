@@ -59,6 +59,7 @@ export default function GameScreen() {
   const prevRoundRef = useRef<number>(0);
   const moveIdRef = useRef(0);
   const moveLogScrollRef = useRef<ScrollView>(null);
+  const seenActionIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (gameState?.status === "round_end" || gameState?.status === "game_over") {
@@ -114,6 +115,17 @@ export default function GameScreen() {
     if (!gameState?.lastAction) return;
     
     const action = gameState.lastAction;
+    
+    // Skip if we've already processed this action
+    if (seenActionIds.current.has(action.id)) return;
+    seenActionIds.current.add(action.id);
+    
+    // Keep only last 100 action IDs to prevent memory leak
+    if (seenActionIds.current.size > 100) {
+      const idsArray = Array.from(seenActionIds.current);
+      seenActionIds.current = new Set(idsArray.slice(-50));
+    }
+    
     const player = gameState.players.find(p => p.id === action.playerId);
     const playerName = player?.displayName || "Unknown";
     
@@ -156,7 +168,7 @@ export default function GameScreen() {
     };
     
     setMoveLog(prev => [...prev.slice(-49), newEntry]); // Keep last 50 moves
-  }, [gameState?.lastAction?.timestamp]);
+  }, [gameState?.lastAction?.id]);
 
   const handleCardPress = useCallback((card: PlayingCardType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
