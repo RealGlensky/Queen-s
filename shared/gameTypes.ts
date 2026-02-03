@@ -115,20 +115,23 @@ export function canPickupPile(hand: PlayingCard[], topCard: PlayingCard): boolea
 export function isValidSet(cards: PlayingCard[]): boolean {
   if (cards.length < 3) return false;
   
-  // Jokers cannot be used in sets - only 2s are wild
-  if (cards.some(c => c.rank === 'joker')) return false;
+  const jokers = cards.filter(c => c.rank === 'joker');
+  const nonJokers = cards.filter(c => c.rank !== 'joker');
   
+  // If set contains jokers, it must be ALL jokers (jokers aren't wild)
+  if (jokers.length > 0) {
+    return jokers.length === cards.length; // Valid only if all cards are jokers
+  }
+  
+  // For non-joker sets: 2s are wild cards
   const wildcards = cards.filter(c => isWildCard(c));
-  const nonWildcards = cards.filter(c => !isWildCard(c));
+  const naturalCards = cards.filter(c => !isWildCard(c));
   
-  // Need at least 2 natural cards (non-wild) in a set
-  if (nonWildcards.length < 2) return false;
+  // Need at least 2 natural matching cards
+  if (naturalCards.length < 2) return false;
   
-  // Can only use 1 wild card (2) per set
-  if (wildcards.length > 1) return false;
-  
-  const targetRank = nonWildcards[0].rank;
-  return nonWildcards.every(c => c.rank === targetRank);
+  const targetRank = naturalCards[0].rank;
+  return naturalCards.every(c => c.rank === targetRank);
 }
 
 export function generateRoomCode(): string {
