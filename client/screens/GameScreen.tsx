@@ -372,12 +372,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   opponentsArea: {
-    height: 80,
+    height: 110,
+    marginTop: Spacing.sm,
   },
   opponentsScroll: {
     paddingHorizontal: Spacing.lg,
     gap: Spacing.lg,
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   opponentContainer: {
     alignItems: "center",
