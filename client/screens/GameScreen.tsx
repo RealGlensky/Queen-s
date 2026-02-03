@@ -98,8 +98,8 @@ export default function GameScreen() {
     // Always update prev ref
     prevHandRef.current = currentHandIds;
     
-    // Only highlight if it's 1-2 new cards (normal draw/pickup, not dealt hand)
-    if (newCards.length > 0 && newCards.length <= 15) {
+    // Highlight all new cards (no upper limit - pile pickups can be large)
+    if (newCards.length > 0) {
       setHighlightedCards(newCards);
       // Clear highlight after 3 seconds
       const timeout = setTimeout(() => {
@@ -194,9 +194,12 @@ export default function GameScreen() {
   };
 
   const handleAddToSet = async (setId: string) => {
-    if (selectedCards.length !== 1) return;
+    if (selectedCards.length === 0) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    addToSet(setId, selectedCards[0]);
+    // Add each selected card to the set one by one
+    for (const cardId of selectedCards) {
+      addToSet(setId, cardId);
+    }
     setSelectedCards([]);
   };
 
@@ -342,8 +345,8 @@ export default function GameScreen() {
                   ownerIndex={ownerIndex}
                   isMine={isMine}
                   isTeamSet={isMyTeamSet}
-                  canAddCard={isMyTurn && selectedCards.length === 1 && isMyTeamSet}
-                  onPress={isMyTurn && selectedCards.length === 1 && isMyTeamSet
+                  canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
+                  onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
                     ? () => handleAddToSet(set.id)
                     : undefined}
                 />
