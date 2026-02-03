@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    overflow: "hidden",
   },
   cardBackPattern: {
     flex: 1,
@@ -217,8 +216,8 @@ const styles = StyleSheet.create({
   },
   bottomRight: {
     position: "absolute",
-    bottom: 4,
-    right: 4,
+    bottom: 2,
+    right: 3,
     alignItems: "center",
   },
   center: {
@@ -228,10 +227,10 @@ const styles = StyleSheet.create({
   },
   rank: {
     fontWeight: "700",
-    lineHeight: 18,
+    lineHeight: 16,
   },
   suit: {
-    lineHeight: 16,
+    lineHeight: 14,
   },
   centerSuit: {
     fontWeight: "400",

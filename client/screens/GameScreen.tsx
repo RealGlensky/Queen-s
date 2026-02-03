@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xl,
   },
   setsArea: {
-    height: 120,
+    height: 140,
   },
   setsScroll: {
     paddingHorizontal: Spacing.lg,
