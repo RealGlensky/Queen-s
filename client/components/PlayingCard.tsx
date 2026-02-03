@@ -194,6 +194,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    overflow: "visible",
   },
   cardBackPattern: {
     flex: 1,
@@ -224,6 +225,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingTop: 8,
   },
   rank: {
     fontWeight: "700",
@@ -237,6 +239,7 @@ const styles = StyleSheet.create({
   centerSuit: {
     fontWeight: "400",
     includeFontPadding: false,
+    textAlignVertical: "center",
   },
   jokerContent: {
     flex: 1,
