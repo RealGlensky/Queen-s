@@ -11,7 +11,8 @@ export interface AIDecision {
 function countRanks(hand: PlayingCard[]): Map<string, PlayingCard[]> {
   const ranks = new Map<string, PlayingCard[]>();
   for (const card of hand) {
-    if (!isWildCard(card) && !card.isJoker) {
+    // Count all non-wild cards by rank (including jokers as their own rank)
+    if (!isWildCard(card)) {
       const existing = ranks.get(card.rank) || [];
       existing.push(card);
       ranks.set(card.rank, existing);
@@ -22,7 +23,8 @@ function countRanks(hand: PlayingCard[]): Map<string, PlayingCard[]> {
 
 function findPotentialSets(hand: PlayingCard[]): PlayingCard[][] {
   const rankGroups = countRanks(hand);
-  const wildcards = hand.filter(c => isWildCard(c) || c.isJoker);
+  // Only 2s are wild cards, jokers are NOT wild
+  const wildcards = hand.filter(c => isWildCard(c));
   const potentialSets: PlayingCard[][] = [];
 
   for (const [rank, cards] of rankGroups) {
@@ -47,7 +49,8 @@ function findCardsToAddToSets(hand: PlayingCard[], sets: CardSet[]): { cardId: s
 
   for (const card of hand) {
     for (const set of sets) {
-      if (isWildCard(card) || card.isJoker || card.rank === set.rank) {
+      // 2s are wild (can add to any set), other cards must match the set's rank
+      if (isWildCard(card) || card.rank === set.rank) {
         additions.push({ cardId: card.id, setId: set.id });
       }
     }
@@ -68,7 +71,8 @@ function selectBestDiscard(hand: PlayingCard[]): string {
   const pairedCards: PlayingCard[] = [];
 
   for (const card of hand) {
-    if (isWildCard(card) || card.isJoker) continue;
+    // Only skip wild cards (2s), jokers are regular cards
+    if (isWildCard(card)) continue;
     
     const group = rankGroups.get(card.rank) || [];
     if (group.length === 1) {
@@ -91,7 +95,8 @@ function selectBestDiscard(hand: PlayingCard[]): string {
     return sorted[0].id;
   }
 
-  const wildcards = hand.filter(c => isWildCard(c) || c.isJoker);
+  // Only 2s are wild cards
+  const wildcards = hand.filter(c => isWildCard(c));
   if (wildcards.length > 0) {
     return wildcards[0].id;
   }
@@ -114,7 +119,8 @@ function shouldPickupPile(
   }
 
   const matchingCards = hand.filter(c => c.rank === topCard.rank);
-  const wildcards = hand.filter(c => isWildCard(c) || c.isJoker);
+  // Only 2s are wild cards, jokers are NOT wild
+  const wildcards = hand.filter(c => isWildCard(c));
 
   if (matchingCards.length >= 2) {
     return { 
