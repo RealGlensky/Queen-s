@@ -180,11 +180,29 @@ export function processPickupPile(
   }
   
   const selectedCards = player.hand.filter(c => cardIds.includes(c.id));
-  const matchingCards = selectedCards.filter(c => c.rank === topCard.rank);
-  const wildcards = selectedCards.filter(c => isWildCard(c));
   
-  if (matchingCards.length < 2 && !(matchingCards.length >= 1 && wildcards.length >= 1)) {
-    return null;
+  // When picking up a wild card (2), you need 2 natural cards of the same rank
+  // You cannot use another 2 to help pick up a 2
+  if (isWildCard(topCard)) {
+    // Filter out wild cards - only natural cards count
+    const naturalCards = selectedCards.filter(c => !isWildCard(c) && !c.isJoker);
+    if (naturalCards.length < 2) {
+      return null;
+    }
+    // All natural cards must be the same rank
+    const firstRank = naturalCards[0].rank;
+    const allSameRank = naturalCards.every(c => c.rank === firstRank);
+    if (!allSameRank) {
+      return null;
+    }
+  } else {
+    // Normal pickup: need 2 matching cards, or 1 matching + 1 wild
+    const matchingCards = selectedCards.filter(c => c.rank === topCard.rank);
+    const wildcards = selectedCards.filter(c => isWildCard(c));
+    
+    if (matchingCards.length < 2 && !(matchingCards.length >= 1 && wildcards.length >= 1)) {
+      return null;
+    }
   }
   
   player.hand = player.hand.filter(c => !cardIds.includes(c.id));
@@ -195,10 +213,20 @@ export function processPickupPile(
   player.hand.push(...pileCards);
   
   const setCards = [...selectedCards, topCard];
+  
+  // Determine set rank: if top card is wild, use the natural cards' rank
+  let setRank = topCard.rank;
+  if (isWildCard(topCard)) {
+    const naturalCards = selectedCards.filter(c => !isWildCard(c) && !c.isJoker);
+    if (naturalCards.length > 0) {
+      setRank = naturalCards[0].rank;
+    }
+  }
+  
   const newSet: CardSet = {
     id: uuidv4(),
     cards: setCards,
-    rank: topCard.rank,
+    rank: setRank,
     ownerId: playerId,
     teamId: player.odexTeam,
   };

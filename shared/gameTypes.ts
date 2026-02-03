@@ -103,6 +103,22 @@ export function isWildCard(card: PlayingCard): boolean {
 }
 
 export function canPickupPile(hand: PlayingCard[], topCard: PlayingCard): boolean {
+  // When picking up a wild card (2), you need 2 natural cards of the same rank
+  // You cannot use another 2 to help pick up a 2
+  if (isWildCard(topCard)) {
+    const naturalCards = hand.filter(c => !isWildCard(c) && !c.isJoker);
+    // Group natural cards by rank and check if any rank has 2+ cards
+    const rankCounts = new Map<Rank, number>();
+    for (const card of naturalCards) {
+      rankCounts.set(card.rank, (rankCounts.get(card.rank) || 0) + 1);
+    }
+    for (const count of rankCounts.values()) {
+      if (count >= 2) return true;
+    }
+    return false;
+  }
+  
+  // Normal pickup: need 2 matching cards, or 1 matching + 1 wild
   const matchingCards = hand.filter(c => c.rank === topCard.rank);
   const wildcards = hand.filter(c => isWildCard(c));
   

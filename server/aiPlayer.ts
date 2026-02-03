@@ -118,8 +118,30 @@ function shouldPickupPile(
     return { shouldPickup: false, cardIds: [] };
   }
 
+  // When picking up a wild card (2), need 2 natural cards of the same rank
+  // Cannot use another 2 to help pick up a 2
+  if (isWildCard(topCard)) {
+    const naturalCards = hand.filter(c => !isWildCard(c) && !c.isJoker);
+    // Group by rank and find a pair
+    const rankGroups = new Map<string, PlayingCard[]>();
+    for (const card of naturalCards) {
+      const existing = rankGroups.get(card.rank) || [];
+      existing.push(card);
+      rankGroups.set(card.rank, existing);
+    }
+    for (const cards of rankGroups.values()) {
+      if (cards.length >= 2) {
+        return {
+          shouldPickup: true,
+          cardIds: cards.slice(0, 2).map(c => c.id)
+        };
+      }
+    }
+    return { shouldPickup: false, cardIds: [] };
+  }
+
+  // Normal pickup: need 2 matching cards, or 1 matching + 1 wild
   const matchingCards = hand.filter(c => c.rank === topCard.rank);
-  // Only 2s are wild cards, jokers are NOT wild
   const wildcards = hand.filter(c => isWildCard(c));
 
   if (matchingCards.length >= 2) {
