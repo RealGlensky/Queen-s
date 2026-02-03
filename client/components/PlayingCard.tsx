@@ -210,8 +210,8 @@ const styles = StyleSheet.create({
   },
   topLeft: {
     position: "absolute",
-    top: 4,
-    left: 4,
+    top: 2,
+    left: 3,
     alignItems: "center",
   },
   bottomRight: {
@@ -227,13 +227,16 @@ const styles = StyleSheet.create({
   },
   rank: {
     fontWeight: "700",
-    lineHeight: 16,
+    lineHeight: 18,
+    includeFontPadding: false,
   },
   suit: {
-    lineHeight: 14,
+    lineHeight: 16,
+    includeFontPadding: false,
   },
   centerSuit: {
     fontWeight: "400",
+    includeFontPadding: false,
   },
   jokerContent: {
     flex: 1,
