@@ -138,6 +138,29 @@ export default function GameScreen() {
       })
     : myPlayer.sets;
 
+  const getOwnerInfo = (ownerId: string) => {
+    const ownerIndex = gameState.players.findIndex((p) => p.id === ownerId);
+    const owner = gameState.players[ownerIndex];
+    return {
+      ownerName: owner?.displayName || "Unknown",
+      ownerIndex: ownerIndex >= 0 ? ownerIndex : 0,
+      isMine: ownerId === myPlayer.id,
+    };
+  };
+
+  const rankOrder: Record<string, number> = {
+    "A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7,
+    "8": 8, "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13, "joker": 14,
+  };
+
+  const sortedHand = [...myPlayer.hand].sort((a, b) => {
+    const rankA = rankOrder[a.rank] || 0;
+    const rankB = rankOrder[b.rank] || 0;
+    if (rankA !== rankB) return rankA - rankB;
+    const suitOrder: Record<string, number> = { spades: 1, hearts: 2, diamonds: 3, clubs: 4 };
+    return (suitOrder[a.suit || ""] || 5) - (suitOrder[b.suit || ""] || 5);
+  });
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -190,6 +213,7 @@ export default function GameScreen() {
             contentContainerStyle={styles.setsScroll}
           >
             {allSets.map((set) => {
+              const { ownerName, ownerIndex, isMine } = getOwnerInfo(set.ownerId);
               const isMyTeamSet = gameState.gameMode === "2v2" && myPlayer.odexTeam
                 ? gameState.players.find((p) => p.id === set.ownerId)?.odexTeam === myPlayer.odexTeam
                 : set.ownerId === myPlayer.id;
@@ -197,6 +221,9 @@ export default function GameScreen() {
                 <CardSet
                   key={set.id}
                   set={set}
+                  ownerName={ownerName}
+                  ownerIndex={ownerIndex}
+                  isMine={isMine}
                   isTeamSet={isMyTeamSet}
                   canAddCard={isMyTurn && selectedCards.length === 1 && isMyTeamSet}
                   onPress={isMyTurn && selectedCards.length === 1 && isMyTeamSet
@@ -275,7 +302,7 @@ export default function GameScreen() {
 
         <View style={[styles.handContainer, { paddingBottom: insets.bottom + Spacing.sm }]}>
           <CardHand
-            cards={myPlayer.hand}
+            cards={sortedHand}
             selectedCardIds={selectedCards}
             onCardPress={handleCardPress}
           />
@@ -293,6 +320,7 @@ const styles = StyleSheet.create({
   feltTexture: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.2)",
+    pointerEvents: "none",
   },
   loadingContainer: {
     flex: 1,

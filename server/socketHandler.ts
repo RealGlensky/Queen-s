@@ -520,21 +520,38 @@ function broadcastGameState(io: Server, room: Room) {
 }
 
 function scheduleAITurn(io: Server, room: Room) {
-  if (!room.gameState || room.gameState.status !== "playing") return;
+  if (!room.gameState || room.gameState.status !== "playing") {
+    console.log("scheduleAITurn: Game not playing, status:", room.gameState?.status);
+    return;
+  }
 
   const currentPlayer = room.players.find(p => p.id === room.gameState?.currentPlayerId);
-  if (!currentPlayer?.isAI) return;
+  console.log("scheduleAITurn: Current player:", currentPlayer?.displayName, "isAI:", currentPlayer?.isAI);
+  
+  if (!currentPlayer?.isAI) {
+    console.log("scheduleAITurn: Not an AI player's turn");
+    return;
+  }
 
+  console.log("scheduleAITurn: Scheduling AI turn for", currentPlayer.displayName);
   setTimeout(() => {
     executeAITurnActions(io, room, currentPlayer.id);
   }, 800);
 }
 
 function executeAITurnActions(io: Server, room: Room, aiPlayerId: string) {
-  if (!room.gameState || room.gameState.status !== "playing") return;
-  if (room.gameState.currentPlayerId !== aiPlayerId) return;
+  if (!room.gameState || room.gameState.status !== "playing") {
+    console.log("executeAITurnActions: Game not playing");
+    return;
+  }
+  if (room.gameState.currentPlayerId !== aiPlayerId) {
+    console.log("executeAITurnActions: Not AI's turn anymore");
+    return;
+  }
 
+  console.log("executeAITurnActions: Executing AI turn for", aiPlayerId);
   const decisions = executeAITurn(room.gameState, aiPlayerId);
+  console.log("executeAITurnActions: AI decisions:", decisions.map(d => d.type));
   
   let delay = 0;
   const actionDelay = 600;

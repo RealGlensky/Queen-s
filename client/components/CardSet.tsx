@@ -10,9 +10,21 @@ import { ThemedText } from "@/components/ThemedText";
 import type { CardSet as CardSetType } from "@shared/gameTypes";
 import { GameColors, CardDimensions, Spacing, BorderRadius } from "@/constants/theme";
 
+const PLAYER_COLORS = [
+  "#4CAF50", // Green - Player 1 (you)
+  "#2196F3", // Blue - Player 2
+  "#FF9800", // Orange - Player 3
+  "#E91E63", // Pink - Player 4
+  "#9C27B0", // Purple - Player 5
+  "#00BCD4", // Cyan - Player 6
+];
+
 interface CardSetProps {
   set: CardSetType;
+  ownerName?: string;
+  ownerIndex?: number;
   isTeamSet?: boolean;
+  isMine?: boolean;
   canAddCard?: boolean;
   onPress?: () => void;
   style?: any;
@@ -22,11 +34,15 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function CardSet({
   set,
+  ownerName,
+  ownerIndex = 0,
   isTeamSet = false,
+  isMine = false,
   canAddCard = false,
   onPress,
   style,
 }: CardSetProps) {
+  const ownerColor = PLAYER_COLORS[ownerIndex % PLAYER_COLORS.length];
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -56,10 +72,11 @@ export function CardSet({
       style={[
         styles.container,
         {
-          borderColor: canAddCard ? GameColors.gold : "transparent",
-          backgroundColor: isTeamSet
-            ? "rgba(212, 175, 55, 0.1)"
-            : "rgba(0, 0, 0, 0.2)",
+          borderColor: canAddCard ? GameColors.gold : ownerColor,
+          borderWidth: 2,
+          backgroundColor: isMine
+            ? "rgba(212, 175, 55, 0.15)"
+            : `${ownerColor}22`,
         },
         style,
         animatedStyle,
@@ -86,6 +103,9 @@ export function CardSet({
         ) : null}
       </View>
       <View style={styles.labelContainer}>
+        <ThemedText style={[styles.ownerLabel, { color: ownerColor }]}>
+          {ownerName || "Unknown"}
+        </ThemedText>
         <ThemedText style={styles.setLabel}>
           {set.rank}s
         </ThemedText>
@@ -117,6 +137,11 @@ const styles = StyleSheet.create({
   labelContainer: {
     marginTop: Spacing.xs,
     alignItems: "center",
+  },
+  ownerLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   setLabel: {
     fontSize: 12,
