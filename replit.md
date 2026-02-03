@@ -33,6 +33,21 @@ The server handles room management, game state, turn validation, and AI player d
 - Turn phases: draw → play → discard
 - AI players use basic strategy for set building and pile pickup decisions
 
+### AI Player System
+- AI logic in `/server/aiPlayer.ts` handles automated decision-making
+- Host can add/remove AI players in waiting room before game starts
+- AI automatically takes turns with configurable delays (~600-800ms between actions)
+- AI strategy includes:
+  - Evaluating whether to pick up pile or draw from deck
+  - Finding valid sets (3+ matching cards) to lay down
+  - Adding cards to existing sets when possible
+  - Discarding lowest-value unpaired cards
+
+### Socket Context
+- `GameSocketProvider` in `/client/contexts/GameSocketContext.tsx` shares socket connection across all screens
+- Single socket instance ensures game state persists during navigation
+- All game actions flow through the shared context
+
 ### Data Layer
 - Schema defined in `/shared/schema.ts` using Drizzle
 - Tables: users, game_rooms, game_players, game_history
