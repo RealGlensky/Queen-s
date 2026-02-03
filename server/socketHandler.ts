@@ -125,6 +125,7 @@ export function setupSocketHandlers(io: Server) {
           },
           players: getPlayersForClient(room),
           playerId,
+          displayName,
         },
         timestamp: Date.now(),
       });
@@ -189,6 +190,7 @@ export function setupSocketHandlers(io: Server) {
           },
           players: getPlayersForClient(room),
           playerId,
+          displayName,
         },
         timestamp: Date.now(),
       });
@@ -202,6 +204,75 @@ export function setupSocketHandlers(io: Server) {
 
     socket.on("leave_room", () => {
       handlePlayerLeave(io, socket);
+    });
+
+    socket.on("rejoin_room", ({ roomCode, playerId, displayName }: { roomCode: string; playerId: string; displayName: string }) => {
+      const room = rooms.get(roomCode.toUpperCase());
+
+      if (!room) {
+        sendMessage(socket, {
+          type: "error",
+          payload: { message: "Room no longer exists" },
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      const player = room.players.find(p => p.id === playerId);
+      
+      if (!player) {
+        sendMessage(socket, {
+          type: "error",
+          payload: { message: "Player not found in room" },
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      // Update player's socket connection
+      player.socketId = socket.id;
+      player.isConnected = true;
+
+      socketToRoom.set(socket.id, room.code);
+      socketToPlayer.set(socket.id, playerId);
+
+      socket.join(room.code);
+
+      console.log(`Player ${displayName} rejoined room ${roomCode}`);
+
+      // Send room info to rejoining player
+      sendMessage(socket, {
+        type: "room_info",
+        payload: {
+          roomInfo: {
+            roomCode: room.code,
+            gameMode: room.config.gameMode,
+            maxPlayers: room.config.maxPlayers,
+            pointThreshold: room.config.pointThreshold,
+            status: room.status,
+          },
+          players: getPlayersForClient(room),
+          playerId,
+          displayName,
+        },
+        timestamp: Date.now(),
+      });
+
+      // If game is in progress, send current game state
+      if (room.gameState) {
+        sendMessage(socket, {
+          type: "game_state",
+          payload: room.gameState,
+          timestamp: Date.now(),
+        });
+      }
+
+      // Notify others that player reconnected
+      broadcastToRoom(io, room.code, {
+        type: "player_joined",
+        payload: { players: getPlayersForClient(room) },
+        timestamp: Date.now(),
+      });
     });
 
     socket.on("add_ai_player", () => {

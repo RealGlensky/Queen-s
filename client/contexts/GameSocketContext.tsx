@@ -51,6 +51,8 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  const sessionInfoRef = useRef<{ roomCode: string; playerId: string; displayName: string } | null>(null);
 
   useEffect(() => {
     const apiUrl = getApiUrl();
@@ -64,6 +66,16 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     socket.on("connect", () => {
       setConnected(true);
       setError(null);
+      
+      // Attempt to rejoin if we have session info
+      if (sessionInfoRef.current) {
+        console.log("Attempting to rejoin room after reconnect:", sessionInfoRef.current.roomCode);
+        socket.emit("rejoin_room", {
+          roomCode: sessionInfoRef.current.roomCode,
+          playerId: sessionInfoRef.current.playerId,
+          displayName: sessionInfoRef.current.displayName,
+        });
+      }
     });
 
     socket.on("disconnect", () => {
@@ -92,6 +104,14 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
         setPlayers(message.payload.players || []);
         if (message.payload.playerId) {
           setMyPlayerId(message.payload.playerId);
+          // Store session info for reconnection
+          if (message.payload.roomInfo?.roomCode && message.payload.displayName) {
+            sessionInfoRef.current = {
+              roomCode: message.payload.roomInfo.roomCode,
+              playerId: message.payload.playerId,
+              displayName: message.payload.displayName,
+            };
+          }
         }
         break;
       case "player_joined":
@@ -146,6 +166,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     setPlayers([]);
     setGameState(null);
     setMyPlayerId(null);
+    sessionInfoRef.current = null;
   }, []);
 
   const startGame = useCallback(() => {
