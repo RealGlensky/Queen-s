@@ -14,6 +14,9 @@ import {
 } from "./gameEngine";
 import {
   executeAITurn,
+  getAIDrawDecision,
+  getAIPlayDecisions,
+  getAIDiscardDecision,
   getNextAIName,
   resetAINames,
   type AIDecision,
@@ -550,47 +553,140 @@ function executeAITurnActions(io: Server, room: Room, aiPlayerId: string) {
   }
 
   console.log("executeAITurnActions: Executing AI turn for", aiPlayerId);
-  const decisions = executeAITurn(room.gameState, aiPlayerId);
-  console.log("executeAITurnActions: AI decisions:", decisions.map(d => d.type));
   
-  let delay = 0;
-  const actionDelay = 600;
+  const executeNextAction = (actionIndex: number) => {
+    if (!room.gameState || room.gameState.status !== "playing") {
+      console.log("executeAITurnActions: Game ended during AI turn");
+      return;
+    }
 
-  for (const decision of decisions) {
-    setTimeout(() => {
-      if (!room.gameState || room.gameState.status !== "playing") return;
-      if (room.gameState.currentPlayerId !== aiPlayerId && decision.type !== "lay_set" && decision.type !== "add_to_set") return;
+    const player = room.gameState.players.find(p => p.id === aiPlayerId);
+    if (!player) {
+      console.log("executeAITurnActions: AI player not found");
+      return;
+    }
 
-      let newState: GameState | null = null;
+    const phase = room.gameState.turnPhase;
+    let newState: GameState | null = null;
+    let actionDescription = "";
 
-      switch (decision.type) {
-        case "draw_deck":
-          newState = processDrawFromDeck(room.gameState, aiPlayerId);
-          break;
-        case "pickup_pile":
-          newState = processPickupPile(room.gameState, aiPlayerId, decision.cardIds || []);
-          break;
-        case "lay_set":
-          newState = processLaySet(room.gameState, aiPlayerId, decision.cardIds || []);
-          break;
-        case "add_to_set":
-          newState = processAddToSet(room.gameState, aiPlayerId, decision.setId!, decision.cardId!);
-          break;
-        case "discard":
-          newState = processDiscard(room.gameState, aiPlayerId, decision.cardId!);
-          break;
+    if (phase === "draw") {
+      const drawDecision = getAIDrawDecision(room.gameState, aiPlayerId);
+      actionDescription = drawDecision.type;
+      
+      if (drawDecision.type === "pickup_pile") {
+        newState = processPickupPile(room.gameState, aiPlayerId, drawDecision.cardIds || []);
+      } else {
+        newState = processDrawFromDeck(room.gameState, aiPlayerId);
       }
-
+      
       if (newState) {
         room.gameState = newState;
         broadcastGameState(io, room);
-
-        if (newState.status === "playing" && decision.type === "discard") {
-          scheduleAITurn(io, room);
+        console.log("executeAITurnActions: AI drew - action:", actionDescription);
+        setTimeout(() => executeNextAction(actionIndex + 1), 600);
+      } else {
+        console.log("executeAITurnActions: Draw failed, trying deck");
+        newState = processDrawFromDeck(room.gameState, aiPlayerId);
+        if (newState) {
+          room.gameState = newState;
+          broadcastGameState(io, room);
+          setTimeout(() => executeNextAction(actionIndex + 1), 600);
+        } else {
+          console.log("executeAITurnActions: All draw attempts failed");
+          forceEndAITurn(io, room, aiPlayerId);
         }
       }
-    }, delay);
+    } else if (phase === "play") {
+      const playDecisions = getAIPlayDecisions(room.gameState, aiPlayerId);
+      
+      if (playDecisions.length > 0) {
+        const decision = playDecisions[0];
+        actionDescription = decision.type;
+        
+        if (decision.type === "lay_set") {
+          newState = processLaySet(room.gameState, aiPlayerId, decision.cardIds || []);
+        } else if (decision.type === "add_to_set") {
+          newState = processAddToSet(room.gameState, aiPlayerId, decision.setId!, decision.cardId!);
+        }
+        
+        if (newState) {
+          room.gameState = newState;
+          broadcastGameState(io, room);
+          console.log("executeAITurnActions: AI played - action:", actionDescription);
+          setTimeout(() => executeNextAction(actionIndex + 1), 600);
+        } else {
+          console.log("executeAITurnActions: Play action failed, trying discard");
+          executeDiscard();
+        }
+      } else {
+        executeDiscard();
+      }
+    } else {
+      console.log("executeAITurnActions: Unknown phase", phase);
+      forceEndAITurn(io, room, aiPlayerId);
+    }
+    
+    function executeDiscard() {
+      if (!room.gameState) return;
+      
+      const discardDecision = getAIDiscardDecision(room.gameState, aiPlayerId);
+      console.log("executeAITurnActions: AI discarding card:", discardDecision.cardId);
+      
+      if (!discardDecision.cardId) {
+        console.log("executeAITurnActions: No card to discard - player hand empty?");
+        forceEndAITurn(io, room, aiPlayerId);
+        return;
+      }
+      
+      const discardState = processDiscard(room.gameState, aiPlayerId, discardDecision.cardId);
+      
+      if (discardState) {
+        room.gameState = discardState;
+        broadcastGameState(io, room);
+        console.log("executeAITurnActions: AI discarded successfully");
+        
+        if (discardState.status === "playing") {
+          setTimeout(() => scheduleAITurn(io, room), 200);
+        }
+      } else {
+        console.log("executeAITurnActions: Discard failed");
+        forceEndAITurn(io, room, aiPlayerId);
+      }
+    }
+  };
+  
+  setTimeout(() => executeNextAction(0), 600);
+}
 
-    delay += actionDelay;
+function forceEndAITurn(io: Server, room: Room, aiPlayerId: string) {
+  console.log("forceEndAITurn: Forcing turn end for stuck AI", aiPlayerId);
+  
+  if (!room.gameState || room.gameState.status !== "playing") return;
+  
+  const player = room.gameState.players.find(p => p.id === aiPlayerId);
+  if (!player || player.hand.length === 0) {
+    console.log("forceEndAITurn: Player has no cards, advancing turn");
   }
+  
+  if (player && player.hand.length > 0) {
+    const cardToDiscard = player.hand[0];
+    console.log("forceEndAITurn: Force discarding first card:", cardToDiscard.id);
+    const newState = processDiscard(room.gameState, aiPlayerId, cardToDiscard.id);
+    if (newState) {
+      room.gameState = newState;
+      broadcastGameState(io, room);
+      if (newState.status === "playing") {
+        setTimeout(() => scheduleAITurn(io, room), 200);
+      }
+      return;
+    }
+  }
+  
+  const currentIndex = room.gameState.players.findIndex(p => p.id === aiPlayerId);
+  const nextIndex = (currentIndex + 1) % room.gameState.players.length;
+  room.gameState.currentPlayerId = room.gameState.players[nextIndex].id;
+  room.gameState.turnPhase = "draw";
+  broadcastGameState(io, room);
+  setTimeout(() => scheduleAITurn(io, room), 200);
 }
