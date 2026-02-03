@@ -75,6 +75,9 @@ export default function GameScreen() {
     // Find new cards (in current hand but not in previous)
     const newCards = currentHandIds.filter(id => !prevHandIds.includes(id));
     
+    // Always update prev ref
+    prevHandRef.current = currentHandIds;
+    
     if (newCards.length > 0) {
       setHighlightedCards(newCards);
       // Clear highlight after 3 seconds
@@ -83,8 +86,6 @@ export default function GameScreen() {
       }, 3000);
       return () => clearTimeout(timeout);
     }
-    
-    prevHandRef.current = currentHandIds;
   }, [myPlayer?.hand]);
 
   // Track game actions for move log
