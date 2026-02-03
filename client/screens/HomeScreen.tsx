@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: Spacing.xl,
   },
   decorativeCard: {
     width: 80,
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   decorativeCardOffset: {
-    marginLeft: -30,
+    marginLeft: -20,
     transform: [{ rotate: "10deg" }],
   },
   decorativeQ: {
