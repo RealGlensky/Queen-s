@@ -152,19 +152,24 @@ export function PlayingCard({
               {suitSymbol}
             </ThemedText>
           </View>
-          <View style={styles.center}>
-            <ThemedText
-              style={[
-                styles.centerSuit,
-                { 
+          <View style={[styles.center, { marginTop: size === "small" ? 4 : 6 }]}>
+            <View style={{ 
+              width: size === "small" ? 28 : 40, 
+              height: size === "small" ? 28 : 40,
+              justifyContent: "center",
+              alignItems: "center",
+            }}>
+              <ThemedText
+                style={{
                   color: suitColor, 
                   fontSize: size === "small" ? 24 : 32,
-                  lineHeight: size === "small" ? 32 : 44,
-                },
-              ]}
-            >
-              {suitSymbol}
-            </ThemedText>
+                  lineHeight: size === "small" ? 28 : 40,
+                  textAlign: "center",
+                }}
+              >
+                {suitSymbol}
+              </ThemedText>
+            </View>
           </View>
           <View style={styles.bottomRight}>
             <ThemedText
