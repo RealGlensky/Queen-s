@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { StyleSheet, View, FlatList, ActivityIndicator } from "react-native";
+import { StyleSheet, View, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Clipboard from "expo-clipboard";
 
 import { ThemedText } from "@/components/ThemedText";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -41,6 +42,16 @@ export default function WaitingRoomScreen() {
   } = useGameSocket();
 
   const [isStarting, setIsStarting] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = async () => {
+    if (roomInfo?.roomCode) {
+      await Clipboard.setStringAsync(roomInfo.roomCode);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     if (isHost && gameMode && maxPlayers && pointThreshold) {
@@ -159,7 +170,21 @@ export default function WaitingRoomScreen() {
       >
         <View style={styles.roomCodeContainer}>
           <ThemedText style={styles.roomCodeLabel}>Room Code</ThemedText>
-          <ThemedText style={styles.roomCode}>{roomInfo.roomCode}</ThemedText>
+          <Pressable onPress={handleCopyCode} style={styles.roomCodeRow}>
+            <ThemedText style={styles.roomCode}>{roomInfo.roomCode}</ThemedText>
+            <View style={styles.copyButton}>
+              <Feather 
+                name={copied ? "check" : "copy"} 
+                size={20} 
+                color={copied ? "#4CAF50" : GameColors.gold} 
+              />
+            </View>
+          </Pressable>
+          {copied ? (
+            <ThemedText style={styles.copiedText}>Copied to clipboard!</ThemedText>
+          ) : (
+            <ThemedText style={styles.tapToCopyText}>Tap to copy</ThemedText>
+          )}
           <ThemedText style={styles.modeLabel}>
             {roomInfo.gameMode === "2v2" ? "2v2 Teams" : "Solo"} • {roomInfo.pointThreshold} points
           </ThemedText>
@@ -278,6 +303,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.xs,
     paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
     backgroundColor: "rgba(0,0,0,0.2)",
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.xl,
@@ -288,15 +314,40 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1,
   },
+  roomCodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
   roomCode: {
     color: GameColors.gold,
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: "700",
-    letterSpacing: 8,
+    letterSpacing: 6,
+    includeFontPadding: false,
+  },
+  copyButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  copiedText: {
+    color: "#4CAF50",
+    fontSize: 12,
+    marginTop: Spacing.xs,
+  },
+  tapToCopyText: {
+    color: "rgba(255,255,255,0.4)",
+    fontSize: 12,
+    marginTop: Spacing.xs,
   },
   modeLabel: {
     color: "rgba(255,255,255,0.6)",
     fontSize: 14,
+    marginTop: Spacing.sm,
   },
   playersSection: {
     flex: 1,
