@@ -46,16 +46,15 @@ export function PlayerAvatar({
         style={[
           styles.avatarContainer,
           {
-            width: avatarSize,
-            height: avatarSize,
-            borderRadius: avatarSize / 2,
-            borderColor: isCurrentTurn
-              ? GameColors.gold
-              : playerColor
-                ? playerColor
-                : team
-                  ? teamColors[team as keyof typeof teamColors]
-                  : "rgba(255,255,255,0.3)",
+            width: avatarSize + (isCurrentTurn ? 4 : 0),
+            height: avatarSize + (isCurrentTurn ? 4 : 0),
+            borderRadius: (avatarSize + (isCurrentTurn ? 4 : 0)) / 2,
+            borderWidth: isCurrentTurn ? 5 : 3,
+            borderColor: playerColor
+              ? playerColor
+              : team
+                ? teamColors[team as keyof typeof teamColors]
+                : "rgba(255,255,255,0.3)",
             opacity: isConnected ? 1 : 0.5,
           },
         ]}
@@ -116,7 +115,6 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   avatarContainer: {
-    borderWidth: 3,
     justifyContent: "center",
     alignItems: "center",
   },
