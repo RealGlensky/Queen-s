@@ -185,6 +185,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 10,
+    overflow: "visible",
   },
   decorativeCardOffset: {
     marginLeft: -20,
@@ -192,8 +193,11 @@ const styles = StyleSheet.create({
   },
   decorativeQ: {
     fontSize: 48,
+    lineHeight: 56,
     fontWeight: "700",
     color: GameColors.blackSuit,
+    includeFontPadding: false,
+    textAlignVertical: "center",
   },
   buttonsContainer: {
     width: "100%",
