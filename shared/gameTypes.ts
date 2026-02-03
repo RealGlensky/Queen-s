@@ -115,21 +115,14 @@ export function canPickupPile(hand: PlayingCard[], topCard: PlayingCard): boolea
 export function isValidSet(cards: PlayingCard[]): boolean {
   if (cards.length < 3) return false;
   
-  const jokers = cards.filter(c => c.rank === 'joker');
-  const nonJokers = cards.filter(c => c.rank !== 'joker');
-  
-  // If set contains jokers, it must be ALL jokers (jokers aren't wild)
-  if (jokers.length > 0) {
-    return jokers.length === cards.length; // Valid only if all cards are jokers
-  }
-  
-  // For non-joker sets: 2s are wild cards
+  // 2s are wild cards that can substitute for any rank (including jokers)
   const wildcards = cards.filter(c => isWildCard(c));
   const naturalCards = cards.filter(c => !isWildCard(c));
   
   // Need at least 2 natural matching cards
   if (naturalCards.length < 2) return false;
   
+  // All natural cards must be the same rank (could be jokers or any other rank)
   const targetRank = naturalCards[0].rank;
   return naturalCards.every(c => c.rank === targetRank);
 }
