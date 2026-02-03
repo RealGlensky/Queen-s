@@ -151,6 +151,12 @@ export function processDrawFromDeck(state: GameState, playerId: string): GameSta
   player.hand.push(card);
   state.turnPhase = "play";
   
+  state.lastAction = {
+    type: 'draw_deck',
+    playerId,
+    timestamp: Date.now(),
+  };
+  
   return state;
 }
 
@@ -202,6 +208,13 @@ export function processPickupPile(
   
   state.turnPhase = "play";
   
+  state.lastAction = {
+    type: 'pickup_pile',
+    playerId,
+    cards: pileCards,
+    timestamp: Date.now(),
+  };
+  
   return state;
 }
 
@@ -245,6 +258,13 @@ export function processLaySet(
   
   player.hand = player.hand.filter(c => !cardIds.includes(c.id));
   player.sets.push(newSet);
+  
+  state.lastAction = {
+    type: 'lay_set',
+    playerId,
+    cards: sortedCards,
+    timestamp: Date.now(),
+  };
   
   return state;
 }
@@ -301,6 +321,14 @@ export function processAddToSet(
     targetSet.cards.unshift(card);
   }
   
+  state.lastAction = {
+    type: 'add_to_set',
+    playerId,
+    cards: [card],
+    setId,
+    timestamp: Date.now(),
+  };
+  
   return state;
 }
 
@@ -320,6 +348,13 @@ export function processDiscard(
   
   const [discardedCard] = player.hand.splice(cardIndex, 1);
   state.pickupPile.push(discardedCard);
+  
+  state.lastAction = {
+    type: 'discard',
+    playerId,
+    cards: [discardedCard],
+    timestamp: Date.now(),
+  };
   
   if (player.hand.length === 0) {
     return endRound(state, playerId);
@@ -344,6 +379,12 @@ export function processDeclareLastCard(
   
   if (player.hand.length <= 2) {
     player.hasLastCard = true;
+    
+    state.lastAction = {
+      type: 'declare_last_card',
+      playerId,
+      timestamp: Date.now(),
+    };
   }
   
   return state;
