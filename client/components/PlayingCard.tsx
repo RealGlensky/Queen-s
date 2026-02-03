@@ -15,6 +15,7 @@ interface PlayingCardProps {
   size?: "small" | "normal";
   faceDown?: boolean;
   selected?: boolean;
+  highlighted?: boolean;
   disabled?: boolean;
   onPress?: () => void;
   style?: any;
@@ -41,6 +42,7 @@ export function PlayingCard({
   size = "normal",
   faceDown = false,
   selected = false,
+  highlighted = false,
   disabled = false,
   onPress,
   style,
@@ -111,8 +113,8 @@ export function PlayingCard({
           width: cardWidth,
           height: cardHeight,
           backgroundColor: GameColors.cardFace,
-          borderColor: selected ? GameColors.gold : "transparent",
-          borderWidth: selected ? 2 : 0,
+          borderColor: highlighted ? "#FFD700" : selected ? GameColors.gold : "transparent",
+          borderWidth: highlighted || selected ? 3 : 0,
         },
         style,
         animatedStyle,

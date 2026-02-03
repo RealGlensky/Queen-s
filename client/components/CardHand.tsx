@@ -7,6 +7,7 @@ import { CardDimensions, Spacing } from "@/constants/theme";
 interface CardHandProps {
   cards: PlayingCardType[];
   selectedCardIds?: string[];
+  highlightedCardIds?: string[];
   faceDown?: boolean;
   compact?: boolean;
   onCardPress?: (card: PlayingCardType) => void;
@@ -16,6 +17,7 @@ interface CardHandProps {
 export function CardHand({
   cards,
   selectedCardIds = [],
+  highlightedCardIds = [],
   faceDown = false,
   compact = false,
   onCardPress,
@@ -52,6 +54,7 @@ export function CardHand({
             size={cardSize}
             faceDown={faceDown}
             selected={selectedCardIds.includes(card.id)}
+            highlighted={highlightedCardIds.includes(card.id)}
             onPress={onCardPress ? () => onCardPress(card) : undefined}
           />
         </View>

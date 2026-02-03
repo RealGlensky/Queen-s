@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { StyleSheet, View, ScrollView, Pressable, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -18,8 +18,15 @@ import { GameButton } from "@/components/GameButton";
 import { GameColors, Spacing, BorderRadius, CardDimensions, PLAYER_COLORS } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
-import type { PlayingCard as PlayingCardType, CardSet as CardSetType, Player } from "@shared/gameTypes";
+import type { PlayingCard as PlayingCardType, CardSet as CardSetType, Player, GameAction } from "@shared/gameTypes";
 import { isValidSet, canPickupPile, getCardPoints } from "@shared/gameTypes";
+
+interface MoveLogEntry {
+  id: number;
+  playerName: string;
+  action: string;
+  timestamp: number;
+}
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type GameRouteProp = RouteProp<RootStackParamList, "Game">;
@@ -45,12 +52,89 @@ export default function GameScreen() {
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [targetSetId, setTargetSetId] = useState<string | null>(null);
+  const [highlightedCards, setHighlightedCards] = useState<string[]>([]);
+  const [moveLog, setMoveLog] = useState<MoveLogEntry[]>([]);
+  const [showMoveLog, setShowMoveLog] = useState(false);
+  const prevHandRef = useRef<string[]>([]);
+  const moveIdRef = useRef(0);
+  const moveLogScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (gameState?.status === "round_end" || gameState?.status === "game_over") {
       navigation.replace("Score", { roomCode: route.params.roomCode });
     }
   }, [gameState?.status]);
+
+  // Track newly acquired cards
+  useEffect(() => {
+    if (!myPlayer) return;
+    
+    const currentHandIds = myPlayer.hand.map(c => c.id);
+    const prevHandIds = prevHandRef.current;
+    
+    // Find new cards (in current hand but not in previous)
+    const newCards = currentHandIds.filter(id => !prevHandIds.includes(id));
+    
+    if (newCards.length > 0) {
+      setHighlightedCards(newCards);
+      // Clear highlight after 3 seconds
+      const timeout = setTimeout(() => {
+        setHighlightedCards([]);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+    
+    prevHandRef.current = currentHandIds;
+  }, [myPlayer?.hand]);
+
+  // Track game actions for move log
+  useEffect(() => {
+    if (!gameState?.lastAction) return;
+    
+    const action = gameState.lastAction;
+    const player = gameState.players.find(p => p.id === action.playerId);
+    const playerName = player?.displayName || "Unknown";
+    
+    let actionText = "";
+    switch (action.type) {
+      case "draw_deck":
+        actionText = "drew from deck";
+        break;
+      case "pickup_pile":
+        actionText = `picked up pile (${action.cards?.length || 0} cards)`;
+        break;
+      case "lay_set":
+        const setRank = action.cards?.[0]?.rank || "?";
+        actionText = `laid set of ${setRank}s`;
+        break;
+      case "add_to_set":
+        actionText = "added to a set";
+        break;
+      case "discard":
+        const discardCard = action.cards?.[0];
+        if (discardCard) {
+          const rankDisplay = discardCard.isJoker ? "Joker" : `${discardCard.rank}${discardCard.suit ? " of " + discardCard.suit : ""}`;
+          actionText = `discarded ${rankDisplay}`;
+        } else {
+          actionText = "discarded a card";
+        }
+        break;
+      case "declare_last_card":
+        actionText = "declared LAST CARD!";
+        break;
+      default:
+        actionText = action.type;
+    }
+    
+    const newEntry: MoveLogEntry = {
+      id: moveIdRef.current++,
+      playerName,
+      action: actionText,
+      timestamp: action.timestamp,
+    };
+    
+    setMoveLog(prev => [...prev.slice(-49), newEntry]); // Keep last 50 moves
+  }, [gameState?.lastAction?.timestamp]);
 
   const handleCardPress = useCallback((card: PlayingCardType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -260,7 +344,7 @@ export default function GameScreen() {
             label="Pickup"
             faceDown={false}
             showCount
-            highlighted={canPickup}
+            highlighted={!!canPickup}
             onPress={canPickup ? handlePickupPile : undefined}
           />
         </View>
@@ -315,10 +399,47 @@ export default function GameScreen() {
           <CardHand
             cards={sortedHand}
             selectedCardIds={selectedCards}
+            highlightedCardIds={highlightedCards}
             onCardPress={handleCardPress}
           />
         </View>
       </View>
+
+      {/* Move Log Toggle Button */}
+      <Pressable 
+        style={[styles.moveLogToggle, { top: insets.top + 60 }]}
+        onPress={() => setShowMoveLog(!showMoveLog)}
+      >
+        <Feather name="list" size={20} color="#FFFFFF" />
+      </Pressable>
+
+      {/* Move Log Panel */}
+      {showMoveLog ? (
+        <View style={[styles.moveLogPanel, { top: insets.top + 110 }]}>
+          <View style={styles.moveLogHeader}>
+            <ThemedText style={styles.moveLogTitle}>Move History</ThemedText>
+            <Pressable onPress={() => setShowMoveLog(false)}>
+              <Feather name="x" size={18} color="rgba(255,255,255,0.7)" />
+            </Pressable>
+          </View>
+          <ScrollView 
+            ref={moveLogScrollRef}
+            style={styles.moveLogScroll}
+            onContentSizeChange={() => moveLogScrollRef.current?.scrollToEnd({ animated: true })}
+          >
+            {moveLog.length === 0 ? (
+              <ThemedText style={styles.moveLogEmpty}>No moves yet</ThemedText>
+            ) : (
+              moveLog.map((entry) => (
+                <View key={entry.id} style={styles.moveLogEntry}>
+                  <ThemedText style={styles.moveLogPlayer}>{entry.playerName}</ThemedText>
+                  <ThemedText style={styles.moveLogAction}>{entry.action}</ThemedText>
+                </View>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -445,5 +566,63 @@ const styles = StyleSheet.create({
   },
   handContainer: {
     minHeight: CardDimensions.height + Spacing.xl,
+  },
+  moveLogToggle: {
+    position: "absolute",
+    right: Spacing.lg,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  moveLogPanel: {
+    position: "absolute",
+    right: Spacing.lg,
+    width: 200,
+    maxHeight: 250,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.sm,
+  },
+  moveLogHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+    paddingBottom: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.2)",
+  },
+  moveLogTitle: {
+    color: GameColors.gold,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  moveLogScroll: {
+    maxHeight: 180,
+  },
+  moveLogEmpty: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 12,
+    textAlign: "center",
+    paddingVertical: Spacing.md,
+  },
+  moveLogEntry: {
+    flexDirection: "row",
+    gap: Spacing.xs,
+    paddingVertical: 3,
+    flexWrap: "wrap",
+  },
+  moveLogPlayer: {
+    color: GameColors.gold,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  moveLogAction: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 11,
+    flex: 1,
   },
 });
