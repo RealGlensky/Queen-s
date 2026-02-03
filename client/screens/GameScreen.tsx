@@ -56,6 +56,7 @@ export default function GameScreen() {
   const [moveLog, setMoveLog] = useState<MoveLogEntry[]>([]);
   const [showMoveLog, setShowMoveLog] = useState(false);
   const prevHandRef = useRef<string[]>([]);
+  const prevRoundRef = useRef<number>(0);
   const moveIdRef = useRef(0);
   const moveLogScrollRef = useRef<ScrollView>(null);
 
@@ -65,9 +66,28 @@ export default function GameScreen() {
     }
   }, [gameState?.status]);
 
-  // Track newly acquired cards
+  // Reset tracking when a new round starts
   useEffect(() => {
-    if (!myPlayer) return;
+    if (!gameState || !myPlayer) return;
+    
+    if (gameState.currentRound !== prevRoundRef.current) {
+      // New round started - reset hand tracking to avoid highlighting all dealt cards
+      prevHandRef.current = myPlayer.hand.map(c => c.id);
+      prevRoundRef.current = gameState.currentRound;
+      setHighlightedCards([]);
+      setMoveLog([]);
+    }
+  }, [gameState?.currentRound, myPlayer?.hand]);
+
+  // Track newly acquired cards (only during active gameplay, not at round start)
+  useEffect(() => {
+    if (!myPlayer || !gameState) return;
+    
+    // Skip if this is the initial hand for a new round (already handled above)
+    if (prevHandRef.current.length === 0) {
+      prevHandRef.current = myPlayer.hand.map(c => c.id);
+      return;
+    }
     
     const currentHandIds = myPlayer.hand.map(c => c.id);
     const prevHandIds = prevHandRef.current;
@@ -78,7 +98,8 @@ export default function GameScreen() {
     // Always update prev ref
     prevHandRef.current = currentHandIds;
     
-    if (newCards.length > 0) {
+    // Only highlight if it's 1-2 new cards (normal draw/pickup, not dealt hand)
+    if (newCards.length > 0 && newCards.length <= 15) {
       setHighlightedCards(newCards);
       // Clear highlight after 3 seconds
       const timeout = setTimeout(() => {
@@ -86,7 +107,7 @@ export default function GameScreen() {
       }, 3000);
       return () => clearTimeout(timeout);
     }
-  }, [myPlayer?.hand]);
+  }, [myPlayer?.hand, gameState?.currentRound]);
 
   // Track game actions for move log
   useEffect(() => {
