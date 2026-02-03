@@ -59,6 +59,11 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     const socket = io(apiUrl, {
       transports: ["websocket", "polling"],
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
     socketRef.current = socket;
