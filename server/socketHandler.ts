@@ -12,6 +12,12 @@ import {
   processDeclareLastCard,
   startNextRound,
 } from "./gameEngine";
+import {
+  executeAITurn,
+  getNextAIName,
+  resetAINames,
+  type AIDecision,
+} from "./aiPlayer";
 
 interface Room {
   id: string;
@@ -26,6 +32,7 @@ interface Room {
     odexTeam?: number;
     seatPosition: number;
     isConnected: boolean;
+    isAI?: boolean;
   }[];
   gameState: GameState | null;
   status: "waiting" | "playing" | "ended";
@@ -194,6 +201,86 @@ export function setupSocketHandlers(io: Server) {
       handlePlayerLeave(io, socket);
     });
 
+    socket.on("add_ai_player", () => {
+      const roomCode = socketToRoom.get(socket.id);
+      const playerId = socketToPlayer.get(socket.id);
+
+      if (!roomCode || !playerId) return;
+
+      const room = rooms.get(roomCode);
+      if (!room || room.hostId !== playerId) {
+        sendMessage(socket, {
+          type: "error",
+          payload: { message: "Only the host can add AI players" },
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      if (room.status !== "waiting") {
+        sendMessage(socket, {
+          type: "error",
+          payload: { message: "Cannot add AI during game" },
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      if (room.players.length >= room.config.maxPlayers) {
+        sendMessage(socket, {
+          type: "error",
+          payload: { message: "Room is full" },
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      const aiPlayerId = uuidv4();
+      const aiOdexId = uuidv4();
+      const aiName = getNextAIName();
+
+      room.players.push({
+        id: aiPlayerId,
+        odexId: aiOdexId,
+        socketId: "",
+        displayName: aiName,
+        seatPosition: room.players.length,
+        isConnected: true,
+        isAI: true,
+      });
+
+      broadcastToRoom(io, room.code, {
+        type: "player_joined",
+        payload: { players: getPlayersForClient(room) },
+        timestamp: Date.now(),
+      });
+    });
+
+    socket.on("remove_ai_player", () => {
+      const roomCode = socketToRoom.get(socket.id);
+      const playerId = socketToPlayer.get(socket.id);
+
+      if (!roomCode || !playerId) return;
+
+      const room = rooms.get(roomCode);
+      if (!room || room.hostId !== playerId || room.status !== "waiting") return;
+
+      const aiIndex = room.players.findIndex(p => p.isAI);
+      if (aiIndex !== -1) {
+        room.players.splice(aiIndex, 1);
+        
+        room.players.forEach((p, idx) => {
+          p.seatPosition = idx;
+        });
+
+        broadcastToRoom(io, room.code, {
+          type: "player_left",
+          payload: { players: getPlayersForClient(room) },
+          timestamp: Date.now(),
+        });
+      }
+    });
+
     socket.on("start_game", () => {
       const roomCode = socketToRoom.get(socket.id);
       const playerId = socketToPlayer.get(socket.id);
@@ -249,6 +336,8 @@ export function setupSocketHandlers(io: Server) {
           });
         }
       }
+
+      scheduleAITurn(io, room);
     });
 
     socket.on("game_action", (action: any) => {
@@ -294,23 +383,10 @@ export function setupSocketHandlers(io: Server) {
 
       room.gameState = newState;
 
-      for (const player of room.players) {
-        const playerSocket = io.sockets.sockets.get(player.socketId);
-        if (playerSocket) {
-          const playerGameState = getGameStateForPlayer(newState, player.id);
-          
-          const messageType = newState.status === "game_over" 
-            ? "game_over" 
-            : newState.status === "round_end" 
-              ? "round_end" 
-              : "game_state";
+      broadcastGameState(io, room);
 
-          sendMessage(playerSocket, {
-            type: messageType,
-            payload: playerGameState,
-            timestamp: Date.now(),
-          });
-        }
+      if (newState.status === "playing") {
+        scheduleAITurn(io, room);
       }
     });
 
@@ -324,17 +400,8 @@ export function setupSocketHandlers(io: Server) {
       const newState = startNextRound(room.gameState);
       room.gameState = newState;
 
-      for (const player of room.players) {
-        const playerSocket = io.sockets.sockets.get(player.socketId);
-        if (playerSocket) {
-          const playerGameState = getGameStateForPlayer(newState, player.id);
-          sendMessage(playerSocket, {
-            type: "game_state",
-            payload: playerGameState,
-            timestamp: Date.now(),
-          });
-        }
-      }
+      broadcastGameState(io, room);
+      scheduleAITurn(io, room);
     });
 
     socket.on("disconnect", () => {
@@ -410,4 +477,90 @@ function getGameStateForPlayer(state: GameState, playerId: string): GameState {
   }));
 
   return stateCopy;
+}
+
+function broadcastGameState(io: Server, room: Room) {
+  if (!room.gameState) return;
+
+  const newState = room.gameState;
+  
+  for (const player of room.players) {
+    if (player.isAI) continue;
+    
+    const playerSocket = io.sockets.sockets.get(player.socketId);
+    if (playerSocket) {
+      const playerGameState = getGameStateForPlayer(newState, player.id);
+      
+      const messageType = newState.status === "game_over" 
+        ? "game_over" 
+        : newState.status === "round_end" 
+          ? "round_end" 
+          : "game_state";
+
+      sendMessage(playerSocket, {
+        type: messageType,
+        payload: playerGameState,
+        timestamp: Date.now(),
+      });
+    }
+  }
+}
+
+function scheduleAITurn(io: Server, room: Room) {
+  if (!room.gameState || room.gameState.status !== "playing") return;
+
+  const currentPlayer = room.players.find(p => p.id === room.gameState?.currentPlayerId);
+  if (!currentPlayer?.isAI) return;
+
+  setTimeout(() => {
+    executeAITurnActions(io, room, currentPlayer.id);
+  }, 800);
+}
+
+function executeAITurnActions(io: Server, room: Room, aiPlayerId: string) {
+  if (!room.gameState || room.gameState.status !== "playing") return;
+  if (room.gameState.currentPlayerId !== aiPlayerId) return;
+
+  const decisions = executeAITurn(room.gameState, aiPlayerId);
+  
+  let delay = 0;
+  const actionDelay = 600;
+
+  for (const decision of decisions) {
+    setTimeout(() => {
+      if (!room.gameState || room.gameState.status !== "playing") return;
+      if (room.gameState.currentPlayerId !== aiPlayerId && decision.type !== "lay_set" && decision.type !== "add_to_set") return;
+
+      let newState: GameState | null = null;
+
+      switch (decision.type) {
+        case "draw_deck":
+          newState = processDrawFromDeck(room.gameState, aiPlayerId);
+          break;
+        case "pickup_pile":
+          newState = processPickupPile(room.gameState, aiPlayerId, decision.cardIds || []);
+          break;
+        case "lay_set":
+          newState = processLaySet(room.gameState, aiPlayerId, decision.cardIds || []);
+          break;
+        case "add_to_set":
+          newState = processAddToSet(room.gameState, aiPlayerId, decision.setId!, decision.cardId!);
+          break;
+        case "discard":
+          newState = processDiscard(room.gameState, aiPlayerId, decision.cardId!);
+          break;
+      }
+
+      if (newState) {
+        room.gameState = newState;
+        broadcastGameState(io, room);
+
+        if (newState.status === "playing" && decision.type === "discard") {
+          scheduleAITurn(io, room);
+        }
+      }
+    }, delay);
+
+    delay += actionDelay;
+  }
 }
