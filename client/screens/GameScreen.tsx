@@ -258,6 +258,25 @@ export default function GameScreen() {
     return [...acc, ...player.sets];
   }, []);
 
+  // Team colors for 2v2 mode
+  const teamColors: Record<number, string> = {
+    1: "#4CAF50",
+    2: "#2196F3",
+  };
+
+  // In 2v2 mode, group sets by team; otherwise show all sets
+  const getTeamForSet = (set: CardSetType) => {
+    const owner = gameState.players.find((p) => p.id === set.ownerId);
+    return owner?.odexTeam;
+  };
+
+  const team1Sets = gameState.gameMode === "2v2" 
+    ? allSets.filter(s => getTeamForSet(s) === 1)
+    : [];
+  const team2Sets = gameState.gameMode === "2v2"
+    ? allSets.filter(s => getTeamForSet(s) === 2)
+    : [];
+
   const myTeamSets = gameState.gameMode === "2v2" && myPlayer.odexTeam
     ? allSets.filter((s) => {
         const owner = gameState.players.find((p) => p.id === s.ownerId);
@@ -272,6 +291,7 @@ export default function GameScreen() {
       ownerName: owner?.displayName || "Unknown",
       ownerIndex: ownerIndex >= 0 ? ownerIndex : 0,
       isMine: ownerId === myPlayer.id,
+      team: owner?.odexTeam,
     };
   };
 
@@ -348,26 +368,80 @@ export default function GameScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.setsScroll}
           >
-            {allSets.map((set) => {
-              const { ownerName, ownerIndex, isMine } = getOwnerInfo(set.ownerId);
-              const isMyTeamSet = gameState.gameMode === "2v2" && myPlayer.odexTeam
-                ? gameState.players.find((p) => p.id === set.ownerId)?.odexTeam === myPlayer.odexTeam
-                : set.ownerId === myPlayer.id;
-              return (
-                <CardSet
-                  key={set.id}
-                  set={set}
-                  ownerName={ownerName}
-                  ownerIndex={ownerIndex}
-                  isMine={isMine}
-                  isTeamSet={isMyTeamSet}
-                  canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
-                  onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
-                    ? () => handleAddToSet(set.id)
-                    : undefined}
-                />
-              );
-            })}
+            {gameState.gameMode === "2v2" ? (
+              <>
+                {/* Team 1 Pile */}
+                {team1Sets.length > 0 ? (
+                  <View style={[styles.teamPile, { borderColor: teamColors[1] }]}>
+                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[1] }]}>
+                      Team 1
+                    </ThemedText>
+                    <View style={styles.teamPileSets}>
+                      {team1Sets.map((set) => {
+                        const isMyTeamSet = myPlayer.odexTeam === 1;
+                        return (
+                          <CardSet
+                            key={set.id}
+                            set={set}
+                            ownerIndex={0}
+                            isMine={isMyTeamSet}
+                            isTeamSet={isMyTeamSet}
+                            canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
+                            onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
+                              ? () => handleAddToSet(set.id)
+                              : undefined}
+                          />
+                        );
+                      })}
+                    </View>
+                  </View>
+                ) : null}
+                {/* Team 2 Pile */}
+                {team2Sets.length > 0 ? (
+                  <View style={[styles.teamPile, { borderColor: teamColors[2] }]}>
+                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[2] }]}>
+                      Team 2
+                    </ThemedText>
+                    <View style={styles.teamPileSets}>
+                      {team2Sets.map((set) => {
+                        const isMyTeamSet = myPlayer.odexTeam === 2;
+                        return (
+                          <CardSet
+                            key={set.id}
+                            set={set}
+                            ownerIndex={1}
+                            isMine={isMyTeamSet}
+                            isTeamSet={isMyTeamSet}
+                            canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
+                            onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
+                              ? () => handleAddToSet(set.id)
+                              : undefined}
+                          />
+                        );
+                      })}
+                    </View>
+                  </View>
+                ) : null}
+              </>
+            ) : (
+              allSets.map((set) => {
+                const { ownerName, ownerIndex, isMine } = getOwnerInfo(set.ownerId);
+                return (
+                  <CardSet
+                    key={set.id}
+                    set={set}
+                    ownerName={ownerName}
+                    ownerIndex={ownerIndex}
+                    isMine={isMine}
+                    isTeamSet={isMine}
+                    canAddCard={isMyTurn && selectedCards.length >= 1 && isMine}
+                    onPress={isMyTurn && selectedCards.length >= 1 && isMine
+                      ? () => handleAddToSet(set.id)
+                      : undefined}
+                  />
+                );
+              })
+            )}
           </ScrollView>
         </View>
 
@@ -665,5 +739,23 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.8)",
     fontSize: 11,
     flex: 1,
+  },
+  teamPile: {
+    borderWidth: 2,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.sm,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    marginRight: Spacing.md,
+  },
+  teamPileLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
+    textAlign: "center",
+  },
+  teamPileSets: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    flexWrap: "wrap",
   },
 });
