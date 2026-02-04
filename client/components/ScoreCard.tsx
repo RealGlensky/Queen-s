@@ -6,6 +6,7 @@ import { GameColors, BorderRadius, Spacing } from "@/constants/theme";
 
 interface ScoreCardProps {
   displayName: string;
+  subtitle?: string;
   roundScore: number;
   totalScore: number;
   setsScore: number;
@@ -24,6 +25,7 @@ const teamColors = {
 
 export function ScoreCard({
   displayName,
+  subtitle,
   roundScore,
   totalScore,
   setsScore,
@@ -50,7 +52,12 @@ export function ScoreCard({
               <ThemedText style={styles.rankText}>#{rank}</ThemedText>
             </View>
           ) : null}
-          <ThemedText style={styles.name}>{displayName}</ThemedText>
+          <View>
+            <ThemedText style={styles.name}>{displayName}</ThemedText>
+            {subtitle ? (
+              <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
+            ) : null}
+          </View>
           {isWinner ? (
             <Feather name="award" size={20} color={GameColors.gold} />
           ) : null}
@@ -139,6 +146,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  subtitle: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 12,
   },
   totalScore: {
     color: "#FFFFFF",

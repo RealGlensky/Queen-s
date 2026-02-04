@@ -372,7 +372,7 @@ export default function GameScreen() {
                   isDealer={gameState.dealerId === player.id}
                   team={player.odexTeam}
                   cardCount={player.hand.length}
-                  score={player.totalScore}
+                  score={gameState.gameMode === "2v2" ? undefined : player.totalScore}
                   playerColor={PLAYER_COLORS[playerIndex % PLAYER_COLORS.length]}
                   hasLastCard={player.hasLastCard}
                   isConnected={player.isConnected}

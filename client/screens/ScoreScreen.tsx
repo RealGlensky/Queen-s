@@ -69,6 +69,7 @@ export default function ScoreScreen() {
   const sortedPlayers = [...gameState.players].sort((a, b) => b.totalScore - a.totalScore);
   const winnerId = gameState.winner?.playerId;
   const winnerTeam = gameState.winner?.teamId;
+  const isTeamMode = gameState.gameMode === "2v2";
 
   const calculateScores = (player: typeof sortedPlayers[0]) => {
     const setsScore = player.sets.reduce((acc, set) => {
@@ -78,6 +79,40 @@ export default function ScoreScreen() {
     const roundScore = setsScore - handPenalty + (gameState.perfectCutBonus && player.id === gameState.dealerId ? 100 : 0);
     return { setsScore, handPenalty, roundScore };
   };
+
+  // Calculate team scores for 2v2 mode
+  const calculateTeamScores = (teamId: number) => {
+    const teamPlayers = gameState.players.filter(p => p.odexTeam === teamId);
+    let totalSetsScore = 0;
+    let totalHandPenalty = 0;
+    let totalRoundScore = 0;
+    let totalScore = 0;
+
+    teamPlayers.forEach(player => {
+      const { setsScore, handPenalty, roundScore } = calculateScores(player);
+      totalSetsScore += setsScore;
+      totalHandPenalty += handPenalty;
+      totalRoundScore += roundScore;
+      totalScore += player.totalScore;
+    });
+
+    return {
+      setsScore: totalSetsScore,
+      handPenalty: totalHandPenalty,
+      roundScore: totalRoundScore,
+      totalScore,
+      playerNames: teamPlayers.map(p => p.displayName).join(" & "),
+    };
+  };
+
+  const team1Scores = isTeamMode ? calculateTeamScores(1) : null;
+  const team2Scores = isTeamMode ? calculateTeamScores(2) : null;
+  const teamScoresSorted = isTeamMode && team1Scores && team2Scores
+    ? [
+        { teamId: 1, ...team1Scores },
+        { teamId: 2, ...team2Scores },
+      ].sort((a, b) => b.totalScore - a.totalScore)
+    : [];
 
   return (
     <View style={styles.container}>
@@ -116,39 +151,63 @@ export default function ScoreScreen() {
                 Round {gameState.currentRound} Complete
               </ThemedText>
               <ThemedText style={styles.subtitle}>
-                {gameState.pointThreshold - Math.max(...sortedPlayers.map(p => p.totalScore))} points to go
+                {isTeamMode && teamScoresSorted.length > 0
+                  ? `${gameState.pointThreshold - teamScoresSorted[0].totalScore} points to go`
+                  : `${gameState.pointThreshold - Math.max(...sortedPlayers.map(p => p.totalScore))} points to go`
+                }
               </ThemedText>
             </>
           )}
         </Animated.View>
 
         <View style={styles.scoresContainer}>
-          {sortedPlayers.map((player, index) => {
-            const { setsScore, handPenalty, roundScore } = calculateScores(player);
-            const isWinner = isGameOver && (
-              (winnerId && player.id === winnerId) ||
-              (winnerTeam && player.odexTeam === winnerTeam)
-            );
-
-            return (
+          {isTeamMode ? (
+            teamScoresSorted.map((team, index) => (
               <Animated.View
-                key={player.id}
+                key={`team-${team.teamId}`}
                 entering={FadeInDown.delay(300 + index * 100).duration(400)}
               >
                 <ScoreCard
-                  displayName={player.displayName}
-                  roundScore={roundScore}
-                  totalScore={player.totalScore}
-                  setsScore={setsScore}
-                  handPenalty={handPenalty}
-                  isWinner={isWinner}
-                  team={player.odexTeam}
-                  perfectCutBonus={gameState.perfectCutBonus && player.id === gameState.dealerId}
+                  displayName={`Team ${team.teamId}`}
+                  subtitle={team.playerNames}
+                  roundScore={team.roundScore}
+                  totalScore={team.totalScore}
+                  setsScore={team.setsScore}
+                  handPenalty={team.handPenalty}
+                  isWinner={isGameOver && winnerTeam === team.teamId}
+                  team={team.teamId}
                   rank={index + 1}
                 />
               </Animated.View>
-            );
-          })}
+            ))
+          ) : (
+            sortedPlayers.map((player, index) => {
+              const { setsScore, handPenalty, roundScore } = calculateScores(player);
+              const isWinner = !!(isGameOver && (
+                (winnerId && player.id === winnerId) ||
+                (winnerTeam && player.odexTeam === winnerTeam)
+              ));
+
+              return (
+                <Animated.View
+                  key={player.id}
+                  entering={FadeInDown.delay(300 + index * 100).duration(400)}
+                >
+                  <ScoreCard
+                    displayName={player.displayName}
+                    roundScore={roundScore}
+                    totalScore={player.totalScore}
+                    setsScore={setsScore}
+                    handPenalty={handPenalty}
+                    isWinner={isWinner}
+                    team={player.odexTeam}
+                    perfectCutBonus={!!(gameState.perfectCutBonus && player.id === gameState.dealerId)}
+                    rank={index + 1}
+                  />
+                </Animated.View>
+              );
+            })
+          )}
         </View>
 
         <Animated.View
