@@ -31,6 +31,19 @@ export interface Player {
   hasLastCard: boolean;
 }
 
+export interface RoundScore {
+  playerId: string;
+  displayName: string;
+  roundScore: number;
+  cumulativeScore: number;
+  teamId?: number;
+}
+
+export interface RoundHistoryEntry {
+  round: number;
+  scores: RoundScore[];
+}
+
 export interface GameState {
   roomId: string;
   roomCode: string;
@@ -48,6 +61,7 @@ export interface GameState {
   turnPhase: 'draw' | 'play' | 'discard';
   lastAction?: GameAction;
   recentActions: GameAction[]; // Queue of recent actions for move log
+  scoreHistory: RoundHistoryEntry[]; // Track scores after each round
   winner?: {
     playerId?: string;
     teamId?: number;

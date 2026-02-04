@@ -8,6 +8,7 @@ import type {
   RoomConfig,
   Suit,
   Rank,
+  RoundHistoryEntry,
 } from "@shared/gameTypes";
 import { getCardPoints, isWildCard, isValidSet, canPickupPile, generateRoomCode } from "@shared/gameTypes";
 
@@ -128,6 +129,7 @@ export function createGameState(
     perfectCutBonus: perfectCut,
     turnPhase: "draw",
     recentActions: [],
+    scoreHistory: [],
   };
 }
 
@@ -519,6 +521,18 @@ function endRound(state: GameState, winnerId: string): GameState {
     player.roundScore = setsScore - handPenalty + perfectBonus;
     player.totalScore += player.roundScore;
   }
+  
+  const roundHistoryEntry: RoundHistoryEntry = {
+    round: state.currentRound,
+    scores: state.players.map(p => ({
+      playerId: p.id,
+      displayName: p.displayName,
+      roundScore: p.roundScore,
+      cumulativeScore: p.totalScore,
+      teamId: p.odexTeam,
+    })),
+  };
+  state.scoreHistory.push(roundHistoryEntry);
   
   let gameOver = false;
   let gameWinnerId: string | undefined;
