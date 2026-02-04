@@ -405,7 +405,19 @@ export function processDiscard(
     return endRound(state, playerId);
   }
   
-  player.hasLastCard = player.hand.length === 1;
+  // Check if player just reached "last card" status (1-2 cards remaining)
+  const wasLastCard = player.hasLastCard;
+  player.hasLastCard = player.hand.length <= 2;
+  
+  // Add action to log when player first reaches last card status
+  if (player.hasLastCard && !wasLastCard) {
+    addAction(state, {
+      id: uuidv4(),
+      type: 'declare_last_card',
+      playerId,
+      timestamp: Date.now(),
+    });
+  }
   
   const currentIndex = state.players.findIndex(p => p.id === playerId);
   const nextIndex = (currentIndex + 1) % state.players.length;
