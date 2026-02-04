@@ -47,6 +47,7 @@ export interface GameState {
   perfectCutBonus: boolean;
   turnPhase: 'draw' | 'play' | 'discard';
   lastAction?: GameAction;
+  recentActions: GameAction[]; // Queue of recent actions for move log
   winner?: {
     playerId?: string;
     teamId?: number;

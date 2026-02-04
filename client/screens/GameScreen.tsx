@@ -110,65 +110,69 @@ export default function GameScreen() {
     }
   }, [myPlayer?.hand, gameState?.currentRound]);
 
-  // Track game actions for move log
+  // Track game actions for move log - process all actions from recentActions queue
   useEffect(() => {
-    if (!gameState?.lastAction) return;
+    if (!gameState?.recentActions || gameState.recentActions.length === 0) return;
     
-    const action = gameState.lastAction;
+    const newEntries: MoveLogEntry[] = [];
     
-    // Skip if we've already processed this action
-    if (seenActionIds.current.has(action.id)) return;
-    seenActionIds.current.add(action.id);
+    for (const action of gameState.recentActions) {
+      // Skip if we've already processed this action
+      if (seenActionIds.current.has(action.id)) continue;
+      seenActionIds.current.add(action.id);
+      
+      const player = gameState.players.find(p => p.id === action.playerId);
+      const playerName = player?.displayName || "Unknown";
+      
+      let actionText = "";
+      switch (action.type) {
+        case "draw_deck":
+          actionText = "drew from deck";
+          break;
+        case "pickup_pile":
+          actionText = `picked up pile (${action.cards?.length || 0} cards)`;
+          break;
+        case "lay_set":
+          const setRank = action.cards?.[0]?.rank || "?";
+          actionText = `laid set of ${setRank}s`;
+          break;
+        case "add_to_set":
+          actionText = "added to a set";
+          break;
+        case "discard":
+          const discardCard = action.cards?.[0];
+          if (discardCard) {
+            const rankDisplay = discardCard.isJoker ? "Joker" : `${discardCard.rank}${discardCard.suit ? " of " + discardCard.suit : ""}`;
+            actionText = `discarded ${rankDisplay}`;
+          } else {
+            actionText = "discarded a card";
+          }
+          break;
+        case "declare_last_card":
+          actionText = "declared LAST CARD!";
+          break;
+        default:
+          actionText = action.type;
+      }
+      
+      newEntries.push({
+        id: moveIdRef.current++,
+        playerName,
+        action: actionText,
+        timestamp: action.timestamp,
+      });
+    }
+    
+    if (newEntries.length > 0) {
+      setMoveLog(prev => [...prev, ...newEntries].slice(-50)); // Keep last 50 moves
+    }
     
     // Keep only last 100 action IDs to prevent memory leak
     if (seenActionIds.current.size > 100) {
       const idsArray = Array.from(seenActionIds.current);
       seenActionIds.current = new Set(idsArray.slice(-50));
     }
-    
-    const player = gameState.players.find(p => p.id === action.playerId);
-    const playerName = player?.displayName || "Unknown";
-    
-    let actionText = "";
-    switch (action.type) {
-      case "draw_deck":
-        actionText = "drew from deck";
-        break;
-      case "pickup_pile":
-        actionText = `picked up pile (${action.cards?.length || 0} cards)`;
-        break;
-      case "lay_set":
-        const setRank = action.cards?.[0]?.rank || "?";
-        actionText = `laid set of ${setRank}s`;
-        break;
-      case "add_to_set":
-        actionText = "added to a set";
-        break;
-      case "discard":
-        const discardCard = action.cards?.[0];
-        if (discardCard) {
-          const rankDisplay = discardCard.isJoker ? "Joker" : `${discardCard.rank}${discardCard.suit ? " of " + discardCard.suit : ""}`;
-          actionText = `discarded ${rankDisplay}`;
-        } else {
-          actionText = "discarded a card";
-        }
-        break;
-      case "declare_last_card":
-        actionText = "declared LAST CARD!";
-        break;
-      default:
-        actionText = action.type;
-    }
-    
-    const newEntry: MoveLogEntry = {
-      id: moveIdRef.current++,
-      playerName,
-      action: actionText,
-      timestamp: action.timestamp,
-    };
-    
-    setMoveLog(prev => [...prev.slice(-49), newEntry]); // Keep last 50 moves
-  }, [gameState?.lastAction?.id]);
+  }, [gameState?.recentActions]);
 
   const handleCardPress = useCallback((card: PlayingCardType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
