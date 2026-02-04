@@ -71,11 +71,18 @@ export default function ScoreScreen() {
   const winnerTeam = gameState.winner?.teamId;
   const isTeamMode = gameState.gameMode === "2v2";
 
+  // Find the winning team (team of the player who went out - has empty hand)
+  const roundWinner = gameState.players.find(p => p.hand.length === 0);
+  const winningTeamId = isTeamMode ? roundWinner?.odexTeam : undefined;
+
   const calculateScores = (player: typeof sortedPlayers[0]) => {
     const setsScore = player.sets.reduce((acc, set) => {
       return acc + set.cards.reduce((sum, card) => sum + getCardPoints(card), 0);
     }, 0);
-    const handPenalty = player.hand.reduce((acc, card) => acc + getCardPoints(card), 0);
+    // In 2v2 mode, winning team has no hand penalty
+    const handPenalty = (isTeamMode && winningTeamId !== undefined && player.odexTeam === winningTeamId)
+      ? 0
+      : player.hand.reduce((acc, card) => acc + getCardPoints(card), 0);
     const roundScore = setsScore - handPenalty + (gameState.perfectCutBonus && player.id === gameState.dealerId ? 100 : 0);
     return { setsScore, handPenalty, roundScore };
   };

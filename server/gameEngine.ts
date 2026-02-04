@@ -492,6 +492,7 @@ export function processDeclareLastCard(
 
 function endRound(state: GameState, winnerId: string): GameState {
   const winner = state.players.find(p => p.id === winnerId);
+  const winningTeam = state.gameMode === "2v2" ? winner?.odexTeam : undefined;
   
   for (const player of state.players) {
     let setsScore = 0;
@@ -502,8 +503,12 @@ function endRound(state: GameState, winnerId: string): GameState {
     }
     
     let handPenalty = 0;
-    for (const card of player.hand) {
-      handPenalty += getCardPoints(card);
+    if (state.gameMode === "2v2" && winningTeam !== undefined && player.odexTeam === winningTeam) {
+      handPenalty = 0;
+    } else {
+      for (const card of player.hand) {
+        handPenalty += getCardPoints(card);
+      }
     }
     
     let perfectBonus = 0;
