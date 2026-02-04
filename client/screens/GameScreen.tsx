@@ -264,6 +264,16 @@ export default function GameScreen() {
     2: "#2196F3",
   };
 
+  // Calculate team scores for 2v2 mode
+  const team1Score = gameState.gameMode === "2v2"
+    ? gameState.players.filter(p => p.odexTeam === 1).reduce((sum, p) => sum + p.totalScore, 0)
+    : 0;
+  const team2Score = gameState.gameMode === "2v2"
+    ? gameState.players.filter(p => p.odexTeam === 2).reduce((sum, p) => sum + p.totalScore, 0)
+    : 0;
+  const myTeamScore = myPlayer.odexTeam === 1 ? team1Score : team2Score;
+  const opponentTeamScore = myPlayer.odexTeam === 1 ? team2Score : team1Score;
+
   // In 2v2 mode, group sets by team; otherwise show all sets
   const getTeamForSet = (set: CardSetType) => {
     const owner = gameState.players.find((p) => p.id === set.ownerId);
@@ -318,16 +328,29 @@ export default function GameScreen() {
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.myScoreContainer}>
-          <View style={[styles.myColorDot, { backgroundColor: myPlayerColor }]} />
+          <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
           <View>
-            <ThemedText style={styles.myScoreLabel}>You</ThemedText>
-            <ThemedText style={styles.myScoreValue}>{myPlayer.totalScore} pts</ThemedText>
+            <ThemedText style={styles.myScoreLabel}>
+              {gameState.gameMode === "2v2" ? "Your Team" : "You"}
+            </ThemedText>
+            <ThemedText style={styles.myScoreValue}>
+              {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
+            </ThemedText>
           </View>
         </View>
         <View style={styles.roundInfo}>
           <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
           <ThemedText style={styles.thresholdText}>Goal: {gameState.pointThreshold}</ThemedText>
         </View>
+        {gameState.gameMode === "2v2" ? (
+          <View style={styles.opponentScoreContainer}>
+            <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
+            <View>
+              <ThemedText style={styles.myScoreLabel}>Opponents</ThemedText>
+              <ThemedText style={styles.myScoreValue}>{opponentTeamScore} pts</ThemedText>
+            </View>
+          </View>
+        ) : null}
         <Pressable style={styles.headerButton}>
           <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
         </Pressable>
@@ -594,6 +617,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   myScoreContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  opponentScoreContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.xs,
