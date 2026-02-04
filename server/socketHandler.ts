@@ -21,6 +21,7 @@ import {
   resetAINames,
   type AIDecision,
 } from "./aiPlayer";
+import { storage } from "./storage";
 
 interface Room {
   id: string;
@@ -78,11 +79,24 @@ function assignTeams(players: Room["players"], gameMode: "solo" | "2v2"): void {
   players[3].odexTeam = 2;
 }
 
+export async function initializeRoomCleanup() {
+  try {
+    const cleanedCount = await storage.cleanupStaleRooms(24);
+    if (cleanedCount > 0) {
+      console.log(`Cleaned up ${cleanedCount} stale room(s) from database`);
+    }
+  } catch (err) {
+    console.error("Failed to clean up stale rooms:", err);
+  }
+}
+
 export function setupSocketHandlers(io: Server) {
+  initializeRoomCleanup();
+
   io.on("connection", (socket: Socket) => {
     console.log("Client connected:", socket.id);
 
-    socket.on("create_room", ({ displayName, config }: { displayName: string; config: RoomConfig }) => {
+    socket.on("create_room", async ({ displayName, config }: { displayName: string; config: RoomConfig }) => {
       const roomId = uuidv4();
       const roomCode = generateRoomCode();
       const playerId = uuidv4();
@@ -111,6 +125,21 @@ export function setupSocketHandlers(io: Server) {
       socketToRoom.set(socket.id, roomCode);
       socketToPlayer.set(socket.id, playerId);
 
+      try {
+        await storage.createGameRoom({
+          id: roomId,
+          code: roomCode,
+          hostId: odexId,
+          gameMode: config.gameMode,
+          maxPlayers: config.maxPlayers,
+          pointThreshold: config.pointThreshold,
+          status: "waiting",
+        });
+        console.log(`Room ${roomCode} saved to database`);
+      } catch (err) {
+        console.error("Failed to persist room to database:", err);
+      }
+
       socket.join(roomCode);
 
       sendMessage(socket, {
@@ -131,15 +160,33 @@ export function setupSocketHandlers(io: Server) {
       });
     });
 
-    socket.on("join_room", ({ displayName, roomCode }: { displayName: string; roomCode: string }) => {
+    socket.on("join_room", async ({ displayName, roomCode }: { displayName: string; roomCode: string }) => {
       const room = rooms.get(roomCode.toUpperCase());
 
       if (!room) {
-        sendMessage(socket, {
-          type: "error",
-          payload: { message: "Room not found" },
-          timestamp: Date.now(),
-        });
+        const dbRoom = await storage.getGameRoomByCode(roomCode.toUpperCase());
+        
+        if (dbRoom) {
+          if (dbRoom.status === "waiting") {
+            sendMessage(socket, {
+              type: "error",
+              payload: { message: "Room exists but session expired. Ask the host to create a new room." },
+              timestamp: Date.now(),
+            });
+          } else {
+            sendMessage(socket, {
+              type: "error",
+              payload: { message: "This game has already ended" },
+              timestamp: Date.now(),
+            });
+          }
+        } else {
+          sendMessage(socket, {
+            type: "error",
+            payload: { message: "Room not found. Please check the code and try again." },
+            timestamp: Date.now(),
+          });
+        }
         return;
       }
 

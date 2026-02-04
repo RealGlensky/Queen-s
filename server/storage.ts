@@ -1,6 +1,6 @@
 import { users, gameRooms, gamePlayers, gameHistory, type User, type InsertUser, type GameRoom, type GamePlayer, type GameHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, lt, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -79,6 +79,29 @@ export class DatabaseStorage implements IStorage {
       .values(history as any)
       .returning();
     return created;
+  }
+
+  async getWaitingRooms(): Promise<GameRoom[]> {
+    return db.select().from(gameRooms).where(eq(gameRooms.status, "waiting"));
+  }
+
+  async deleteGameRoom(id: string): Promise<void> {
+    await db.delete(gamePlayers).where(eq(gamePlayers.roomId, id));
+    await db.delete(gameRooms).where(eq(gameRooms.id, id));
+  }
+
+  async cleanupStaleRooms(hoursOld: number = 24): Promise<number> {
+    const cutoffTime = new Date(Date.now() - hoursOld * 60 * 60 * 1000);
+    const staleRooms = await db
+      .select()
+      .from(gameRooms)
+      .where(lt(gameRooms.createdAt, cutoffTime));
+    
+    for (const room of staleRooms) {
+      await this.deleteGameRoom(room.id);
+    }
+    
+    return staleRooms.length;
   }
 }
 
