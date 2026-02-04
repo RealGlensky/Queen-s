@@ -405,9 +405,9 @@ export function processDiscard(
     return endRound(state, playerId);
   }
   
-  // Check if player just reached "last card" status (1-2 cards remaining)
+  // Check if player just reached "last card" status (exactly 1 card remaining)
   const wasLastCard = player.hasLastCard;
-  player.hasLastCard = player.hand.length <= 2;
+  player.hasLastCard = player.hand.length === 1;
   
   // Add action to log when player first reaches last card status
   if (player.hasLastCard && !wasLastCard) {
@@ -434,7 +434,7 @@ export function processDeclareLastCard(
   const player = state.players.find(p => p.id === playerId);
   if (!player) return null;
   
-  if (player.hand.length <= 2) {
+  if (player.hand.length === 1) {
     player.hasLastCard = true;
     
     addAction(state, {
