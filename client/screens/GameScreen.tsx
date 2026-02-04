@@ -358,27 +358,28 @@ export default function GameScreen() {
         </Pressable>
       </View>
 
-      <View style={styles.opponentsArea}>
+      <View style={styles.playersArea}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.opponentsScroll}
+          contentContainerStyle={styles.playersScroll}
         >
-          {otherPlayers.map((player) => {
-            const playerIndex = gameState.players.findIndex((p) => p.id === player.id);
+          {gameState.players.map((player, index) => {
+            const isMe = player.id === myPlayer.id;
             return (
-              <View key={player.id} style={styles.opponentContainer}>
+              <View key={player.id} style={styles.playerContainer}>
                 <PlayerAvatar
-                  displayName={player.displayName}
+                  displayName={isMe ? "You" : player.displayName}
                   isCurrentTurn={gameState.currentPlayerId === player.id}
                   isDealer={gameState.dealerId === player.id}
                   team={player.odexTeam}
                   cardCount={player.hand.length}
                   score={gameState.gameMode === "2v2" ? undefined : player.totalScore}
-                  playerColor={PLAYER_COLORS[playerIndex % PLAYER_COLORS.length]}
+                  playerColor={PLAYER_COLORS[index % PLAYER_COLORS.length]}
                   hasLastCard={player.hasLastCard}
                   isConnected={player.isConnected}
                   size="small"
+                  isMe={isMe}
                 />
               </View>
             );
@@ -661,17 +662,17 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.6)",
     fontSize: 12,
   },
-  opponentsArea: {
+  playersArea: {
     minHeight: 100,
     marginTop: Spacing.md,
     paddingBottom: Spacing.xs,
   },
-  opponentsScroll: {
+  playersScroll: {
     paddingHorizontal: Spacing.lg,
     gap: Spacing.lg,
     alignItems: "flex-start",
   },
-  opponentContainer: {
+  playerContainer: {
     alignItems: "center",
   },
   tableArea: {

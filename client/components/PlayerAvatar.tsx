@@ -15,6 +15,7 @@ interface PlayerAvatarProps {
   hasLastCard?: boolean;
   isConnected?: boolean;
   size?: "small" | "normal" | "large";
+  isMe?: boolean;
   style?: any;
 }
 
@@ -34,6 +35,7 @@ export function PlayerAvatar({
   hasLastCard = false,
   isConnected = true,
   size = "normal",
+  isMe = false,
   style,
 }: PlayerAvatarProps) {
   const avatarSize = size === "small" ? 36 : size === "large" ? 56 : 44;
@@ -49,14 +51,17 @@ export function PlayerAvatar({
             width: avatarSize + (isCurrentTurn ? 4 : 0),
             height: avatarSize + (isCurrentTurn ? 4 : 0),
             borderRadius: (avatarSize + (isCurrentTurn ? 4 : 0)) / 2,
-            borderWidth: isCurrentTurn ? 5 : 3,
-            borderColor: playerColor
-              ? playerColor
-              : team
-                ? teamColors[team as keyof typeof teamColors]
-                : "rgba(255,255,255,0.3)",
+            borderWidth: isCurrentTurn ? 5 : isMe ? 4 : 3,
+            borderColor: isCurrentTurn
+              ? GameColors.gold
+              : playerColor
+                ? playerColor
+                : team
+                  ? teamColors[team as keyof typeof teamColors]
+                  : "rgba(255,255,255,0.3)",
             opacity: isConnected ? 1 : 0.5,
           },
+          isMe && !isCurrentTurn && styles.myAvatarContainer,
         ]}
       >
         <View
@@ -125,6 +130,9 @@ const styles = StyleSheet.create({
   initial: {
     color: "#FFFFFF",
     fontWeight: "700",
+  },
+  myAvatarContainer: {
+    borderColor: GameColors.gold,
   },
   dealerBadge: {
     position: "absolute",
