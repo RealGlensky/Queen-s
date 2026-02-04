@@ -236,9 +236,18 @@ export function processPickupPile(
     }
   }
   
+  // Sort cards: normal cards first, then 2s (wild), then Queen of Spades
+  const sortedSetCards = [...setCards].sort((a, b) => {
+    if (isWildCard(a) && !isWildCard(b)) return 1;
+    if (!isWildCard(a) && isWildCard(b)) return -1;
+    if (a.rank === "Q" && a.suit === "spades") return 1;
+    if (b.rank === "Q" && b.suit === "spades") return -1;
+    return 0;
+  });
+  
   const newSet: CardSet = {
     id: uuidv4(),
-    cards: setCards,
+    cards: sortedSetCards,
     rank: setRank,
     ownerId: playerId,
     teamId: player.odexTeam,
@@ -281,14 +290,16 @@ export function processLaySet(
   const rank = nonWildcards[0]?.rank || "2";
   
   const hasQueenOfSpades = cards.some(c => c.rank === "Q" && c.suit === "spades");
-  let sortedCards = [...cards];
-  if (hasQueenOfSpades) {
-    sortedCards = sortedCards.sort((a, b) => {
-      if (a.rank === "Q" && a.suit === "spades") return 1;
-      if (b.rank === "Q" && b.suit === "spades") return -1;
-      return 0;
-    });
-  }
+  // Sort cards: wild cards (2s) go to the end so normal cards appear on top
+  let sortedCards = [...cards].sort((a, b) => {
+    // Wild cards (2s) go to end
+    if (isWildCard(a) && !isWildCard(b)) return 1;
+    if (!isWildCard(a) && isWildCard(b)) return -1;
+    // Queen of Spades goes to very end (after 2s)
+    if (a.rank === "Q" && a.suit === "spades") return 1;
+    if (b.rank === "Q" && b.suit === "spades") return -1;
+    return 0;
+  });
   
   const newSet: CardSet = {
     id: uuidv4(),
@@ -358,11 +369,17 @@ export function processAddToSet(
   
   player.hand = player.hand.filter(c => c.id !== cardId);
   
-  if (card.rank === "Q" && card.suit === "spades") {
-    targetSet.cards.push(card);
-  } else {
-    targetSet.cards.unshift(card);
-  }
+  // Add the card and re-sort the set: normal cards first, then 2s, then Queen of Spades
+  targetSet.cards.push(card);
+  targetSet.cards.sort((a, b) => {
+    // Wild cards (2s) go to end
+    if (isWildCard(a) && !isWildCard(b)) return 1;
+    if (!isWildCard(a) && isWildCard(b)) return -1;
+    // Queen of Spades goes to very end (after 2s)
+    if (a.rank === "Q" && a.suit === "spades") return 1;
+    if (b.rank === "Q" && b.suit === "spades") return -1;
+    return 0;
+  });
   
   addAction(state, {
     id: uuidv4(),
