@@ -54,6 +54,17 @@ export function CardSet({
     (c) => c.rank === "Q" && c.suit === "spades"
   );
 
+  // Sort cards for display: 2s first (underneath), then normal cards, Queen of Spades last (on top)
+  const sortedCards = [...set.cards].sort((a, b) => {
+    // Queen of Spades goes to very end (on top visually - highest zIndex)
+    if (a.rank === "Q" && a.suit === "spades") return 1;
+    if (b.rank === "Q" && b.suit === "spades") return -1;
+    // Wild cards (2s) go to beginning (underneath visually - lowest zIndex)
+    if (a.rank === "2" && b.rank !== "2") return -1;
+    if (a.rank !== "2" && b.rank === "2") return 1;
+    return 0;
+  });
+
   return (
     <AnimatedPressable
       onPress={onPress}
@@ -74,7 +85,7 @@ export function CardSet({
       ]}
     >
       <View style={styles.cardsContainer}>
-        {set.cards.slice(0, 4).map((card, index) => (
+        {sortedCards.slice(0, 4).map((card, index) => (
           <View
             key={card.id}
             style={[
@@ -85,10 +96,10 @@ export function CardSet({
             <PlayingCard card={card} size="small" />
           </View>
         ))}
-        {set.cards.length > 4 ? (
+        {sortedCards.length > 4 ? (
           <View style={[styles.moreCards, { zIndex: 5 }]}>
             <ThemedText style={styles.moreCardsText}>
-              +{set.cards.length - 4}
+              +{sortedCards.length - 4}
             </ThemedText>
           </View>
         ) : null}
