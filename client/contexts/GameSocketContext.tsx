@@ -56,6 +56,8 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const apiUrl = getApiUrl();
+    console.log("[Socket] Connecting to:", apiUrl);
+    
     const socket = io(apiUrl, {
       transports: ["websocket", "polling"],
       autoConnect: true,
@@ -69,12 +71,13 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     socketRef.current = socket;
 
     socket.on("connect", () => {
+      console.log("[Socket] Connected successfully, id:", socket.id);
       setConnected(true);
       setError(null);
       
       // Attempt to rejoin if we have session info
       if (sessionInfoRef.current) {
-        console.log("Attempting to rejoin room after reconnect:", sessionInfoRef.current.roomCode);
+        console.log("[Socket] Attempting to rejoin room after reconnect:", sessionInfoRef.current.roomCode);
         socket.emit("rejoin_room", {
           roomCode: sessionInfoRef.current.roomCode,
           playerId: sessionInfoRef.current.playerId,
@@ -83,13 +86,14 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", (reason) => {
+      console.log("[Socket] Disconnected, reason:", reason);
       setConnected(false);
     });
 
     socket.on("connect_error", (err) => {
+      console.error("[Socket] Connection error:", err.message);
       setError("Connection failed. Please try again.");
-      console.error("Socket connection error:", err);
     });
 
     socket.on("message", (message: GameMessage) => {
@@ -153,13 +157,21 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const createRoom = useCallback((displayName: string, config: RoomConfig) => {
-    if (!socketRef.current) return;
+    if (!socketRef.current) {
+      console.error("[Socket] Cannot create room - socket not connected");
+      return;
+    }
+    console.log("[Socket] Creating room with config:", config);
     setError(null);
     socketRef.current.emit("create_room", { displayName, config });
   }, []);
 
   const joinRoom = useCallback((displayName: string, roomCode: string) => {
-    if (!socketRef.current) return;
+    if (!socketRef.current) {
+      console.error("[Socket] Cannot join room - socket not connected");
+      return;
+    }
+    console.log("[Socket] Joining room:", roomCode);
     setError(null);
     socketRef.current.emit("join_room", { displayName, roomCode });
   }, []);
