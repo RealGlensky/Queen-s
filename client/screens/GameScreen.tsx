@@ -15,6 +15,7 @@ import { CardSet } from "@/components/CardSet";
 import { CardPile } from "@/components/CardPile";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { GameButton } from "@/components/GameButton";
+import { ScoreHistoryModal } from "@/components/ScoreHistoryModal";
 import { GameColors, Spacing, BorderRadius, CardDimensions, PLAYER_COLORS } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
@@ -55,6 +56,7 @@ export default function GameScreen() {
   const [highlightedCards, setHighlightedCards] = useState<string[]>([]);
   const [moveLog, setMoveLog] = useState<MoveLogEntry[]>([]);
   const [showMoveLog, setShowMoveLog] = useState(false);
+  const [showScoreHistory, setShowScoreHistory] = useState(false);
   const prevHandRef = useRef<string[]>([]);
   const prevRoundRef = useRef<number>(0);
   const moveIdRef = useRef(0);
@@ -351,7 +353,7 @@ export default function GameScreen() {
             </View>
           </View>
         ) : null}
-        <Pressable style={styles.headerButton}>
+        <Pressable style={styles.headerButton} onPress={() => setShowScoreHistory(true)}>
           <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
         </Pressable>
       </View>
@@ -580,6 +582,13 @@ export default function GameScreen() {
           </ScrollView>
         </View>
       ) : null}
+
+      <ScoreHistoryModal
+        visible={showScoreHistory}
+        onClose={() => setShowScoreHistory(false)}
+        gameState={gameState}
+        myPlayerId={myPlayer.id}
+      />
     </View>
   );
 }
