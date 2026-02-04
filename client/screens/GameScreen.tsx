@@ -425,7 +425,7 @@ export default function GameScreen() {
               onPress={handleDiscard}
             />
           ) : null}
-          {myPlayer.hand.length === 1 && !myPlayer.hasLastCard ? (
+          {myPlayer.hand.length === 1 ? (
             <GameButton
               label="Last Card!"
               icon="alert-circle"
