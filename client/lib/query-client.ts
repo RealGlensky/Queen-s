@@ -1,8 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 /**
- * Gets the base URL for the Express API server (e.g., "https://domain.replit.dev")
- * Replit proxies port 5000 through the base domain, so we strip any port suffix.
+ * Gets the base URL for the Express API server (e.g., "https://domain.replit.dev:5000")
+ * The port suffix is required for Replit to route to the correct backend server.
  * @returns {string} The API base URL
  */
 export function getApiUrl(): string {
@@ -11,9 +11,6 @@ export function getApiUrl(): string {
   if (!host) {
     throw new Error("EXPO_PUBLIC_DOMAIN is not set");
   }
-
-  // Remove port suffix if present (e.g., ":5000") - Replit proxies through base domain
-  host = host.replace(/:\d+$/, "");
 
   let url = new URL(`https://${host}`);
 
