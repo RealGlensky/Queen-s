@@ -5,8 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, BorderRadius, Spacing, PLAYER_COLORS } from "@/constants/theme";
-import type { GameState, Player } from "@shared/gameTypes";
-import { getCardPoints } from "@shared/gameTypes";
+import type { GameState } from "@shared/gameTypes";
 
 interface ScoreHistoryModalProps {
   visible: boolean;
@@ -28,16 +27,19 @@ export function ScoreHistoryModal({
 }: ScoreHistoryModalProps) {
   const insets = useSafeAreaInsets();
   const isTeamMode = gameState.gameMode === "2v2";
-
-  const calculatePlayerScoreBreakdown = (player: Player) => {
-    const setsScore = player.sets.reduce((acc, set) => {
-      return acc + set.cards.reduce((sum, card) => sum + getCardPoints(card), 0);
-    }, 0);
-    const handValue = player.hand.reduce((acc, card) => acc + getCardPoints(card), 0);
-    return { setsScore, handValue };
-  };
+  const scoreHistory = gameState.scoreHistory || [];
 
   const sortedPlayers = [...gameState.players].sort((a, b) => b.totalScore - a.totalScore);
+
+  const getTeamRoundScore = (round: number, teamId: number) => {
+    const roundEntry = scoreHistory.find(h => h.round === round);
+    if (!roundEntry) return { roundScore: 0, cumulative: 0 };
+    const teamScores = roundEntry.scores.filter(s => s.teamId === teamId);
+    return {
+      roundScore: teamScores.reduce((sum, s) => sum + s.roundScore, 0),
+      cumulative: teamScores.reduce((sum, s) => sum + s.cumulativeScore, 0),
+    };
+  };
 
   const team1Players = gameState.players.filter(p => p.odexTeam === 1);
   const team2Players = gameState.players.filter(p => p.odexTeam === 2);
@@ -62,14 +64,16 @@ export function ScoreHistoryModal({
           style={styles.container}
         >
           <View style={styles.header}>
-            <ThemedText style={styles.title}>Score Standings</ThemedText>
+            <ThemedText style={styles.title}>Score History</ThemedText>
             <Pressable style={styles.closeButton} onPress={onClose}>
               <Feather name="x" size={24} color="#FFFFFF" />
             </Pressable>
           </View>
 
           <View style={styles.roundInfo}>
-            <ThemedText style={styles.roundLabel}>Round {gameState.currentRound}</ThemedText>
+            <ThemedText style={styles.roundLabel}>
+              {gameState.status === "playing" ? `Playing Round ${gameState.currentRound}` : `Round ${gameState.currentRound}`}
+            </ThemedText>
             <ThemedText style={styles.thresholdLabel}>
               Goal: {gameState.pointThreshold} pts
             </ThemedText>
@@ -77,102 +81,138 @@ export function ScoreHistoryModal({
 
           <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
             {isTeamMode ? (
-              <View style={styles.teamsContainer}>
-                {teamsSorted.map((team, index) => {
-                  const isMyTeam = team.players.some(p => p.id === myPlayerId);
-                  return (
-                    <View
-                      key={team.teamId}
-                      style={[
-                        styles.teamCard,
-                        { borderLeftColor: teamColors[team.teamId as keyof typeof teamColors] },
-                        isMyTeam && styles.myTeamCard,
-                      ]}
-                    >
-                      <View style={styles.teamHeader}>
-                        <View style={styles.teamRank}>
-                          <ThemedText style={styles.rankText}>#{index + 1}</ThemedText>
-                        </View>
-                        <View style={styles.teamInfo}>
-                          <ThemedText style={styles.teamName}>
-                            {isMyTeam ? "Your Team" : "Opponents"}
-                          </ThemedText>
-                          <ThemedText style={styles.teamMembers}>
-                            {team.players.map(p => p.displayName).join(" & ")}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.teamScore}>{team.totalScore}</ThemedText>
+              <View style={styles.tableContainer}>
+                <View style={styles.tableHeader}>
+                  <View style={styles.roundColumn}>
+                    <ThemedText style={styles.columnHeader}>Round</ThemedText>
+                  </View>
+                  {teamsSorted.map(team => {
+                    const isMyTeam = team.players.some(p => p.id === myPlayerId);
+                    return (
+                      <View key={team.teamId} style={styles.teamColumn}>
+                        <ThemedText style={[
+                          styles.columnHeader,
+                          { color: teamColors[team.teamId as keyof typeof teamColors] }
+                        ]}>
+                          {isMyTeam ? "Your Team" : "Opponents"}
+                        </ThemedText>
                       </View>
+                    );
+                  })}
+                </View>
 
-                      <View style={styles.playerBreakdown}>
-                        {team.players.map(player => {
-                          const { setsScore, handValue } = calculatePlayerScoreBreakdown(player);
-                          return (
-                            <View key={player.id} style={styles.playerRow}>
-                              <ThemedText style={styles.playerName}>{player.displayName}</ThemedText>
-                              <View style={styles.playerStats}>
-                                <View style={styles.statItem}>
-                                  <Feather name="layers" size={12} color="rgba(255,255,255,0.6)" />
-                                  <ThemedText style={styles.statValue}>+{setsScore}</ThemedText>
-                                </View>
-                                <View style={styles.statItem}>
-                                  <Feather name="credit-card" size={12} color="rgba(255,255,255,0.6)" />
-                                  <ThemedText style={styles.statValue}>{player.hand.length}</ThemedText>
-                                </View>
-                              </View>
-                            </View>
-                          );
-                        })}
+                {scoreHistory.length > 0 ? (
+                  scoreHistory.map(entry => (
+                    <View key={entry.round} style={styles.tableRow}>
+                      <View style={styles.roundColumn}>
+                        <ThemedText style={styles.roundNumber}>{entry.round}</ThemedText>
                       </View>
+                      {teamsSorted.map(team => {
+                        const { roundScore, cumulative } = getTeamRoundScore(entry.round, team.teamId);
+                        return (
+                          <View key={team.teamId} style={styles.teamColumn}>
+                            <ThemedText style={[
+                              styles.roundScoreValue,
+                              roundScore >= 0 ? styles.positiveScore : styles.negativeScore
+                            ]}>
+                              {roundScore >= 0 ? `+${roundScore}` : roundScore}
+                            </ThemedText>
+                            <ThemedText style={styles.cumulativeScore}>
+                              Total: {cumulative}
+                            </ThemedText>
+                          </View>
+                        );
+                      })}
                     </View>
-                  );
-                })}
+                  ))
+                ) : (
+                  <View style={styles.noHistory}>
+                    <Feather name="clock" size={24} color="rgba(255,255,255,0.4)" />
+                    <ThemedText style={styles.noHistoryText}>
+                      No rounds completed yet
+                    </ThemedText>
+                  </View>
+                )}
+
+                <View style={[styles.tableRow, styles.totalRow]}>
+                  <View style={styles.roundColumn}>
+                    <ThemedText style={styles.totalLabel}>Total</ThemedText>
+                  </View>
+                  {teamsSorted.map(team => (
+                    <View key={team.teamId} style={styles.teamColumn}>
+                      <ThemedText style={styles.totalScore}>{team.totalScore}</ThemedText>
+                    </View>
+                  ))}
+                </View>
               </View>
             ) : (
-              <View style={styles.playersContainer}>
-                {sortedPlayers.map((player, index) => {
-                  const isMe = player.id === myPlayerId;
-                  const { setsScore, handValue } = calculatePlayerScoreBreakdown(player);
-                  const playerIndex = gameState.players.findIndex(p => p.id === player.id);
-                  const playerColor = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length];
-
-                  return (
-                    <View
-                      key={player.id}
-                      style={[
-                        styles.playerCard,
-                        { borderLeftColor: playerColor },
-                        isMe && styles.myPlayerCard,
-                      ]}
-                    >
-                      <View style={styles.playerCardHeader}>
-                        <View style={styles.playerRank}>
-                          <ThemedText style={styles.rankText}>#{index + 1}</ThemedText>
-                        </View>
-                        <View style={styles.playerInfo}>
-                          <ThemedText style={styles.playerCardName}>
-                            {player.displayName}
-                            {isMe ? " (You)" : ""}
-                          </ThemedText>
-                        </View>
-                        <ThemedText style={styles.playerScore}>{player.totalScore}</ThemedText>
+              <View style={styles.tableContainer}>
+                <View style={styles.tableHeader}>
+                  <View style={styles.roundColumn}>
+                    <ThemedText style={styles.columnHeader}>Round</ThemedText>
+                  </View>
+                  {sortedPlayers.map((player, idx) => {
+                    const isMe = player.id === myPlayerId;
+                    const playerIndex = gameState.players.findIndex(p => p.id === player.id);
+                    const playerColor = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length];
+                    return (
+                      <View key={player.id} style={styles.playerColumn}>
+                        <ThemedText 
+                          style={[styles.columnHeader, { color: playerColor }]}
+                          numberOfLines={1}
+                        >
+                          {isMe ? "You" : player.displayName}
+                        </ThemedText>
                       </View>
+                    );
+                  })}
+                </View>
 
-                      <View style={styles.scoreBreakdown}>
-                        <View style={styles.breakdownItem}>
-                          <Feather name="layers" size={14} color="rgba(255,255,255,0.6)" />
-                          <ThemedText style={styles.breakdownLabel}>Sets laid</ThemedText>
-                          <ThemedText style={styles.breakdownValue}>+{setsScore}</ThemedText>
-                        </View>
-                        <View style={styles.breakdownItem}>
-                          <Feather name="credit-card" size={14} color="rgba(255,255,255,0.6)" />
-                          <ThemedText style={styles.breakdownLabel}>Cards in hand</ThemedText>
-                          <ThemedText style={styles.breakdownValue}>{player.hand.length} ({handValue} pts)</ThemedText>
-                        </View>
+                {scoreHistory.length > 0 ? (
+                  scoreHistory.map(entry => (
+                    <View key={entry.round} style={styles.tableRow}>
+                      <View style={styles.roundColumn}>
+                        <ThemedText style={styles.roundNumber}>{entry.round}</ThemedText>
                       </View>
+                      {sortedPlayers.map(player => {
+                        const scoreData = entry.scores.find(s => s.playerId === player.id);
+                        const roundScore = scoreData?.roundScore || 0;
+                        const cumulative = scoreData?.cumulativeScore || 0;
+                        return (
+                          <View key={player.id} style={styles.playerColumn}>
+                            <ThemedText style={[
+                              styles.roundScoreValue,
+                              roundScore >= 0 ? styles.positiveScore : styles.negativeScore
+                            ]}>
+                              {roundScore >= 0 ? `+${roundScore}` : roundScore}
+                            </ThemedText>
+                            <ThemedText style={styles.cumulativeScore}>
+                              {cumulative}
+                            </ThemedText>
+                          </View>
+                        );
+                      })}
                     </View>
-                  );
-                })}
+                  ))
+                ) : (
+                  <View style={styles.noHistory}>
+                    <Feather name="clock" size={24} color="rgba(255,255,255,0.4)" />
+                    <ThemedText style={styles.noHistoryText}>
+                      No rounds completed yet
+                    </ThemedText>
+                  </View>
+                )}
+
+                <View style={[styles.tableRow, styles.totalRow]}>
+                  <View style={styles.roundColumn}>
+                    <ThemedText style={styles.totalLabel}>Total</ThemedText>
+                  </View>
+                  {sortedPlayers.map(player => (
+                    <View key={player.id} style={styles.playerColumn}>
+                      <ThemedText style={styles.totalScore}>{player.totalScore}</ThemedText>
+                    </View>
+                  ))}
+                </View>
               </View>
             )}
           </ScrollView>
@@ -231,139 +271,91 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.md,
   },
-  teamsContainer: {
-    gap: Spacing.md,
-  },
-  teamCard: {
+  tableContainer: {
     backgroundColor: "rgba(0,0,0,0.3)",
     borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderLeftWidth: 4,
+    overflow: "hidden",
   },
-  myTeamCard: {
-    backgroundColor: "rgba(212,175,55,0.15)",
-  },
-  teamHeader: {
+  tableHeader: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
   },
-  teamRank: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.1)",
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.05)",
+  },
+  totalRow: {
+    backgroundColor: "rgba(212,175,55,0.1)",
+    borderBottomWidth: 0,
+    paddingVertical: Spacing.md,
+  },
+  roundColumn: {
+    width: 60,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
   },
-  rankText: {
+  teamColumn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  playerColumn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 2,
+  },
+  columnHeader: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "rgba(255,255,255,0.8)",
+    textAlign: "center",
   },
-  teamInfo: {
-    flex: 1,
-  },
-  teamName: {
-    fontSize: 16,
+  roundNumber: {
+    fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
   },
-  teamMembers: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.6)",
+  roundScoreValue: {
+    fontSize: 14,
+    fontWeight: "700",
   },
-  teamScore: {
-    fontSize: 24,
+  positiveScore: {
+    color: "#4CAF50",
+  },
+  negativeScore: {
+    color: "#F44336",
+  },
+  cumulativeScore: {
+    fontSize: 10,
+    color: "rgba(255,255,255,0.5)",
+    marginTop: 2,
+  },
+  totalLabel: {
+    fontSize: 14,
     fontWeight: "700",
     color: GameColors.gold,
   },
-  playerBreakdown: {
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.1)",
-    gap: Spacing.xs,
+  totalScore: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: GameColors.gold,
   },
-  playerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  noHistory: {
     alignItems: "center",
-  },
-  playerName: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.8)",
-  },
-  playerStats: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  statValue: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.6)",
-  },
-  playersContainer: {
-    gap: Spacing.md,
-  },
-  playerCard: {
-    backgroundColor: "rgba(0,0,0,0.3)",
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderLeftWidth: 4,
-  },
-  myPlayerCard: {
-    backgroundColor: "rgba(212,175,55,0.15)",
-  },
-  playerCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.xl,
     gap: Spacing.sm,
   },
-  playerRank: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  playerInfo: {
-    flex: 1,
-  },
-  playerCardName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  playerScore: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: GameColors.gold,
-  },
-  scoreBreakdown: {
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.1)",
-    gap: Spacing.xs,
-  },
-  breakdownItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  breakdownLabel: {
-    flex: 1,
-    fontSize: 13,
-    color: "rgba(255,255,255,0.6)",
-  },
-  breakdownValue: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.8)",
+  noHistoryText: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.5)",
   },
 });
