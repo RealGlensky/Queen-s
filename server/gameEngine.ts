@@ -236,12 +236,14 @@ export function processPickupPile(
     }
   }
   
-  // Sort cards: normal cards first, then 2s (wild), then Queen of Spades
+  // Sort cards: 2s (wild) first (underneath), then normal cards, then Queen of Spades on top
   const sortedSetCards = [...setCards].sort((a, b) => {
-    if (isWildCard(a) && !isWildCard(b)) return 1;
-    if (!isWildCard(a) && isWildCard(b)) return -1;
+    // Queen of Spades goes to very end (on top visually)
     if (a.rank === "Q" && a.suit === "spades") return 1;
     if (b.rank === "Q" && b.suit === "spades") return -1;
+    // Wild cards (2s) go to beginning (underneath visually)
+    if (isWildCard(a) && !isWildCard(b)) return -1;
+    if (!isWildCard(a) && isWildCard(b)) return 1;
     return 0;
   });
   
@@ -289,15 +291,14 @@ export function processLaySet(
   const nonWildcards = cards.filter(c => !isWildCard(c) && !c.isJoker);
   const rank = nonWildcards[0]?.rank || "2";
   
-  const hasQueenOfSpades = cards.some(c => c.rank === "Q" && c.suit === "spades");
-  // Sort cards: wild cards (2s) go to the end so normal cards appear on top
+  // Sort cards: 2s (wild) first (underneath), then normal cards, then Queen of Spades on top
   let sortedCards = [...cards].sort((a, b) => {
-    // Wild cards (2s) go to end
-    if (isWildCard(a) && !isWildCard(b)) return 1;
-    if (!isWildCard(a) && isWildCard(b)) return -1;
-    // Queen of Spades goes to very end (after 2s)
+    // Queen of Spades goes to very end (on top visually)
     if (a.rank === "Q" && a.suit === "spades") return 1;
     if (b.rank === "Q" && b.suit === "spades") return -1;
+    // Wild cards (2s) go to beginning (underneath visually)
+    if (isWildCard(a) && !isWildCard(b)) return -1;
+    if (!isWildCard(a) && isWildCard(b)) return 1;
     return 0;
   });
   
@@ -369,15 +370,15 @@ export function processAddToSet(
   
   player.hand = player.hand.filter(c => c.id !== cardId);
   
-  // Add the card and re-sort the set: normal cards first, then 2s, then Queen of Spades
+  // Add the card and re-sort: 2s first (underneath), normal cards, Queen of Spades on top
   targetSet.cards.push(card);
   targetSet.cards.sort((a, b) => {
-    // Wild cards (2s) go to end
-    if (isWildCard(a) && !isWildCard(b)) return 1;
-    if (!isWildCard(a) && isWildCard(b)) return -1;
-    // Queen of Spades goes to very end (after 2s)
+    // Queen of Spades goes to very end (on top visually)
     if (a.rank === "Q" && a.suit === "spades") return 1;
     if (b.rank === "Q" && b.suit === "spades") return -1;
+    // Wild cards (2s) go to beginning (underneath visually)
+    if (isWildCard(a) && !isWildCard(b)) return -1;
+    if (!isWildCard(a) && isWildCard(b)) return 1;
     return 0;
   });
   
