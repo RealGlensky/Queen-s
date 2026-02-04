@@ -16,6 +16,7 @@ interface CardSetProps {
   ownerIndex?: number;
   isTeamSet?: boolean;
   isMine?: boolean;
+  hideOwnerName?: boolean;
   canAddCard?: boolean;
   onPress?: () => void;
   style?: any;
@@ -29,6 +30,7 @@ export function CardSet({
   ownerIndex = 0,
   isTeamSet = false,
   isMine = false,
+  hideOwnerName = false,
   canAddCard = false,
   onPress,
   style,
@@ -105,9 +107,11 @@ export function CardSet({
         ) : null}
       </View>
       <View style={styles.labelContainer}>
-        <ThemedText style={[styles.ownerLabel, { color: ownerColor }]}>
-          {ownerName || "Unknown"}
-        </ThemedText>
+        {!hideOwnerName ? (
+          <ThemedText style={[styles.ownerLabel, { color: ownerColor }]}>
+            {ownerName || "Unknown"}
+          </ThemedText>
+        ) : null}
         <ThemedText style={styles.setLabel}>
           {set.rank}s
         </ThemedText>

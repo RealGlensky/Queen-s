@@ -386,6 +386,7 @@ export default function GameScreen() {
                             ownerIndex={0}
                             isMine={isMyTeamSet}
                             isTeamSet={isMyTeamSet}
+                            hideOwnerName
                             canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
                             onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
                               ? () => handleAddToSet(set.id)
@@ -412,6 +413,7 @@ export default function GameScreen() {
                             ownerIndex={1}
                             isMine={isMyTeamSet}
                             isTeamSet={isMyTeamSet}
+                            hideOwnerName
                             canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
                             onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
                               ? () => handleAddToSet(set.id)
@@ -641,7 +643,8 @@ const styles = StyleSheet.create({
     gap: Spacing.xl,
   },
   setsArea: {
-    height: 140,
+    minHeight: 160,
+    maxHeight: 180,
   },
   setsScroll: {
     paddingHorizontal: Spacing.lg,
