@@ -321,6 +321,18 @@ export function processLaySet(
     timestamp: Date.now(),
   });
   
+  // Check if player reached last card status after laying set
+  const wasLastCard = player.hasLastCard;
+  player.hasLastCard = player.hand.length === 1;
+  if (player.hasLastCard && !wasLastCard) {
+    addAction(state, {
+      id: uuidv4(),
+      type: 'declare_last_card',
+      playerId,
+      timestamp: Date.now(),
+    });
+  }
+  
   return state;
 }
 
@@ -390,6 +402,18 @@ export function processAddToSet(
     setId,
     timestamp: Date.now(),
   });
+  
+  // Check if player reached last card status after adding to set
+  const wasLastCard = player.hasLastCard;
+  player.hasLastCard = player.hand.length === 1;
+  if (player.hasLastCard && !wasLastCard) {
+    addAction(state, {
+      id: uuidv4(),
+      type: 'declare_last_card',
+      playerId,
+      timestamp: Date.now(),
+    });
+  }
   
   return state;
 }
