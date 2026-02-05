@@ -293,7 +293,11 @@ export function setupSocketHandlers(io: Server) {
         return;
       }
 
-      const player = room.players.find(p => p.id === playerId);
+      let player = room.players.find(p => p.id === playerId);
+      
+      if (!player && displayName) {
+        player = room.players.find(p => p.displayName === displayName && !p.isConnected);
+      }
       
       if (!player) {
         sendMessage(socket, {
@@ -304,12 +308,11 @@ export function setupSocketHandlers(io: Server) {
         return;
       }
 
-      // Update player's socket connection
       player.socketId = socket.id;
       player.isConnected = true;
 
       socketToRoom.set(socket.id, room.code);
-      socketToPlayer.set(socket.id, playerId);
+      socketToPlayer.set(socket.id, player.id);
 
       socket.join(room.code);
 
@@ -327,16 +330,17 @@ export function setupSocketHandlers(io: Server) {
             status: room.status,
           },
           players: playersForClient,
-          playerId,
-          displayName,
+          playerId: player.id,
+          displayName: player.displayName,
         },
         timestamp: Date.now(),
       });
 
       if (room.gameState) {
+        const playerGameState = getGameStateForPlayer(room.gameState, player.id);
         sendMessage(socket, {
           type: "game_state",
-          payload: room.gameState,
+          payload: playerGameState,
           timestamp: Date.now(),
         });
       }
