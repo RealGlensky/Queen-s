@@ -1,19 +1,42 @@
-import { users, gameRooms, gamePlayers, gameHistory, type User, type InsertUser, type GameRoom, type GamePlayer, type GameHistory } from "@shared/schema";
+import { users, gameRooms, gameHistory, type User, type InsertUser, type GameRoom, type GameHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, lt, sql } from "drizzle-orm";
+import { eq, and, lt, or, inArray, sql } from "drizzle-orm";
+import type { GameState, Player, RoomConfig } from "@shared/gameTypes";
+
+interface RoomPlayer {
+  id: string;
+  odexId: string;
+  socketId: string;
+  displayName: string;
+  odexTeam?: number;
+  seatPosition: number;
+  isConnected: boolean;
+  isAI?: boolean;
+}
+
+interface PersistedRoom {
+  id: string;
+  code: string;
+  hostPlayerId: string;
+  config: RoomConfig;
+  players: RoomPlayer[];
+  gameState: GameState | null;
+  status: "waiting" | "playing" | "ended";
+}
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserStats(id: string, stats: { totalScore?: number; gamesPlayed?: number; gamesWon?: number }): Promise<void>;
-  createGameRoom(room: Partial<GameRoom>): Promise<GameRoom>;
   getGameRoom(id: string): Promise<GameRoom | undefined>;
   getGameRoomByCode(code: string): Promise<GameRoom | undefined>;
   updateGameRoom(id: string, updates: Partial<GameRoom>): Promise<void>;
-  addGamePlayer(player: Partial<GamePlayer>): Promise<GamePlayer>;
-  getGamePlayers(roomId: string): Promise<GamePlayer[]>;
   createGameHistory(history: Partial<GameHistory>): Promise<GameHistory>;
+  saveRoom(room: PersistedRoom): Promise<void>;
+  loadActiveRooms(): Promise<PersistedRoom[]>;
+  deleteRoom(code: string): Promise<void>;
+  cleanupStaleRooms(hoursOld: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -39,14 +62,6 @@ export class DatabaseStorage implements IStorage {
     await db.update(users).set(stats).where(eq(users.id, id));
   }
 
-  async createGameRoom(room: Partial<GameRoom>): Promise<GameRoom> {
-    const [created] = await db
-      .insert(gameRooms)
-      .values(room as any)
-      .returning();
-    return created;
-  }
-
   async getGameRoom(id: string): Promise<GameRoom | undefined> {
     const [room] = await db.select().from(gameRooms).where(eq(gameRooms.id, id));
     return room || undefined;
@@ -58,19 +73,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateGameRoom(id: string, updates: Partial<GameRoom>): Promise<void> {
-    await db.update(gameRooms).set(updates).where(eq(gameRooms.id, id));
-  }
-
-  async addGamePlayer(player: Partial<GamePlayer>): Promise<GamePlayer> {
-    const [created] = await db
-      .insert(gamePlayers)
-      .values(player as any)
-      .returning();
-    return created;
-  }
-
-  async getGamePlayers(roomId: string): Promise<GamePlayer[]> {
-    return db.select().from(gamePlayers).where(eq(gamePlayers.roomId, roomId));
+    await db.update(gameRooms).set({ ...updates, updatedAt: new Date() }).where(eq(gameRooms.id, id));
   }
 
   async createGameHistory(history: Partial<GameHistory>): Promise<GameHistory> {
@@ -81,13 +84,61 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getWaitingRooms(): Promise<GameRoom[]> {
-    return db.select().from(gameRooms).where(eq(gameRooms.status, "waiting"));
+  async saveRoom(room: PersistedRoom): Promise<void> {
+    const existing = await this.getGameRoomByCode(room.code);
+    
+    const roomData = {
+      id: room.id,
+      code: room.code,
+      hostPlayerId: room.hostPlayerId,
+      gameMode: room.config.gameMode,
+      maxPlayers: room.config.maxPlayers,
+      pointThreshold: room.config.pointThreshold,
+      status: room.status,
+      currentRound: room.gameState?.currentRound || 1,
+      playersData: room.players as any,
+      gameStateData: room.gameState as any,
+      updatedAt: new Date(),
+    };
+
+    if (existing) {
+      await db.update(gameRooms)
+        .set(roomData)
+        .where(eq(gameRooms.code, room.code));
+      console.log(`[Storage] Updated room ${room.code}`);
+    } else {
+      await db.insert(gameRooms)
+        .values({ ...roomData, createdAt: new Date() });
+      console.log(`[Storage] Created room ${room.code}`);
+    }
   }
 
-  async deleteGameRoom(id: string): Promise<void> {
-    await db.delete(gamePlayers).where(eq(gamePlayers.roomId, id));
-    await db.delete(gameRooms).where(eq(gameRooms.id, id));
+  async loadActiveRooms(): Promise<PersistedRoom[]> {
+    const rooms = await db.select()
+      .from(gameRooms)
+      .where(or(
+        eq(gameRooms.status, "waiting"),
+        eq(gameRooms.status, "playing")
+      ));
+
+    return rooms.map(room => ({
+      id: room.id,
+      code: room.code,
+      hostPlayerId: room.hostPlayerId,
+      config: {
+        gameMode: room.gameMode as "solo" | "2v2",
+        maxPlayers: room.maxPlayers,
+        pointThreshold: room.pointThreshold,
+      },
+      players: (room.playersData as RoomPlayer[]) || [],
+      gameState: room.gameStateData as GameState | null,
+      status: room.status as "waiting" | "playing" | "ended",
+    }));
+  }
+
+  async deleteRoom(code: string): Promise<void> {
+    await db.delete(gameRooms).where(eq(gameRooms.code, code));
+    console.log(`[Storage] Deleted room ${code}`);
   }
 
   async cleanupStaleRooms(hoursOld: number = 24): Promise<number> {
@@ -95,10 +146,11 @@ export class DatabaseStorage implements IStorage {
     const staleRooms = await db
       .select()
       .from(gameRooms)
-      .where(lt(gameRooms.createdAt, cutoffTime));
+      .where(lt(gameRooms.updatedAt, cutoffTime));
     
-    for (const room of staleRooms) {
-      await this.deleteGameRoom(room.id);
+    if (staleRooms.length > 0) {
+      const staleCodes = staleRooms.map(r => r.code);
+      await db.delete(gameRooms).where(inArray(gameRooms.code, staleCodes));
     }
     
     return staleRooms.length;
