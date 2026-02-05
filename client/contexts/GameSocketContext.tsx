@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
+import { AppState, AppStateStatus, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io, Socket } from "socket.io-client";
 import { getApiUrl } from "@/lib/query-client";
 import type {
@@ -7,6 +9,14 @@ import type {
   RoomConfig,
   GameMessage,
 } from "@shared/gameTypes";
+
+const SESSION_STORAGE_KEY = "@queens_session";
+
+interface SessionInfo {
+  roomCode: string;
+  playerId: string;
+  displayName: string;
+}
 
 interface RoomInfo {
   roomCode: string;
@@ -18,6 +28,7 @@ interface RoomInfo {
 
 interface GameSocketContextType {
   connected: boolean;
+  reconnecting: boolean;
   roomInfo: RoomInfo | null;
   players: Player[];
   gameState: GameState | null;
@@ -39,73 +50,67 @@ interface GameSocketContextType {
   declareLastCard: () => void;
   nextRound: () => void;
   clearError: () => void;
+  forceReconnect: () => void;
 }
 
 const GameSocketContext = createContext<GameSocketContextType | null>(null);
 
+async function saveSession(session: SessionInfo | null): Promise<void> {
+  try {
+    if (session) {
+      await AsyncStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+      console.log("[Session] Saved to storage:", session.roomCode);
+    } else {
+      await AsyncStorage.removeItem(SESSION_STORAGE_KEY);
+      console.log("[Session] Cleared from storage");
+    }
+  } catch (e) {
+    console.error("[Session] Error saving session:", e);
+  }
+}
+
+async function loadSession(): Promise<SessionInfo | null> {
+  try {
+    const stored = await AsyncStorage.getItem(SESSION_STORAGE_KEY);
+    if (stored) {
+      const session = JSON.parse(stored) as SessionInfo;
+      console.log("[Session] Loaded from storage:", session.roomCode);
+      return session;
+    }
+  } catch (e) {
+    console.error("[Session] Error loading session:", e);
+  }
+  return null;
+}
+
 export function GameSocketProvider({ children }: { children: ReactNode }) {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  const sessionInfoRef = useRef<{ roomCode: string; playerId: string; displayName: string } | null>(null);
+  const sessionInfoRef = useRef<SessionInfo | null>(null);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const lastActiveRef = useRef<number>(Date.now());
 
-  useEffect(() => {
-    const apiUrl = getApiUrl();
-    console.log("[Socket] Connecting to:", apiUrl);
-    
-    const socket = io(apiUrl, {
-      transports: ["websocket", "polling"],
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
+  const attemptRejoin = useCallback((socket: Socket, session: SessionInfo) => {
+    console.log("[Socket] Attempting to rejoin room:", session.roomCode);
+    setReconnecting(true);
+    socket.emit("rejoin_room", {
+      roomCode: session.roomCode,
+      playerId: session.playerId,
+      displayName: session.displayName,
     });
-
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      console.log("[Socket] Connected successfully, id:", socket.id);
-      setConnected(true);
-      setError(null);
-      
-      // Attempt to rejoin if we have session info
-      if (sessionInfoRef.current) {
-        console.log("[Socket] Attempting to rejoin room after reconnect:", sessionInfoRef.current.roomCode);
-        socket.emit("rejoin_room", {
-          roomCode: sessionInfoRef.current.roomCode,
-          playerId: sessionInfoRef.current.playerId,
-          displayName: sessionInfoRef.current.displayName,
-        });
-      }
-    });
-
-    socket.on("disconnect", (reason) => {
-      console.log("[Socket] Disconnected, reason:", reason);
-      setConnected(false);
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("[Socket] Connection error:", err.message);
-      setError("Connection failed. Please try again.");
-    });
-
-    socket.on("message", (message: GameMessage) => {
-      handleMessage(message);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
   }, []);
 
   const handleMessage = useCallback((message: GameMessage) => {
+    console.log("[Socket] Received message:", message.type);
+    setReconnecting(false);
+    
     switch (message.type) {
       case "room_created":
       case "room_info":
@@ -113,20 +118,23 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
         setPlayers(message.payload.players || []);
         if (message.payload.playerId) {
           setMyPlayerId(message.payload.playerId);
-          // Store session info for reconnection
           if (message.payload.roomInfo?.roomCode && message.payload.displayName) {
-            sessionInfoRef.current = {
+            const session: SessionInfo = {
               roomCode: message.payload.roomInfo.roomCode,
               playerId: message.payload.playerId,
               displayName: message.payload.displayName,
             };
+            sessionInfoRef.current = session;
+            saveSession(session);
           }
         }
         break;
       case "player_joined":
+        console.log("[Socket] Player joined, updating players list:", message.payload.players?.length);
         setPlayers(message.payload.players);
         break;
       case "player_left":
+        console.log("[Socket] Player left, updating players list:", message.payload.players?.length);
         setPlayers(message.payload.players);
         break;
       case "game_started":
@@ -152,9 +160,114 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
         break;
       case "error":
         setError(message.payload.message || "An error occurred");
+        if (message.payload.message?.includes("Room no longer exists") || 
+            message.payload.message?.includes("Player not found")) {
+          sessionInfoRef.current = null;
+          saveSession(null);
+          setRoomInfo(null);
+          setGameState(null);
+        }
         break;
     }
   }, []);
+
+  useEffect(() => {
+    const apiUrl = getApiUrl();
+    console.log("[Socket] Connecting to:", apiUrl);
+    
+    const socket = io(apiUrl, {
+      transports: ["websocket", "polling"],
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 3000,
+      timeout: 20000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on("connect", async () => {
+      console.log("[Socket] Connected successfully, id:", socket.id);
+      setConnected(true);
+      setError(null);
+      
+      if (sessionInfoRef.current) {
+        attemptRejoin(socket, sessionInfoRef.current);
+      } else {
+        const savedSession = await loadSession();
+        if (savedSession) {
+          sessionInfoRef.current = savedSession;
+          attemptRejoin(socket, savedSession);
+        }
+      }
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("[Socket] Disconnected, reason:", reason);
+      setConnected(false);
+    });
+
+    socket.on("reconnect_attempt", (attemptNumber) => {
+      console.log("[Socket] Reconnection attempt:", attemptNumber);
+      setReconnecting(true);
+    });
+
+    socket.on("reconnect", () => {
+      console.log("[Socket] Reconnected!");
+      setReconnecting(false);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("[Socket] Connection error:", err.message);
+    });
+
+    socket.on("message", handleMessage);
+
+    loadSession().then(savedSession => {
+      if (savedSession) {
+        sessionInfoRef.current = savedSession;
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [attemptRejoin, handleMessage]);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      console.log("[AppState] Changed from", appStateRef.current, "to", nextAppState);
+      
+      if (appStateRef.current.match(/inactive|background/) && nextAppState === "active") {
+        const timeSinceActive = Date.now() - lastActiveRef.current;
+        console.log("[AppState] App came to foreground after", timeSinceActive, "ms");
+        
+        const socket = socketRef.current;
+        if (socket) {
+          if (!socket.connected) {
+            console.log("[AppState] Socket disconnected, reconnecting...");
+            socket.connect();
+          } else if (sessionInfoRef.current && timeSinceActive > 5000) {
+            console.log("[AppState] Requesting state refresh after background...");
+            attemptRejoin(socket, sessionInfoRef.current);
+          }
+        }
+      }
+      
+      if (nextAppState.match(/inactive|background/)) {
+        lastActiveRef.current = Date.now();
+      }
+      
+      appStateRef.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [attemptRejoin]);
 
   const createRoom = useCallback((displayName: string, config: RoomConfig) => {
     if (!socketRef.current) {
@@ -184,6 +297,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     setGameState(null);
     setMyPlayerId(null);
     sessionInfoRef.current = null;
+    saveSession(null);
   }, []);
 
   const startGame = useCallback(() => {
@@ -240,6 +354,17 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     setError(null);
   }, []);
 
+  const forceReconnect = useCallback(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+    
+    if (socket.connected && sessionInfoRef.current) {
+      attemptRejoin(socket, sessionInfoRef.current);
+    } else if (!socket.connected) {
+      socket.connect();
+    }
+  }, [attemptRejoin]);
+
   const myPlayer = gameState?.players.find((p) => p.id === myPlayerId) || null;
   const isMyTurn = gameState?.currentPlayerId === myPlayerId;
 
@@ -247,6 +372,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     <GameSocketContext.Provider
       value={{
         connected,
+        reconnecting,
         roomInfo,
         players,
         gameState,
@@ -268,6 +394,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
         declareLastCard,
         nextRound,
         clearError,
+        forceReconnect,
       }}
     >
       {children}
