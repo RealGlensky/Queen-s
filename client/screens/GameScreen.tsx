@@ -334,31 +334,33 @@ export default function GameScreen() {
       <View style={styles.feltTexture} />
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <View style={styles.myScoreContainer}>
-          <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
-          <View>
-            <ThemedText style={styles.myScoreLabel}>
-              {gameState.gameMode === "2v2" ? "Your Team" : "You"}
-            </ThemedText>
-            <ThemedText style={styles.myScoreValue}>
-              {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
-            </ThemedText>
-          </View>
-        </View>
-        <View style={styles.roundInfo}>
-          <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
-          <ThemedText style={styles.thresholdText}>Goal: {gameState.pointThreshold}</ThemedText>
-        </View>
-        {gameState.gameMode === "2v2" ? (
-          <View style={styles.opponentScoreContainer}>
-            <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
+        <View style={styles.scoreRow}>
+          <View style={styles.myScoreContainer}>
+            <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
             <View>
-              <ThemedText style={styles.myScoreLabel}>Opponents</ThemedText>
-              <ThemedText style={styles.myScoreValue}>{opponentTeamScore} pts</ThemedText>
+              <ThemedText style={styles.myScoreLabel}>
+                {gameState.gameMode === "2v2" ? "Your Team" : "You"}
+              </ThemedText>
+              <ThemedText style={styles.myScoreValue}>
+                {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
+              </ThemedText>
             </View>
           </View>
-        ) : null}
-        <View style={styles.headerButtons}>
+          <View style={styles.roundInfo}>
+            <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
+            <ThemedText style={styles.thresholdText}>Goal: {gameState.pointThreshold}</ThemedText>
+          </View>
+          {gameState.gameMode === "2v2" ? (
+            <View style={styles.opponentScoreContainer}>
+              <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
+              <View>
+                <ThemedText style={styles.myScoreLabel}>Opponents</ThemedText>
+                <ThemedText style={styles.myScoreValue}>{opponentTeamScore} pts</ThemedText>
+              </View>
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.headerUtilRow}>
           {reconnecting ? (
             <View style={styles.connectionIndicator}>
               <ActivityIndicator size="small" color={GameColors.gold} />
@@ -368,12 +370,14 @@ export default function GameScreen() {
               <Feather name="wifi-off" size={18} color="#FF6B6B" />
             </Pressable>
           ) : null}
-          <Pressable style={styles.headerButton} onPress={() => setShowHelp(true)}>
-            <Feather name="help-circle" size={24} color={GameColors.gold} />
-          </Pressable>
-          <Pressable style={styles.headerButton} onPress={() => setShowScoreHistory(true)}>
-            <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
-          </Pressable>
+          <View style={styles.headerButtons}>
+            <Pressable style={styles.headerButton} onPress={() => setShowHelp(true)}>
+              <Feather name="help-circle" size={20} color={GameColors.gold} />
+            </Pressable>
+            <Pressable style={styles.headerButton} onPress={() => setShowScoreHistory(true)}>
+              <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -635,16 +639,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   header: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xs,
+  },
+  scoreRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    justifyContent: "center",
+    gap: Spacing.lg,
+  },
+  headerUtilRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginTop: 2,
   },
   headerButtons: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 2,
   },
   connectionIndicator: {
     width: 32,
@@ -655,8 +668,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerButton: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     justifyContent: "center",
     alignItems: "center",
   },
