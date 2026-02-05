@@ -26,8 +26,8 @@ export function HelpModal({ visible, onClose }: HelpModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>("basics");
 
   const tabs: { key: TabType; label: string; icon: string }[] = [
-    { key: "basics", label: "Basics", icon: "book-open" },
-    { key: "scoring", label: "Scoring", icon: "award" },
+    { key: "basics", label: "Controls", icon: "hand" },
+    { key: "scoring", label: "Rules", icon: "book-open" },
     { key: "tips", label: "Tips", icon: "zap" },
   ];
 
@@ -101,72 +101,85 @@ export function HelpModal({ visible, onClose }: HelpModalProps) {
 function BasicsContent() {
   return (
     <View style={styles.section}>
-      <SectionCard title="Objective" icon="target">
+      <SectionCard title="Your Turn - Step by Step" icon="play-circle">
         <ThemedText style={styles.text}>
-          Be the first player (or team) to reach the point threshold by laying down sets of matching cards and going out before your opponents.
+          Each turn has 3 phases. Follow these steps in order:
         </ThemedText>
       </SectionCard>
 
-      <SectionCard title="Game Modes" icon="users">
+      <SectionCard title="Step 1: Draw a Card" icon="download">
         <BulletPoint>
-          <ThemedText style={styles.boldText}>Solo Mode:</ThemedText>
-          <ThemedText style={styles.text}> 2-6 players compete individually. First to 1000 points wins.</ThemedText>
+          <ThemedText style={styles.boldText}>Tap the deck</ThemedText>
+          <ThemedText style={styles.text}> (face-down card pile) to draw 1 card into your hand.</ThemedText>
         </BulletPoint>
+        <View style={styles.spacer} />
+        <ThemedText style={styles.highlightText}>OR pick up the discard pile:</ThemedText>
         <BulletPoint>
-          <ThemedText style={styles.boldText}>2v2 Teams:</ThemedText>
-          <ThemedText style={styles.text}> 4 players in 2 teams. First team to 1500 points wins.</ThemedText>
+          <ThemedText style={styles.text}>If you have 2+ cards matching the top card of the pile, </ThemedText>
+          <ThemedText style={styles.boldText}>tap the pile</ThemedText>
+          <ThemedText style={styles.text}> to take ALL cards from it.</ThemedText>
         </BulletPoint>
       </SectionCard>
 
-      <SectionCard title="Turn Structure" icon="rotate-cw">
+      <SectionCard title="Step 2: Play Cards (Optional)" icon="layers">
+        <ThemedText style={styles.highlightText}>Lay down a new set:</ThemedText>
         <BulletPoint number={1}>
-          <ThemedText style={styles.boldText}>Draw:</ThemedText>
-          <ThemedText style={styles.text}> Take a card from the deck OR pick up the discard pile (if you can use the top card).</ThemedText>
+          <ThemedText style={styles.boldText}>Tap cards</ThemedText>
+          <ThemedText style={styles.text}> in your hand to select 3+ matching cards.</ThemedText>
         </BulletPoint>
         <BulletPoint number={2}>
-          <ThemedText style={styles.boldText}>Play:</ThemedText>
-          <ThemedText style={styles.text}> Lay down sets of 3+ matching cards, or add cards to existing sets.</ThemedText>
+          <ThemedText style={styles.text}>Selected cards rise up and get highlighted.</ThemedText>
         </BulletPoint>
         <BulletPoint number={3}>
-          <ThemedText style={styles.boldText}>Discard:</ThemedText>
-          <ThemedText style={styles.text}> End your turn by discarding one card to the pile.</ThemedText>
+          <ThemedText style={styles.boldText}>Tap "Lay Set"</ThemedText>
+          <ThemedText style={styles.text}> button to place them on the table.</ThemedText>
+        </BulletPoint>
+        <View style={styles.spacer} />
+        <ThemedText style={styles.highlightText}>Add to existing sets:</ThemedText>
+        <BulletPoint number={1}>
+          <ThemedText style={styles.boldText}>Tap a card</ThemedText>
+          <ThemedText style={styles.text}> in your hand that matches a set on the table.</ThemedText>
+        </BulletPoint>
+        <BulletPoint number={2}>
+          <ThemedText style={styles.boldText}>Tap the set</ThemedText>
+          <ThemedText style={styles.text}> (your own or teammate's) to add the card to it.</ThemedText>
         </BulletPoint>
       </SectionCard>
 
-      <SectionCard title="Sets" icon="layers">
-        <ThemedText style={styles.text}>
-          A valid set contains 3 or more cards of the same rank. For example: three 7s, four Kings, or five Aces.
-        </ThemedText>
+      <SectionCard title="Step 3: Discard" icon="arrow-down-circle">
+        <BulletPoint number={1}>
+          <ThemedText style={styles.boldText}>Tap a card</ThemedText>
+          <ThemedText style={styles.text}> in your hand to select it.</ThemedText>
+        </BulletPoint>
+        <BulletPoint number={2}>
+          <ThemedText style={styles.boldText}>Tap "Discard"</ThemedText>
+          <ThemedText style={styles.text}> button to end your turn.</ThemedText>
+        </BulletPoint>
         <View style={styles.spacer} />
         <ThemedText style={styles.text}>
-          You can add cards to your own sets (or your teammate's sets in 2v2 mode) to increase your score.
+          Your turn ends after discarding. The next player then takes their turn.
         </ThemedText>
       </SectionCard>
 
-      <SectionCard title="Wild Cards" icon="star">
-        <ThemedText style={styles.text}>
-          <ThemedText style={styles.boldText}>2s are wild!</ThemedText> They can substitute for any rank when forming sets.
-        </ThemedText>
-        <View style={styles.spacer} />
-        <ThemedText style={styles.text}>
-          A set can have at most one wild card. Wild 2s are worth 20 points when laid down.
-        </ThemedText>
+      <SectionCard title="Selecting Cards" icon="mouse-pointer">
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Tap once</ThemedText>
+          <ThemedText style={styles.text}> to select a card (it moves up).</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Tap again</ThemedText>
+          <ThemedText style={styles.text}> to deselect it.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.text}>You can select multiple cards at once for laying sets.</ThemedText>
+        </BulletPoint>
       </SectionCard>
 
-      <SectionCard title="Picking Up the Pile" icon="download">
+      <SectionCard title="Last Card Warning" icon="alert-circle">
         <ThemedText style={styles.text}>
-          Instead of drawing from the deck, you can pick up the entire discard pile IF you have at least 2 cards that match the top card.
-        </ThemedText>
-        <View style={styles.spacer} />
-        <ThemedText style={styles.text}>
-          This is powerful for building big sets but gives you more cards to get rid of!
-        </ThemedText>
-      </SectionCard>
-
-      <SectionCard title="Last Card" icon="alert-circle">
-        <ThemedText style={styles.text}>
-          When you have exactly 1 card left, you must declare "Last Card!" before your next turn. If you forget and go out, you receive a penalty.
-        </ThemedText>
+          When you have exactly 1 card left, tap the </ThemedText>
+        <ThemedText style={styles.boldText}>"Last Card!"</ThemedText>
+        <ThemedText style={styles.text}> button that appears. You must declare this before going out!</ThemedText>
       </SectionCard>
     </View>
   );
@@ -175,6 +188,39 @@ function BasicsContent() {
 function ScoringContent() {
   return (
     <View style={styles.section}>
+      <SectionCard title="Valid Sets" icon="layers">
+        <BulletPoint>
+          <ThemedText style={styles.text}>A set is 3 or more cards of the </ThemedText>
+          <ThemedText style={styles.boldText}>same rank</ThemedText>
+          <ThemedText style={styles.text}> (e.g., three 7s, four Kings).</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>2s are wild</ThemedText>
+          <ThemedText style={styles.text}> - they can substitute for any rank in a set.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.text}>Each set can only have </ThemedText>
+          <ThemedText style={styles.boldText}>one wild card (2)</ThemedText>
+          <ThemedText style={styles.text}>.</ThemedText>
+        </BulletPoint>
+      </SectionCard>
+
+      <SectionCard title="Picking Up the Pile" icon="download">
+        <ThemedText style={styles.text}>
+          To pick up the discard pile instead of drawing:
+        </ThemedText>
+        <BulletPoint>
+          <ThemedText style={styles.text}>You must have </ThemedText>
+          <ThemedText style={styles.boldText}>2+ cards matching</ThemedText>
+          <ThemedText style={styles.text}> the top card of the pile.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.text}>You take the </ThemedText>
+          <ThemedText style={styles.boldText}>entire pile</ThemedText>
+          <ThemedText style={styles.text}> (all cards in it).</ThemedText>
+        </BulletPoint>
+      </SectionCard>
+
       <SectionCard title="Card Values" icon="hash">
         <View style={styles.scoreTable}>
           <ScoreRow label="Number cards (3-10)" value="Face value" />
@@ -185,34 +231,29 @@ function ScoringContent() {
         </View>
       </SectionCard>
 
-      <SectionCard title="Scoring Rounds" icon="bar-chart-2">
+      <SectionCard title="Scoring" icon="bar-chart-2">
         <BulletPoint>
-          <ThemedText style={styles.text}>When a player goes out (discards their last card), the round ends.</ThemedText>
+          <ThemedText style={styles.text}>Round ends when someone discards their last card.</ThemedText>
         </BulletPoint>
         <BulletPoint>
           <ThemedText style={styles.boldText}>Winner:</ThemedText>
-          <ThemedText style={styles.text}> Gets points from all cards in their laid sets.</ThemedText>
+          <ThemedText style={styles.text}> Gets points from cards in their laid sets.</ThemedText>
         </BulletPoint>
         <BulletPoint>
-          <ThemedText style={styles.boldText}>Other players:</ThemedText>
-          <ThemedText style={styles.text}> Lose points equal to cards left in their hand.</ThemedText>
+          <ThemedText style={styles.boldText}>Others:</ThemedText>
+          <ThemedText style={styles.text}> Lose points for cards left in hand.</ThemedText>
         </BulletPoint>
       </SectionCard>
 
-      <SectionCard title="Team Scoring (2v2)" icon="users">
-        <ThemedText style={styles.text}>
-          In 2v2 mode, when one player goes out, their teammate's remaining hand cards are NOT counted as penalties.
-        </ThemedText>
-        <View style={styles.spacer} />
-        <ThemedText style={styles.text}>
-          Team scores are combined. First team to reach 1500 points wins!
-        </ThemedText>
-      </SectionCard>
-
-      <SectionCard title="Perfect Cut Bonus" icon="gift">
-        <ThemedText style={styles.text}>
-          If you go out by discarding exactly the right card (perfect timing), you earn a bonus 50 points!
-        </ThemedText>
+      <SectionCard title="Winning the Game" icon="award">
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Solo Mode:</ThemedText>
+          <ThemedText style={styles.text}> First to 1000 points wins.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>2v2 Teams:</ThemedText>
+          <ThemedText style={styles.text}> First team to 1500 points wins. Teammate's hand penalty doesn't count when you go out.</ThemedText>
+        </BulletPoint>
       </SectionCard>
     </View>
   );
@@ -221,14 +262,48 @@ function ScoringContent() {
 function TipsContent() {
   return (
     <View style={styles.section}>
-      <SectionCard title="Strategy Tips" icon="lightbulb">
+      <SectionCard title="Reading the Screen" icon="monitor">
         <BulletPoint>
-          <ThemedText style={styles.boldText}>Hold onto 2s:</ThemedText>
-          <ThemedText style={styles.text}> Wild cards are valuable for completing sets.</ThemedText>
+          <ThemedText style={styles.boldText}>Player bar (top):</ThemedText>
+          <ThemedText style={styles.text}> Shows all players, their card count, and who is currently playing (highlighted).</ThemedText>
         </BulletPoint>
         <BulletPoint>
-          <ThemedText style={styles.boldText}>Watch the pile:</ThemedText>
-          <ThemedText style={styles.text}> Picking up can be powerful but also risky.</ThemedText>
+          <ThemedText style={styles.boldText}>Deck & Pile (center):</ThemedText>
+          <ThemedText style={styles.text}> Left is the draw deck, right is the discard pile.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Your hand (bottom):</ThemedText>
+          <ThemedText style={styles.text}> Your cards appear at the bottom. Scroll to see all cards.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Laid sets (above hand):</ThemedText>
+          <ThemedText style={styles.text}> Your sets and teammates' sets appear here.</ThemedText>
+        </BulletPoint>
+      </SectionCard>
+
+      <SectionCard title="Visual Indicators" icon="eye">
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Gold border:</ThemedText>
+          <ThemedText style={styles.text}> Indicates it's that player's turn.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Raised card:</ThemedText>
+          <ThemedText style={styles.text}> Card is selected in your hand.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Glowing cards:</ThemedText>
+          <ThemedText style={styles.text}> Newly drawn or picked up cards glow briefly.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Team colors:</ThemedText>
+          <ThemedText style={styles.text}> In 2v2, green = your team, blue = opponents.</ThemedText>
+        </BulletPoint>
+      </SectionCard>
+
+      <SectionCard title="Strategy Tips" icon="lightbulb">
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Save your 2s:</ThemedText>
+          <ThemedText style={styles.text}> Wild cards help complete hard-to-build sets.</ThemedText>
         </BulletPoint>
         <BulletPoint>
           <ThemedText style={styles.boldText}>Lay sets early:</ThemedText>
@@ -238,47 +313,9 @@ function TipsContent() {
           <ThemedText style={styles.boldText}>Discard high cards:</ThemedText>
           <ThemedText style={styles.text}> Get rid of Aces and face cards you can't use.</ThemedText>
         </BulletPoint>
-      </SectionCard>
-
-      <SectionCard title="Game Controls" icon="hand">
         <BulletPoint>
-          <ThemedText style={styles.boldText}>Tap cards:</ThemedText>
-          <ThemedText style={styles.text}> Select cards from your hand.</ThemedText>
-        </BulletPoint>
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Tap deck:</ThemedText>
-          <ThemedText style={styles.text}> Draw a new card.</ThemedText>
-        </BulletPoint>
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Tap pickup pile:</ThemedText>
-          <ThemedText style={styles.text}> Pick up the discard pile (when valid).</ThemedText>
-        </BulletPoint>
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Lay Set button:</ThemedText>
-          <ThemedText style={styles.text}> Select 3+ matching cards, then tap to lay them.</ThemedText>
-        </BulletPoint>
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Tap your sets:</ThemedText>
-          <ThemedText style={styles.text}> Add selected cards to existing sets.</ThemedText>
-        </BulletPoint>
-      </SectionCard>
-
-      <SectionCard title="Reading the Screen" icon="monitor">
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Player icons:</ThemedText>
-          <ThemedText style={styles.text}> Shows all players, their card count, and whose turn it is.</ThemedText>
-        </BulletPoint>
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Score display:</ThemedText>
-          <ThemedText style={styles.text}> Your score (or team score) appears at the top.</ThemedText>
-        </BulletPoint>
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Round info:</ThemedText>
-          <ThemedText style={styles.text}> Shows current round and point goal.</ThemedText>
-        </BulletPoint>
-        <BulletPoint>
-          <ThemedText style={styles.boldText}>Highlighted cards:</ThemedText>
-          <ThemedText style={styles.text}> Newly acquired cards glow briefly.</ThemedText>
+          <ThemedText style={styles.boldText}>Watch the pile size:</ThemedText>
+          <ThemedText style={styles.text}> Big pile = big risk if someone else picks it up!</ThemedText>
         </BulletPoint>
       </SectionCard>
     </View>
@@ -416,6 +453,12 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
+  },
+  highlightText: {
+    color: GameColors.gold,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: Spacing.xs,
   },
   spacer: {
     height: Spacing.xs,
