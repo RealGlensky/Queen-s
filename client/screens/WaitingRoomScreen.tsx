@@ -31,6 +31,7 @@ export default function WaitingRoomScreen() {
 
   const {
     connected,
+    reconnecting,
     roomInfo,
     players,
     error,
@@ -40,6 +41,7 @@ export default function WaitingRoomScreen() {
     leaveRoom,
     addAIPlayer,
     removeAIPlayer,
+    forceReconnect,
   } = useGameSocket();
 
   const [isStarting, setIsStarting] = useState(false);
@@ -171,6 +173,17 @@ export default function WaitingRoomScreen() {
         ]}
       >
         <View style={styles.roomCodeHeader}>
+          {reconnecting ? (
+            <View style={styles.connectionStatus}>
+              <ActivityIndicator size="small" color={GameColors.gold} />
+              <ThemedText style={styles.connectionText}>Reconnecting...</ThemedText>
+            </View>
+          ) : !connected ? (
+            <Pressable style={styles.connectionStatus} onPress={forceReconnect}>
+              <Feather name="wifi-off" size={16} color="#FF6B6B" />
+              <ThemedText style={[styles.connectionText, { color: "#FF6B6B" }]}>Tap to reconnect</ThemedText>
+            </Pressable>
+          ) : null}
           <Pressable style={styles.helpButton} onPress={() => setShowHelp(true)}>
             <Feather name="help-circle" size={24} color={GameColors.gold} />
           </Pressable>
@@ -311,8 +324,23 @@ const styles = StyleSheet.create({
   },
   roomCodeHeader: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: Spacing.sm,
+  },
+  connectionStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+  connectionText: {
+    color: GameColors.gold,
+    fontSize: 12,
+    fontWeight: "500",
   },
   helpButton: {
     width: 40,

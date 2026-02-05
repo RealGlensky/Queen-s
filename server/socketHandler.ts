@@ -225,6 +225,9 @@ export function setupSocketHandlers(io: Server) {
 
       socket.join(room.code);
 
+      const playersForClient = getPlayersForClient(room);
+      console.log(`[Socket] Player ${displayName} joined room ${room.code}. Total players: ${playersForClient.length}`);
+
       sendMessage(socket, {
         type: "room_info",
         payload: {
@@ -235,16 +238,16 @@ export function setupSocketHandlers(io: Server) {
             pointThreshold: room.config.pointThreshold,
             status: room.status,
           },
-          players: getPlayersForClient(room),
+          players: playersForClient,
           playerId,
           displayName,
         },
         timestamp: Date.now(),
       });
 
-      broadcastToRoom(io, room.code, {
+      socket.to(room.code).emit("message", {
         type: "player_joined",
-        payload: { players: getPlayersForClient(room) },
+        payload: { players: playersForClient },
         timestamp: Date.now(),
       });
     });
@@ -285,9 +288,9 @@ export function setupSocketHandlers(io: Server) {
 
       socket.join(room.code);
 
-      console.log(`Player ${displayName} rejoined room ${roomCode}`);
+      const playersForClient = getPlayersForClient(room);
+      console.log(`[Socket] Player ${displayName} rejoined room ${roomCode}. Total players: ${playersForClient.length}`);
 
-      // Send room info to rejoining player
       sendMessage(socket, {
         type: "room_info",
         payload: {
@@ -298,14 +301,13 @@ export function setupSocketHandlers(io: Server) {
             pointThreshold: room.config.pointThreshold,
             status: room.status,
           },
-          players: getPlayersForClient(room),
+          players: playersForClient,
           playerId,
           displayName,
         },
         timestamp: Date.now(),
       });
 
-      // If game is in progress, send current game state
       if (room.gameState) {
         sendMessage(socket, {
           type: "game_state",
@@ -314,10 +316,9 @@ export function setupSocketHandlers(io: Server) {
         });
       }
 
-      // Notify others that player reconnected
-      broadcastToRoom(io, room.code, {
+      socket.to(room.code).emit("message", {
         type: "player_joined",
-        payload: { players: getPlayersForClient(room) },
+        payload: { players: playersForClient },
         timestamp: Date.now(),
       });
     });

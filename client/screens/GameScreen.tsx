@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { StyleSheet, View, ScrollView, Pressable, Dimensions } from "react-native";
+import { StyleSheet, View, ScrollView, Pressable, Dimensions, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -41,6 +41,8 @@ export default function GameScreen() {
   const route = useRoute<GameRouteProp>();
 
   const {
+    connected,
+    reconnecting,
     gameState,
     myPlayer,
     isMyTurn,
@@ -50,6 +52,7 @@ export default function GameScreen() {
     addToSet,
     discard,
     declareLastCard,
+    forceReconnect,
   } = useGameSocket();
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
@@ -356,6 +359,15 @@ export default function GameScreen() {
           </View>
         ) : null}
         <View style={styles.headerButtons}>
+          {reconnecting ? (
+            <View style={styles.connectionIndicator}>
+              <ActivityIndicator size="small" color={GameColors.gold} />
+            </View>
+          ) : !connected ? (
+            <Pressable style={styles.connectionIndicator} onPress={forceReconnect}>
+              <Feather name="wifi-off" size={18} color="#FF6B6B" />
+            </Pressable>
+          ) : null}
           <Pressable style={styles.headerButton} onPress={() => setShowHelp(true)}>
             <Feather name="help-circle" size={24} color={GameColors.gold} />
           </Pressable>
@@ -631,7 +643,16 @@ const styles = StyleSheet.create({
   },
   headerButtons: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 4,
+  },
+  connectionIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerButton: {
     width: 44,
