@@ -12,7 +12,6 @@ import * as Clipboard from "expo-clipboard";
 import { ThemedText } from "@/components/ThemedText";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { GameButton } from "@/components/GameButton";
-import { HelpModal } from "@/components/HelpModal";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
@@ -46,7 +45,6 @@ export default function WaitingRoomScreen() {
 
   const [isStarting, setIsStarting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
 
   const handleCopyCode = async () => {
     if (roomInfo?.roomCode) {
@@ -172,22 +170,17 @@ export default function WaitingRoomScreen() {
           },
         ]}
       >
-        <View style={styles.roomCodeHeader}>
-          {reconnecting ? (
-            <View style={styles.connectionStatus}>
-              <ActivityIndicator size="small" color={GameColors.gold} />
-              <ThemedText style={styles.connectionText}>Reconnecting...</ThemedText>
-            </View>
-          ) : !connected ? (
-            <Pressable style={styles.connectionStatus} onPress={forceReconnect}>
-              <Feather name="wifi-off" size={16} color="#FF6B6B" />
-              <ThemedText style={[styles.connectionText, { color: "#FF6B6B" }]}>Tap to reconnect</ThemedText>
-            </Pressable>
-          ) : null}
-          <Pressable style={styles.helpButton} onPress={() => setShowHelp(true)}>
-            <Feather name="help-circle" size={24} color={GameColors.gold} />
+        {reconnecting ? (
+          <View style={styles.connectionStatus}>
+            <ActivityIndicator size="small" color={GameColors.gold} />
+            <ThemedText style={styles.connectionText}>Reconnecting...</ThemedText>
+          </View>
+        ) : !connected ? (
+          <Pressable style={styles.connectionStatus} onPress={forceReconnect}>
+            <Feather name="wifi-off" size={16} color="#FF6B6B" />
+            <ThemedText style={[styles.connectionText, { color: "#FF6B6B" }]}>Tap to reconnect</ThemedText>
           </Pressable>
-        </View>
+        ) : null}
 
         <View style={styles.roomCodeContainer}>
           <ThemedText style={styles.roomCodeLabel}>Room Code</ThemedText>
@@ -292,8 +285,6 @@ export default function WaitingRoomScreen() {
           />
         </View>
       </View>
-
-      <HelpModal visible={showHelp} onClose={() => setShowHelp(false)} />
     </View>
   );
 }
@@ -322,33 +313,21 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.lg,
   },
-  roomCodeHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.sm,
-  },
   connectionStatus: {
     flexDirection: "row",
     alignItems: "center",
+    alignSelf: "center",
     gap: Spacing.xs,
     backgroundColor: "rgba(0,0,0,0.3)",
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
   },
   connectionText: {
     color: GameColors.gold,
     fontSize: 12,
     fontWeight: "500",
-  },
-  helpButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0,0,0,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
   },
   roomCodeContainer: {
     alignItems: "center",

@@ -31,6 +31,8 @@ export function HelpModal({ visible, onClose }: HelpModalProps) {
     { key: "tips", label: "Tips", icon: "zap" },
   ];
 
+  const contentHeight = SCREEN_HEIGHT * 0.6;
+
   return (
     <Modal
       visible={visible}
@@ -45,7 +47,6 @@ export function HelpModal({ visible, onClose }: HelpModalProps) {
             {
               paddingTop: insets.top + Spacing.md,
               paddingBottom: insets.bottom + Spacing.lg,
-              maxHeight: SCREEN_HEIGHT * 0.85,
             },
           ]}
         >
@@ -84,9 +85,9 @@ export function HelpModal({ visible, onClose }: HelpModalProps) {
           </View>
 
           <ScrollView
-            style={styles.content}
+            style={[styles.content, { height: contentHeight }]}
             contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
           >
             {activeTab === "basics" ? <BasicsContent /> : null}
             {activeTab === "scoring" ? <ScoringContent /> : null}
@@ -417,7 +418,8 @@ const styles = StyleSheet.create({
     color: GameColors.gold,
   },
   content: {
-    flex: 1,
+    flexGrow: 0,
+    flexShrink: 0,
   },
   contentContainer: {
     paddingBottom: Spacing.xl,
