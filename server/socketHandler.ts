@@ -23,6 +23,22 @@ import {
 } from "./aiPlayer";
 import { storage } from "./storage";
 
+async function persistRoom(room: Room) {
+  try {
+    await storage.saveRoom({
+      id: room.id,
+      code: room.code,
+      hostPlayerId: room.hostId,
+      config: room.config,
+      players: room.players,
+      gameState: room.gameState,
+      status: room.status,
+    });
+  } catch (err) {
+    console.error(`[Storage] Failed to persist room ${room.code}:`, err);
+  }
+}
+
 interface Room {
   id: string;
   code: string;
@@ -125,20 +141,7 @@ export function setupSocketHandlers(io: Server) {
       socketToRoom.set(socket.id, roomCode);
       socketToPlayer.set(socket.id, playerId);
 
-      try {
-        await storage.createGameRoom({
-          id: roomId,
-          code: roomCode,
-          hostId: odexId,
-          gameMode: config.gameMode,
-          maxPlayers: config.maxPlayers,
-          pointThreshold: config.pointThreshold,
-          status: "waiting",
-        });
-        console.log(`Room ${roomCode} saved to database`);
-      } catch (err) {
-        console.error("Failed to persist room to database:", err);
-      }
+      await persistRoom(room);
 
       socket.join(roomCode);
 
@@ -250,6 +253,8 @@ export function setupSocketHandlers(io: Server) {
         payload: { players: playersForClient },
         timestamp: Date.now(),
       });
+
+      await persistRoom(room);
     });
 
     socket.on("leave_room", () => {
@@ -376,6 +381,8 @@ export function setupSocketHandlers(io: Server) {
         payload: { players: getPlayersForClient(room) },
         timestamp: Date.now(),
       });
+
+      persistRoom(room);
     });
 
     socket.on("remove_ai_player", () => {
@@ -400,6 +407,8 @@ export function setupSocketHandlers(io: Server) {
           payload: { players: getPlayersForClient(room) },
           timestamp: Date.now(),
         });
+
+        persistRoom(room);
       }
     });
 
@@ -459,6 +468,7 @@ export function setupSocketHandlers(io: Server) {
         }
       }
 
+      persistRoom(room);
       scheduleAITurn(io, room);
     });
 
@@ -519,6 +529,7 @@ export function setupSocketHandlers(io: Server) {
       room.gameState = newState;
 
       broadcastGameState(io, room);
+      persistRoom(room);
 
       if (newState.status === "playing") {
         scheduleAITurn(io, room);
@@ -536,6 +547,7 @@ export function setupSocketHandlers(io: Server) {
       room.gameState = newState;
 
       broadcastGameState(io, room);
+      persistRoom(room);
       scheduleAITurn(io, room);
     });
 
@@ -763,6 +775,7 @@ function executeAITurnActions(io: Server, room: Room, aiPlayerId: string) {
       if (discardState) {
         room.gameState = discardState;
         broadcastGameState(io, room);
+        persistRoom(room);
         console.log("executeAITurnActions: AI discarded successfully");
         
         if (discardState.status === "playing") {
