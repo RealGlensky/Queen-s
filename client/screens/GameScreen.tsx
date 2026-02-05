@@ -16,6 +16,7 @@ import { CardPile } from "@/components/CardPile";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { GameButton } from "@/components/GameButton";
 import { ScoreHistoryModal } from "@/components/ScoreHistoryModal";
+import { HelpModal } from "@/components/HelpModal";
 import { GameColors, Spacing, BorderRadius, CardDimensions, PLAYER_COLORS } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
@@ -57,6 +58,7 @@ export default function GameScreen() {
   const [moveLog, setMoveLog] = useState<MoveLogEntry[]>([]);
   const [showMoveLog, setShowMoveLog] = useState(false);
   const [showScoreHistory, setShowScoreHistory] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const prevHandRef = useRef<string[]>([]);
   const prevRoundRef = useRef<number>(0);
   const moveIdRef = useRef(0);
@@ -353,9 +355,14 @@ export default function GameScreen() {
             </View>
           </View>
         ) : null}
-        <Pressable style={styles.headerButton} onPress={() => setShowScoreHistory(true)}>
-          <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
-        </Pressable>
+        <View style={styles.headerButtons}>
+          <Pressable style={styles.headerButton} onPress={() => setShowHelp(true)}>
+            <Feather name="help-circle" size={24} color={GameColors.gold} />
+          </Pressable>
+          <Pressable style={styles.headerButton} onPress={() => setShowScoreHistory(true)}>
+            <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.playersArea}>
@@ -590,6 +597,8 @@ export default function GameScreen() {
         gameState={gameState}
         myPlayerId={myPlayer.id}
       />
+
+      <HelpModal visible={showHelp} onClose={() => setShowHelp(false)} />
     </View>
   );
 }
@@ -619,6 +628,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
+  },
+  headerButtons: {
+    flexDirection: "row",
+    gap: 4,
   },
   headerButton: {
     width: 44,
