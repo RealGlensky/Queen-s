@@ -95,19 +95,39 @@ function assignTeams(players: Room["players"], gameMode: "solo" | "2v2"): void {
   players[3].odexTeam = 2;
 }
 
-export async function initializeRoomCleanup() {
+async function initializeRooms() {
   try {
     const cleanedCount = await storage.cleanupStaleRooms(24);
     if (cleanedCount > 0) {
-      console.log(`Cleaned up ${cleanedCount} stale room(s) from database`);
+      console.log(`[Storage] Cleaned up ${cleanedCount} stale room(s) from database`);
+    }
+    
+    const activeRooms = await storage.loadActiveRooms();
+    console.log(`[Storage] Loading ${activeRooms.length} active room(s) from database`);
+    
+    for (const persistedRoom of activeRooms) {
+      const room: Room = {
+        id: persistedRoom.id,
+        code: persistedRoom.code,
+        hostId: persistedRoom.hostPlayerId,
+        config: persistedRoom.config,
+        players: persistedRoom.players.map(p => ({
+          ...p,
+          isConnected: false,
+        })),
+        gameState: persistedRoom.gameState,
+        status: persistedRoom.status,
+      };
+      rooms.set(room.code, room);
+      console.log(`[Storage] Restored room ${room.code} (status: ${room.status}, players: ${room.players.length})`);
     }
   } catch (err) {
-    console.error("Failed to clean up stale rooms:", err);
+    console.error("[Storage] Failed to initialize rooms:", err);
   }
 }
 
 export function setupSocketHandlers(io: Server) {
-  initializeRoomCleanup();
+  initializeRooms();
 
   io.on("connection", (socket: Socket) => {
     console.log("Client connected:", socket.id);
