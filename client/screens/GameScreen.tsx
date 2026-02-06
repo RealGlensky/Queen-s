@@ -594,7 +594,7 @@ export default function GameScreen() {
 
       {/* Move Log Panel */}
       {showMoveLog ? (
-        <View style={[styles.moveLogPanel, { top: insets.top + 60 + 56 }]}>
+        <View style={[styles.moveLogPanel, { top: insets.top + 60 + 48 }]}>
           <View style={styles.moveLogHeader}>
             <ThemedText style={styles.moveLogTitle}>Move History</ThemedText>
             <Pressable onPress={() => setShowMoveLog(false)}>
@@ -792,13 +792,13 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   sidePanelButton: {
-    width: 52,
-    height: 52,
-    borderRadius: BorderRadius.lg,
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    gap: 2,
+    gap: 1,
   },
   sidePanelButtonActive: {
     backgroundColor: "rgba(0,0,0,0.75)",
@@ -807,12 +807,12 @@ const styles = StyleSheet.create({
   },
   sidePanelLabel: {
     color: "rgba(255,255,255,0.8)",
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "600",
   },
   moveLogPanel: {
     position: "absolute",
-    right: Spacing.sm + 52 + Spacing.sm,
+    right: Spacing.sm + 44 + Spacing.sm,
     width: 200,
     maxHeight: 250,
     backgroundColor: "rgba(0,0,0,0.85)",
