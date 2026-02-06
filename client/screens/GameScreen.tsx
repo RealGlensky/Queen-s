@@ -334,30 +334,34 @@ export default function GameScreen() {
       <View style={styles.feltTexture} />
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <View style={styles.myScoreContainer}>
-          <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
-          <View>
-            <ThemedText style={styles.myScoreLabel}>
-              {gameState.gameMode === "2v2" ? "Your Team" : "You"}
-            </ThemedText>
-            <ThemedText style={styles.myScoreValue}>
-              {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
-            </ThemedText>
-          </View>
-        </View>
-        <View style={styles.roundInfo}>
-          <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
-          <ThemedText style={styles.thresholdText}>Goal: {gameState.pointThreshold}</ThemedText>
-        </View>
-        {gameState.gameMode === "2v2" ? (
-          <View style={styles.opponentScoreContainer}>
-            <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
-            <View>
-              <ThemedText style={styles.myScoreLabel}>Opponents</ThemedText>
-              <ThemedText style={styles.myScoreValue}>{opponentTeamScore} pts</ThemedText>
+        <View style={styles.headerCenter}>
+          <View style={styles.scoresRow}>
+            <View style={styles.myScoreContainer}>
+              <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
+              <View>
+                <ThemedText style={styles.myScoreLabel}>
+                  {gameState.gameMode === "2v2" ? "Your Team" : "You"}
+                </ThemedText>
+                <ThemedText style={styles.myScoreValue}>
+                  {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
+                </ThemedText>
+              </View>
             </View>
+            <View style={styles.roundInfo}>
+              <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
+              <ThemedText style={styles.thresholdText}>Goal: {gameState.pointThreshold}</ThemedText>
+            </View>
+            {gameState.gameMode === "2v2" ? (
+              <View style={styles.opponentScoreContainer}>
+                <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
+                <View>
+                  <ThemedText style={styles.myScoreLabel}>Opponents</ThemedText>
+                  <ThemedText style={styles.myScoreValue}>{opponentTeamScore} pts</ThemedText>
+                </View>
+              </View>
+            ) : null}
           </View>
-        ) : null}
+        </View>
         <View style={styles.headerButtons}>
           {reconnecting ? (
             <View style={styles.connectionIndicator}>
@@ -369,10 +373,10 @@ export default function GameScreen() {
             </Pressable>
           ) : null}
           <Pressable style={styles.headerButton} onPress={() => setShowHelp(true)}>
-            <Feather name="help-circle" size={24} color={GameColors.gold} />
+            <Feather name="help-circle" size={20} color={GameColors.gold} />
           </Pressable>
           <Pressable style={styles.headerButton} onPress={() => setShowScoreHistory(true)}>
-            <Feather name="bar-chart-2" size={24} color="#FFFFFF" />
+            <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
           </Pressable>
         </View>
       </View>
@@ -635,28 +639,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.sm,
   },
-  headerButtons: {
+  headerCenter: {
+    alignItems: "center",
+  },
+  scoresRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    justifyContent: "center",
+    gap: Spacing.lg,
+  },
+  headerButtons: {
+    position: "absolute",
+    right: Spacing.xs,
+    bottom: Spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
   },
   connectionIndicator: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: "rgba(0,0,0,0.3)",
     justifyContent: "center",
     alignItems: "center",
   },
   headerButton: {
-    width: 44,
-    height: 44,
+    width: 34,
+    height: 34,
     justifyContent: "center",
     alignItems: "center",
   },
