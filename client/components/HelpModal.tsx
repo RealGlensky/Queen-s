@@ -115,11 +115,24 @@ function ControlsContent() {
         </BulletPoint>
         <View style={styles.spacer} />
         <ThemedText style={styles.highlightText}>OR pick up the discard pile:</ThemedText>
-        <BulletPoint>
-          <ThemedText style={styles.text}>If you can match the top card of the pile, </ThemedText>
-          <ThemedText style={styles.boldText}>tap the pile</ThemedText>
-          <ThemedText style={styles.text}> to take ALL cards from it. (See Rules tab for pickup requirements.)</ThemedText>
+        <BulletPoint number={1}>
+          <ThemedText style={styles.text}>First, </ThemedText>
+          <ThemedText style={styles.boldText}>tap the 2 matching cards</ThemedText>
+          <ThemedText style={styles.text}> in your hand to select them. You need 2 cards that match the top card's rank (or 1 matching + 1 wild 2).</ThemedText>
         </BulletPoint>
+        <BulletPoint number={2}>
+          <ThemedText style={styles.text}>The pile will </ThemedText>
+          <ThemedText style={styles.boldText}>glow/highlight</ThemedText>
+          <ThemedText style={styles.text}> when you have valid matching cards selected.</ThemedText>
+        </BulletPoint>
+        <BulletPoint number={3}>
+          <ThemedText style={styles.boldText}>Tap the pile</ThemedText>
+          <ThemedText style={styles.text}> to pick up ALL cards from it. The matching cards stay in your hand.</ThemedText>
+        </BulletPoint>
+        <View style={styles.spacer} />
+        <ThemedText style={styles.noteText}>
+          If a wild 2 is on top, you need 2 natural cards of the same rank (any rank) - you cannot use another 2. See Rules tab for full details.
+        </ThemedText>
       </SectionCard>
 
       <SectionCard title="Step 2: Play Cards (Optional)" icon="layers">
@@ -139,11 +152,16 @@ function ControlsContent() {
         <ThemedText style={styles.highlightText}>Add to existing sets:</ThemedText>
         <BulletPoint number={1}>
           <ThemedText style={styles.boldText}>Tap a card</ThemedText>
-          <ThemedText style={styles.text}> in your hand that matches a set on the table.</ThemedText>
+          <ThemedText style={styles.text}> in your hand that matches the rank of one of your sets on the table (or your teammate's sets in 2v2).</ThemedText>
         </BulletPoint>
         <BulletPoint number={2}>
+          <ThemedText style={styles.text}>The matching set will become </ThemedText>
+          <ThemedText style={styles.boldText}>tappable</ThemedText>
+          <ThemedText style={styles.text}>.</ThemedText>
+        </BulletPoint>
+        <BulletPoint number={3}>
           <ThemedText style={styles.boldText}>Tap the set</ThemedText>
-          <ThemedText style={styles.text}> (your own or teammate's in 2v2) to add the card to it.</ThemedText>
+          <ThemedText style={styles.text}> on the table to add your selected card to it.</ThemedText>
         </BulletPoint>
         <View style={styles.spacer} />
         <ThemedText style={styles.noteText}>
@@ -185,6 +203,30 @@ function ControlsContent() {
           When you have exactly 1 card left, tap the </ThemedText>
         <ThemedText style={styles.boldText}>"Last Card!"</ThemedText>
         <ThemedText style={styles.text}> button that appears. You must declare this before going out!</ThemedText>
+      </SectionCard>
+
+      <SectionCard title="Side Panel Buttons" icon="sidebar">
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Scores</ThemedText>
+          <ThemedText style={styles.text}> - View the score breakdown for each round and cumulative totals.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Moves</ThemedText>
+          <ThemedText style={styles.text}> - Opens a move-by-move log showing what each player has done (draws, discards, sets laid, etc.).</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>Help</ThemedText>
+          <ThemedText style={styles.text}> - Opens this help guide.</ThemedText>
+        </BulletPoint>
+      </SectionCard>
+
+      <SectionCard title="Connection Status" icon="wifi">
+        <ThemedText style={styles.text}>
+          The small dot in the top-right corner shows your connection. </ThemedText>
+        <ThemedText style={styles.boldText}>Green</ThemedText>
+        <ThemedText style={styles.text}> means connected; </ThemedText>
+        <ThemedText style={styles.boldText}>red</ThemedText>
+        <ThemedText style={styles.text}> means disconnected. Tap it to reconnect if you lose connection.</ThemedText>
       </SectionCard>
     </View>
   );
