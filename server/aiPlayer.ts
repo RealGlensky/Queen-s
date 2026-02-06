@@ -185,33 +185,53 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
   let simulatedHand = [...player.hand];
   const simulatedSets = [...player.sets];
 
+  let teammateSets: CardSet[] = [];
+  if (state.gameMode === "2v2") {
+    teammateSets = state.players
+      .filter(p => p.odexTeam === player.odexTeam && p.id !== playerId)
+      .flatMap(p => p.sets);
+  }
+
   const potentialSets = findPotentialSets(simulatedHand);
   for (const setCards of potentialSets) {
     if (setCards.every(c => simulatedHand.some(h => h.id === c.id))) {
       if (isValidSet(setCards) && simulatedHand.length - setCards.length >= 1) {
-        decisions.push({
-          type: "lay_set",
-          cardIds: setCards.map(c => c.id),
-        });
-        simulatedHand = simulatedHand.filter(c => !setCards.some(sc => sc.id === c.id));
-        
-        const newSet: CardSet = {
-          id: `temp_${Date.now()}`,
-          cards: setCards,
-          rank: setCards.find(c => !isWildCard(c))?.rank || "2",
-          ownerId: playerId,
-        };
-        simulatedSets.push(newSet);
+        const setRank = setCards.find(c => !isWildCard(c))?.rank || "2";
+        const existingTeamSet = teammateSets.find(s => s.rank === setRank);
+
+        if (existingTeamSet) {
+          for (const card of setCards) {
+            if (simulatedHand.length >= 2) {
+              decisions.push({
+                type: "add_to_set",
+                cardId: card.id,
+                setId: existingTeamSet.id,
+              });
+              simulatedHand = simulatedHand.filter(c => c.id !== card.id);
+            }
+          }
+        } else {
+          decisions.push({
+            type: "lay_set",
+            cardIds: setCards.map(c => c.id),
+          });
+          simulatedHand = simulatedHand.filter(c => !setCards.some(sc => sc.id === c.id));
+          
+          const newSet: CardSet = {
+            id: `temp_${Date.now()}`,
+            cards: setCards,
+            rank: setRank,
+            ownerId: playerId,
+          };
+          simulatedSets.push(newSet);
+        }
       }
     }
   }
 
   let allSets = [...simulatedSets];
   if (state.gameMode === "2v2") {
-    const teamSets = state.players
-      .filter(p => p.odexTeam === player.odexTeam && p.id !== playerId)
-      .flatMap(p => p.sets);
-    allSets = [...allSets, ...teamSets];
+    allSets = [...allSets, ...teammateSets];
   }
 
   const additions = findCardsToAddToSets(simulatedHand, allSets);
