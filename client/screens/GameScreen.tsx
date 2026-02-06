@@ -328,9 +328,14 @@ export default function GameScreen() {
   const canPickup = topCard && isMyTurn && gameState.turnPhase === "draw" && 
     canPickupPile(myPlayer.hand, topCard);
 
+  const setRankOrder: Record<string, number> = {
+    "A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7,
+    "8": 8, "9": 9, "10": 10, "J": 11, "Q": 12, "K": 13, "joker": 14,
+  };
+
   const allSets = gameState.players.reduce<CardSetType[]>((acc, player) => {
     return [...acc, ...player.sets];
-  }, []);
+  }, []).sort((a, b) => (setRankOrder[a.rank] || 0) - (setRankOrder[b.rank] || 0));
 
   // Team colors for 2v2 mode
   const teamColors: Record<number, string> = {

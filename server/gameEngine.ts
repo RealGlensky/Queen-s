@@ -249,16 +249,40 @@ export function processPickupPile(
     return 0;
   });
   
-  const newSet: CardSet = {
-    id: uuidv4(),
-    cards: sortedSetCards,
-    rank: setRank,
-    ownerId: playerId,
-    teamId: player.odexTeam,
-  };
-  
   player.hand = player.hand.filter(c => !setCards.some(sc => sc.id === c.id));
-  player.sets.push(newSet);
+
+  let mergedWithTeammate = false;
+  if (state.gameMode === "2v2") {
+    for (const p of state.players) {
+      if (p.odexTeam === player.odexTeam && p.id !== playerId) {
+        const matchingSet = p.sets.find(s => s.rank === setRank);
+        if (matchingSet) {
+          matchingSet.cards.push(...sortedSetCards);
+          matchingSet.cards.sort((a, b) => {
+            if (a.rank === "Q" && a.suit === "spades") return 1;
+            if (b.rank === "Q" && b.suit === "spades") return -1;
+            if (isWildCard(a) && !isWildCard(b)) return -1;
+            if (!isWildCard(a) && isWildCard(b)) return 1;
+            return 0;
+          });
+          mergedWithTeammate = true;
+          console.log(`[Merge-Pickup] Merged pickup set of ${setRank} into teammate ${p.displayName}'s existing set`);
+          break;
+        }
+      }
+    }
+  }
+
+  if (!mergedWithTeammate) {
+    const newSet: CardSet = {
+      id: uuidv4(),
+      cards: sortedSetCards,
+      rank: setRank,
+      ownerId: playerId,
+      teamId: player.odexTeam,
+    };
+    player.sets.push(newSet);
+  }
   
   state.turnPhase = "play";
   
@@ -311,15 +335,27 @@ export function processLaySet(
   player.hand = player.hand.filter(c => !cardIds.includes(c.id));
 
   let existingTeammateSet: CardSet | undefined;
+  let existingSetOwner: Player | undefined;
   if (state.gameMode === "2v2") {
     for (const p of state.players) {
-      if (p.odexTeam === player.odexTeam) {
+      if (p.odexTeam === player.odexTeam && p.id !== playerId) {
         const matchingSet = p.sets.find(s => s.rank === rank);
         if (matchingSet) {
           existingTeammateSet = matchingSet;
+          existingSetOwner = p;
+          console.log(`[Merge] Found teammate set to merge: player ${p.displayName} has set of rank ${rank} (setId: ${matchingSet.id})`);
           break;
         }
       }
+    }
+    if (!existingTeammateSet) {
+      console.log(`[Merge] No teammate set found for rank ${rank}. Team ${player.odexTeam} players' sets:`, 
+        state.players.filter(p => p.odexTeam === player.odexTeam).map(p => ({
+          name: p.displayName, 
+          id: p.id,
+          sets: p.sets.map(s => ({ rank: s.rank, id: s.id }))
+        }))
+      );
     }
   }
 
@@ -332,6 +368,7 @@ export function processLaySet(
       if (!isWildCard(a) && isWildCard(b)) return 1;
       return 0;
     });
+    console.log(`[Merge] Merged ${sortedCards.length} cards into teammate ${existingSetOwner?.displayName}'s set of ${rank}`);
   } else {
     const newSet: CardSet = {
       id: uuidv4(),
