@@ -308,16 +308,40 @@ export function processLaySet(
     return 0;
   });
   
-  const newSet: CardSet = {
-    id: uuidv4(),
-    cards: sortedCards,
-    rank,
-    ownerId: playerId,
-    teamId: player.odexTeam,
-  };
-  
   player.hand = player.hand.filter(c => !cardIds.includes(c.id));
-  player.sets.push(newSet);
+
+  let existingTeammateSet: CardSet | undefined;
+  if (state.gameMode === "2v2") {
+    for (const p of state.players) {
+      if (p.odexTeam === player.odexTeam) {
+        const matchingSet = p.sets.find(s => s.rank === rank);
+        if (matchingSet) {
+          existingTeammateSet = matchingSet;
+          break;
+        }
+      }
+    }
+  }
+
+  if (existingTeammateSet) {
+    existingTeammateSet.cards.push(...sortedCards);
+    existingTeammateSet.cards.sort((a, b) => {
+      if (a.rank === "Q" && a.suit === "spades") return 1;
+      if (b.rank === "Q" && b.suit === "spades") return -1;
+      if (isWildCard(a) && !isWildCard(b)) return -1;
+      if (!isWildCard(a) && isWildCard(b)) return 1;
+      return 0;
+    });
+  } else {
+    const newSet: CardSet = {
+      id: uuidv4(),
+      cards: sortedCards,
+      rank,
+      ownerId: playerId,
+      teamId: player.odexTeam,
+    };
+    player.sets.push(newSet);
+  }
   
   addAction(state, {
     id: uuidv4(),
