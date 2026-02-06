@@ -668,8 +668,8 @@ export default function GameScreen() {
           style={[styles.sidePanelButton, showHelp && styles.sidePanelButtonActive]}
           onPress={() => setShowHelp(true)}
         >
-          <Feather name="zap" size={20} color={GameColors.gold} />
-          <ThemedText style={styles.sidePanelLabel}>Tips</ThemedText>
+          <Feather name="help-circle" size={20} color={GameColors.gold} />
+          <ThemedText style={styles.sidePanelLabel}>Help</ThemedText>
         </Pressable>
       </View>
 
