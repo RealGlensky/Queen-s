@@ -746,7 +746,8 @@ const styles = StyleSheet.create({
     maxHeight: 180,
   },
   setsScroll: {
-    paddingHorizontal: Spacing.lg,
+    paddingLeft: Spacing.lg,
+    paddingRight: Spacing.lg + 52,
     gap: Spacing.md,
     alignItems: "center",
   },
