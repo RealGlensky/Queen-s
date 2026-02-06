@@ -251,38 +251,14 @@ export function processPickupPile(
   
   player.hand = player.hand.filter(c => !setCards.some(sc => sc.id === c.id));
 
-  let mergedWithTeammate = false;
-  if (state.gameMode === "2v2") {
-    for (const p of state.players) {
-      if (p.odexTeam === player.odexTeam && p.id !== playerId) {
-        const matchingSet = p.sets.find(s => s.rank === setRank);
-        if (matchingSet) {
-          matchingSet.cards.push(...sortedSetCards);
-          matchingSet.cards.sort((a, b) => {
-            if (a.rank === "Q" && a.suit === "spades") return 1;
-            if (b.rank === "Q" && b.suit === "spades") return -1;
-            if (isWildCard(a) && !isWildCard(b)) return -1;
-            if (!isWildCard(a) && isWildCard(b)) return 1;
-            return 0;
-          });
-          mergedWithTeammate = true;
-          console.log(`[Merge-Pickup] Merged pickup set of ${setRank} into teammate ${p.displayName}'s existing set`);
-          break;
-        }
-      }
-    }
-  }
-
-  if (!mergedWithTeammate) {
-    const newSet: CardSet = {
-      id: uuidv4(),
-      cards: sortedSetCards,
-      rank: setRank,
-      ownerId: playerId,
-      teamId: player.odexTeam,
-    };
-    player.sets.push(newSet);
-  }
+  const newSet: CardSet = {
+    id: uuidv4(),
+    cards: sortedSetCards,
+    rank: setRank,
+    ownerId: playerId,
+    teamId: player.odexTeam,
+  };
+  player.sets.push(newSet);
   
   state.turnPhase = "play";
   
