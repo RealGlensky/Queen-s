@@ -289,6 +289,10 @@ export function processLaySet(
   if (cards.length < 3 || !isValidSet(cards)) {
     return null;
   }
+
+  if (player.hand.length - cards.length < 1) {
+    return null;
+  }
   
   const nonWildcards = cards.filter(c => !isWildCard(c) && !c.isJoker);
   const rank = nonWildcards[0]?.rank || "2";
@@ -353,6 +357,10 @@ export function processAddToSet(
   
   const card = player.hand.find(c => c.id === cardId);
   if (!card) return null;
+
+  if (player.hand.length < 2) {
+    return null;
+  }
   
   let targetSet: CardSet | undefined;
   let setOwner: Player | undefined;
