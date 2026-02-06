@@ -188,7 +188,7 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
   const potentialSets = findPotentialSets(simulatedHand);
   for (const setCards of potentialSets) {
     if (setCards.every(c => simulatedHand.some(h => h.id === c.id))) {
-      if (isValidSet(setCards)) {
+      if (isValidSet(setCards) && simulatedHand.length - setCards.length >= 1) {
         decisions.push({
           type: "lay_set",
           cardIds: setCards.map(c => c.id),
@@ -216,7 +216,7 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
 
   const additions = findCardsToAddToSets(simulatedHand, allSets);
   for (const addition of additions) {
-    if (simulatedHand.some(c => c.id === addition.cardId)) {
+    if (simulatedHand.some(c => c.id === addition.cardId) && simulatedHand.length >= 2) {
       const actualSet = state.players
         .flatMap(p => p.sets)
         .find(s => s.id === addition.setId);
