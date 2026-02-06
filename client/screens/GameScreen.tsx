@@ -58,6 +58,7 @@ export default function GameScreen() {
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [targetSetId, setTargetSetId] = useState<string | null>(null);
   const [highlightedCards, setHighlightedCards] = useState<string[]>([]);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [moveLog, setMoveLog] = useState<MoveLogEntry[]>([]);
   const [showMoveLog, setShowMoveLog] = useState(false);
   const [showScoreHistory, setShowScoreHistory] = useState(false);
@@ -67,6 +68,17 @@ export default function GameScreen() {
   const moveIdRef = useRef(0);
   const moveLogScrollRef = useRef<ScrollView>(null);
   const seenActionIds = useRef<Set<string>>(new Set());
+  const actionMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (actionMessage) {
+      if (actionMessageTimer.current) clearTimeout(actionMessageTimer.current);
+      actionMessageTimer.current = setTimeout(() => setActionMessage(null), 3000);
+    }
+    return () => {
+      if (actionMessageTimer.current) clearTimeout(actionMessageTimer.current);
+    };
+  }, [actionMessage]);
 
   useEffect(() => {
     if (gameState?.status === "round_end" || gameState?.status === "game_over") {
@@ -211,6 +223,12 @@ export default function GameScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
+    const handSize = myPlayer?.hand.length || 0;
+    if (handSize - cards.length < 1) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setActionMessage("You must keep at least 1 card to discard");
+      return;
+    }
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     laySet(selectedCards);
     setSelectedCards([]);
@@ -218,8 +236,13 @@ export default function GameScreen() {
 
   const handleAddToSet = async (setId: string) => {
     if (selectedCards.length === 0) return;
+    const handSize = myPlayer?.hand.length || 0;
+    if (handSize - selectedCards.length < 1) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setActionMessage("You must keep at least 1 card to discard");
+      return;
+    }
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Add each selected card to the set one by one
     for (const cardId of selectedCards) {
       addToSet(setId, cardId);
     }
@@ -332,6 +355,20 @@ export default function GameScreen() {
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.feltTexture} />
+
+      {actionMessage ? (
+        <Animated.View
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(200)}
+          style={[styles.actionMessageContainer, { top: insets.top + 60 }]}
+          pointerEvents="none"
+        >
+          <View style={styles.actionMessageBubble}>
+            <Feather name="alert-circle" size={16} color="#fff" />
+            <ThemedText style={styles.actionMessageText}>{actionMessage}</ThemedText>
+          </View>
+        </Animated.View>
+      ) : null}
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.headerCenter}>
@@ -877,5 +914,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: Spacing.sm,
     flexWrap: "wrap",
+  },
+  actionMessageContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    alignItems: "center",
+  },
+  actionMessageBubble: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: "rgba(200, 50, 50, 0.9)",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.lg,
+  },
+  actionMessageText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
