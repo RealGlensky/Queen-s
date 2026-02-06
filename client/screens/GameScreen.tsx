@@ -46,6 +46,7 @@ export default function GameScreen() {
     gameState,
     myPlayer,
     isMyTurn,
+    error: socketError,
     drawFromDeck,
     pickupPile,
     laySet,
@@ -53,12 +54,14 @@ export default function GameScreen() {
     discard,
     declareLastCard,
     forceReconnect,
+    clearError,
   } = useGameSocket();
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [targetSetId, setTargetSetId] = useState<string | null>(null);
   const [highlightedCards, setHighlightedCards] = useState<string[]>([]);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const [moveLog, setMoveLog] = useState<MoveLogEntry[]>([]);
   const [showMoveLog, setShowMoveLog] = useState(false);
   const [showScoreHistory, setShowScoreHistory] = useState(false);
@@ -79,6 +82,15 @@ export default function GameScreen() {
       if (actionMessageTimer.current) clearTimeout(actionMessageTimer.current);
     };
   }, [actionMessage]);
+
+  useEffect(() => {
+    if (gameState && myPlayer) {
+      setLoadingTimedOut(false);
+      return;
+    }
+    const timer = setTimeout(() => setLoadingTimedOut(true), 10000);
+    return () => clearTimeout(timer);
+  }, [gameState, myPlayer]);
 
   useEffect(() => {
     if (gameState?.status === "round_end" || gameState?.status === "game_over") {
@@ -261,7 +273,15 @@ export default function GameScreen() {
     declareLastCard();
   };
 
+  const handleGoBack = () => {
+    clearError();
+    navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+  };
+
   if (!gameState || !myPlayer) {
+    const showError = socketError || loadingTimedOut;
+    const errorMessage = socketError || "Could not connect to the game. The room may no longer exist.";
+
     return (
       <View style={styles.container}>
         <LinearGradient
@@ -269,7 +289,31 @@ export default function GameScreen() {
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.loadingContainer}>
-          <ThemedText style={styles.loadingText}>Loading game...</ThemedText>
+          {showError ? (
+            <>
+              <Feather name="alert-circle" size={48} color="rgba(255,255,255,0.7)" style={{ marginBottom: Spacing.md }} />
+              <ThemedText style={styles.loadingText}>{errorMessage}</ThemedText>
+              <View style={{ flexDirection: "row", gap: Spacing.md, marginTop: Spacing.lg }}>
+                <Pressable
+                  style={styles.loadingRetryButton}
+                  onPress={forceReconnect}
+                >
+                  <ThemedText style={styles.loadingRetryText}>Retry</ThemedText>
+                </Pressable>
+                <Pressable
+                  style={[styles.loadingRetryButton, { backgroundColor: "rgba(255,255,255,0.15)" }]}
+                  onPress={handleGoBack}
+                >
+                  <ThemedText style={styles.loadingRetryText}>Go Back</ThemedText>
+                </Pressable>
+              </View>
+            </>
+          ) : (
+            <>
+              <ActivityIndicator size="large" color="rgba(255,255,255,0.7)" style={{ marginBottom: Spacing.md }} />
+              <ThemedText style={styles.loadingText}>Loading game...</ThemedText>
+            </>
+          )}
         </View>
       </View>
     );
@@ -687,6 +731,19 @@ const styles = StyleSheet.create({
   loadingText: {
     color: "rgba(255,255,255,0.7)",
     fontSize: 16,
+    textAlign: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  loadingRetryButton: {
+    backgroundColor: "rgba(255,255,255,0.25)",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+  loadingRetryText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
   },
   header: {
     paddingHorizontal: Spacing.md,
