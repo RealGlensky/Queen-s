@@ -372,12 +372,6 @@ export default function GameScreen() {
               <Feather name="wifi-off" size={18} color="#FF6B6B" />
             </Pressable>
           ) : null}
-          <Pressable style={styles.headerButton} onPress={() => setShowHelp(true)}>
-            <Feather name="help-circle" size={20} color={GameColors.gold} />
-          </Pressable>
-          <Pressable style={styles.headerButton} onPress={() => setShowScoreHistory(true)}>
-            <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
-          </Pressable>
         </View>
       </View>
 
@@ -571,17 +565,36 @@ export default function GameScreen() {
         </View>
       </View>
 
-      {/* Move Log Toggle Button */}
-      <Pressable 
-        style={[styles.moveLogToggle, { top: insets.top + 60 }]}
-        onPress={() => setShowMoveLog(!showMoveLog)}
-      >
-        <Feather name="list" size={20} color="#FFFFFF" />
-      </Pressable>
+      {/* Right Side Panel - Score Breakdown, Move History, Tips */}
+      <View style={[styles.rightSidePanel, { top: insets.top + 60 }]}>
+        <Pressable 
+          style={[styles.sidePanelButton, showScoreHistory && styles.sidePanelButtonActive]}
+          onPress={() => setShowScoreHistory(true)}
+        >
+          <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
+          <ThemedText style={styles.sidePanelLabel}>Scores</ThemedText>
+        </Pressable>
+
+        <Pressable 
+          style={[styles.sidePanelButton, showMoveLog && styles.sidePanelButtonActive]}
+          onPress={() => setShowMoveLog(!showMoveLog)}
+        >
+          <Feather name="list" size={20} color="#FFFFFF" />
+          <ThemedText style={styles.sidePanelLabel}>Moves</ThemedText>
+        </Pressable>
+
+        <Pressable 
+          style={[styles.sidePanelButton, showHelp && styles.sidePanelButtonActive]}
+          onPress={() => setShowHelp(true)}
+        >
+          <Feather name="zap" size={20} color={GameColors.gold} />
+          <ThemedText style={styles.sidePanelLabel}>Tips</ThemedText>
+        </Pressable>
+      </View>
 
       {/* Move Log Panel */}
       {showMoveLog ? (
-        <View style={[styles.moveLogPanel, { top: insets.top + 110 }]}>
+        <View style={[styles.moveLogPanel, { top: insets.top + 60 + 56 }]}>
           <View style={styles.moveLogHeader}>
             <ThemedText style={styles.moveLogTitle}>Move History</ThemedText>
             <Pressable onPress={() => setShowMoveLog(false)}>
@@ -673,6 +686,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   myScoreContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -770,24 +784,41 @@ const styles = StyleSheet.create({
   handContainer: {
     minHeight: CardDimensions.height + Spacing.xl,
   },
-  moveLogToggle: {
+  rightSidePanel: {
     position: "absolute",
-    right: Spacing.lg,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    right: Spacing.sm,
+    flexDirection: "column",
+    gap: Spacing.xs,
+    zIndex: 10,
+  },
+  sidePanelButton: {
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.lg,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    gap: 2,
+  },
+  sidePanelButtonActive: {
+    backgroundColor: "rgba(0,0,0,0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+  },
+  sidePanelLabel: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 9,
+    fontWeight: "600",
   },
   moveLogPanel: {
     position: "absolute",
-    right: Spacing.lg,
+    right: Spacing.sm + 52 + Spacing.sm,
     width: 200,
     maxHeight: 250,
     backgroundColor: "rgba(0,0,0,0.85)",
     borderRadius: BorderRadius.lg,
     padding: Spacing.sm,
+    zIndex: 9,
   },
   moveLogHeader: {
     flexDirection: "row",
