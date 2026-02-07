@@ -165,7 +165,13 @@ export function getAIDrawDecision(state: GameState, playerId: string): AIDecisio
   const player = state.players.find(p => p.id === playerId);
   if (!player) return { type: "draw_deck" };
 
-  const pickupCheck = shouldPickupPile(player.hand, state.pickupPile, player.sets);
+  let allTeamSets = player.sets;
+  if (state.gameMode === "2v2") {
+    allTeamSets = state.players
+      .filter(p => p.odexTeam === player.odexTeam)
+      .flatMap(p => p.sets);
+  }
+  const pickupCheck = shouldPickupPile(player.hand, state.pickupPile, allTeamSets);
   
   if (pickupCheck.shouldPickup && pickupCheck.cardIds.length >= 2) {
     return {

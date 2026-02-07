@@ -189,9 +189,18 @@ export function processPickupPile(
   
   const topCard = state.pickupPile[state.pickupPile.length - 1];
   
-  const playerHasSetWithRank = player.sets.some(s => s.rank === topCard.rank);
-  if (playerHasSetWithRank && !topCard.isJoker) {
-    return null;
+  if (!topCard.isJoker) {
+    let teamHasSetWithRank = false;
+    if (state.gameMode === "2v2") {
+      teamHasSetWithRank = state.players.some(p =>
+        p.odexTeam === player.odexTeam && p.sets.some(s => s.rank === topCard.rank)
+      );
+    } else {
+      teamHasSetWithRank = player.sets.some(s => s.rank === topCard.rank);
+    }
+    if (teamHasSetWithRank) {
+      return null;
+    }
   }
   
   const selectedCards = player.hand.filter(c => cardIds.includes(c.id));

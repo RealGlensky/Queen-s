@@ -340,8 +340,14 @@ export default function GameScreen() {
   const topCard = gameState.pickupPile.length > 0 
     ? gameState.pickupPile[gameState.pickupPile.length - 1] 
     : null;
+  const teamHasTopCardRank = topCard && !topCard.isJoker && gameState.players.some(p => {
+    if (gameState.gameMode === "2v2") {
+      return p.odexTeam === myPlayer.odexTeam && p.sets.some(s => s.rank === topCard.rank);
+    }
+    return p.id === myPlayer.id && p.sets.some(s => s.rank === topCard.rank);
+  });
   const canPickup = topCard && isMyTurn && gameState.turnPhase === "draw" && 
-    canPickupPile(myPlayer.hand, topCard);
+    !teamHasTopCardRank && canPickupPile(myPlayer.hand, topCard);
 
   const setRankOrder: Record<string, number> = {
     "A": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7,
