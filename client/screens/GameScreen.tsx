@@ -53,6 +53,7 @@ export default function GameScreen() {
     addToSet,
     discard,
     declareLastCard,
+    leaveRoom,
     forceReconnect,
     clearError,
   } = useGameSocket();
@@ -290,6 +291,11 @@ export default function GameScreen() {
 
   const handleGoBack = () => {
     clearError();
+    navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+  };
+
+  const handleExitGame = () => {
+    leaveRoom();
     navigation.reset({ index: 0, routes: [{ name: "Home" }] });
   };
 
@@ -672,6 +678,15 @@ export default function GameScreen() {
         </View>
       </View>
 
+      {/* Back Button - Top Left */}
+      <Pressable
+        style={[styles.backButton, { top: insets.top + 8 }]}
+        onPress={handleExitGame}
+        testID="button-exit-game"
+      >
+        <Feather name="arrow-left" size={22} color="#FFFFFF" />
+      </Pressable>
+
       {/* Right Side Panel - Score Breakdown, Move History, Tips */}
       <View style={[styles.rightSidePanel, { top: insets.top + 60 }]}>
         <Pressable 
@@ -904,6 +919,17 @@ const styles = StyleSheet.create({
   },
   handContainer: {
     minHeight: CardDimensions.height + Spacing.xl,
+  },
+  backButton: {
+    position: "absolute",
+    left: Spacing.sm,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
   },
   rightSidePanel: {
     position: "absolute",
