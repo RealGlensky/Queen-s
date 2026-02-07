@@ -154,10 +154,10 @@ export const CardDimensions = {
 };
 
 export const PLAYER_COLORS = [
-  "#4CAF50", // Green - Player 1 (you)
-  "#2196F3", // Blue - Player 2
-  "#FF9800", // Orange - Player 3
-  "#E91E63", // Pink - Player 4
-  "#9C27B0", // Purple - Player 5
-  "#00BCD4", // Cyan - Player 6
+  "#2ECC71", // Emerald Green - Player 1 (you)
+  "#3498DB", // Royal Blue - Player 2
+  "#F39C12", // Amber Gold - Player 3
+  "#E74C3C", // Crimson Red - Player 4
+  "#8E44AD", // Deep Purple - Player 5
+  "#E91E8C", // Hot Pink - Player 6
 ];
