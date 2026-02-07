@@ -197,7 +197,8 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
     if (setCards.every(c => simulatedHand.some(h => h.id === c.id))) {
       if (isValidSet(setCards) && simulatedHand.length - setCards.length >= 1) {
         const setRank = setCards.find(c => !isWildCard(c))?.rank || "2";
-        const existingTeamSet = teammateSets.find(s => s.rank === setRank);
+        const existingOwnSet = simulatedSets.find(s => s.rank === setRank);
+        const existingTeamSet = existingOwnSet || teammateSets.find(s => s.rank === setRank);
 
         if (existingTeamSet) {
           for (const card of setCards) {

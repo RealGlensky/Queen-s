@@ -241,6 +241,21 @@ export default function GameScreen() {
       setActionMessage("You must keep at least 1 card to discard");
       return;
     }
+    const nonWild = cards.filter(c => c.rank !== "2" && !c.isJoker);
+    const setRank = nonWild[0]?.rank;
+    if (setRank && gameState && myPlayer) {
+      const teamAlreadyHasSet = gameState.players.some(p => {
+        if (gameState.gameMode === "2v2") {
+          return p.odexTeam === myPlayer!.odexTeam && p.sets.some(s => s.rank === setRank);
+        }
+        return p.id === myPlayer!.id && p.sets.some(s => s.rank === setRank);
+      });
+      if (teamAlreadyHasSet) {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setActionMessage("Your team already has this set - tap the set to add cards");
+        return;
+      }
+    }
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     laySet(selectedCards);
     setSelectedCards([]);

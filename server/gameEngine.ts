@@ -297,12 +297,28 @@ export function processLaySet(
   const nonWildcards = cards.filter(c => !isWildCard(c) && !c.isJoker);
   const rank = nonWildcards[0]?.rank || "2";
   
+  // Block laying a set if the team (or player in solo) already has a set of this rank
+  // Player should use "add to set" instead
+  if (state.gameMode === "2v2") {
+    const teamHasSet = state.players.some(p => 
+      p.odexTeam === player.odexTeam && p.sets.some(s => s.rank === rank)
+    );
+    if (teamHasSet) {
+      console.log(`[LaySet] Blocked: Team ${player.odexTeam} already has a set of rank ${rank}. Use add-to-set instead.`);
+      return null;
+    }
+  } else {
+    const playerHasSet = player.sets.some(s => s.rank === rank);
+    if (playerHasSet) {
+      console.log(`[LaySet] Blocked: Player already has a set of rank ${rank}. Use add-to-set instead.`);
+      return null;
+    }
+  }
+
   // Sort cards: 2s (wild) first (underneath), then normal cards, then Queen of Spades on top
   let sortedCards = [...cards].sort((a, b) => {
-    // Queen of Spades goes to very end (on top visually)
     if (a.rank === "Q" && a.suit === "spades") return 1;
     if (b.rank === "Q" && b.suit === "spades") return -1;
-    // Wild cards (2s) go to beginning (underneath visually)
     if (isWildCard(a) && !isWildCard(b)) return -1;
     if (!isWildCard(a) && isWildCard(b)) return 1;
     return 0;
@@ -310,51 +326,14 @@ export function processLaySet(
   
   player.hand = player.hand.filter(c => !cardIds.includes(c.id));
 
-  let existingTeammateSet: CardSet | undefined;
-  let existingSetOwner: Player | undefined;
-  if (state.gameMode === "2v2") {
-    for (const p of state.players) {
-      if (p.odexTeam === player.odexTeam && p.id !== playerId) {
-        const matchingSet = p.sets.find(s => s.rank === rank);
-        if (matchingSet) {
-          existingTeammateSet = matchingSet;
-          existingSetOwner = p;
-          console.log(`[Merge] Found teammate set to merge: player ${p.displayName} has set of rank ${rank} (setId: ${matchingSet.id})`);
-          break;
-        }
-      }
-    }
-    if (!existingTeammateSet) {
-      console.log(`[Merge] No teammate set found for rank ${rank}. Team ${player.odexTeam} players' sets:`, 
-        state.players.filter(p => p.odexTeam === player.odexTeam).map(p => ({
-          name: p.displayName, 
-          id: p.id,
-          sets: p.sets.map(s => ({ rank: s.rank, id: s.id }))
-        }))
-      );
-    }
-  }
-
-  if (existingTeammateSet) {
-    existingTeammateSet.cards.push(...sortedCards);
-    existingTeammateSet.cards.sort((a, b) => {
-      if (a.rank === "Q" && a.suit === "spades") return 1;
-      if (b.rank === "Q" && b.suit === "spades") return -1;
-      if (isWildCard(a) && !isWildCard(b)) return -1;
-      if (!isWildCard(a) && isWildCard(b)) return 1;
-      return 0;
-    });
-    console.log(`[Merge] Merged ${sortedCards.length} cards into teammate ${existingSetOwner?.displayName}'s set of ${rank}`);
-  } else {
-    const newSet: CardSet = {
-      id: uuidv4(),
-      cards: sortedCards,
-      rank,
-      ownerId: playerId,
-      teamId: player.odexTeam,
-    };
-    player.sets.push(newSet);
-  }
+  const newSet: CardSet = {
+    id: uuidv4(),
+    cards: sortedCards,
+    rank,
+    ownerId: playerId,
+    teamId: player.odexTeam,
+  };
+  player.sets.push(newSet);
   
   addAction(state, {
     id: uuidv4(),
