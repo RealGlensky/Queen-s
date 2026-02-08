@@ -11,7 +11,6 @@ export interface AIDecision {
 function countRanks(hand: PlayingCard[]): Map<string, PlayingCard[]> {
   const ranks = new Map<string, PlayingCard[]>();
   for (const card of hand) {
-    // Count all non-wild cards by rank (including jokers as their own rank)
     if (!isWildCard(card)) {
       const existing = ranks.get(card.rank) || [];
       existing.push(card);
@@ -21,13 +20,63 @@ function countRanks(hand: PlayingCard[]): Map<string, PlayingCard[]> {
   return ranks;
 }
 
+function getHandPoints(hand: PlayingCard[]): number {
+  return hand.reduce((sum, c) => sum + getCardPoints(c), 0);
+}
+
+function getSetPoints(cards: PlayingCard[]): number {
+  return cards.reduce((sum, c) => sum + getCardPoints(c), 0);
+}
+
+function isHighValueCard(card: PlayingCard): boolean {
+  return getCardPoints(card) >= 10;
+}
+
+function getSmallestOpponentHandSize(state: GameState, playerId: string): number {
+  const player = state.players.find(p => p.id === playerId);
+  const opponents = state.players.filter(p => {
+    if (p.id === playerId) return false;
+    if (state.gameMode === "2v2" && player && p.odexTeam === player.odexTeam) return false;
+    return true;
+  });
+  if (opponents.length === 0) return Infinity;
+  return Math.min(...opponents.map(p => p.hand.length));
+}
+
+function isEmergencyMode(state: GameState, playerId: string): boolean {
+  const smallestOpponentHand = getSmallestOpponentHandSize(state, playerId);
+  return smallestOpponentHand <= 3;
+}
+
+function isDesperate(state: GameState, playerId: string): boolean {
+  const smallestOpponentHand = getSmallestOpponentHandSize(state, playerId);
+  return smallestOpponentHand <= 1;
+}
+
+function getOpponentSets(state: GameState, playerId: string): CardSet[] {
+  const player = state.players.find(p => p.id === playerId);
+  return state.players
+    .filter(p => {
+      if (p.id === playerId) return false;
+      if (state.gameMode === "2v2" && player && p.odexTeam === player.odexTeam) return false;
+      return true;
+    })
+    .flatMap(p => p.sets);
+}
+
+function getNextPlayerId(state: GameState, playerId: string): string | null {
+  const idx = state.players.findIndex(p => p.id === playerId);
+  if (idx === -1) return null;
+  const nextIdx = (idx + 1) % state.players.length;
+  return state.players[nextIdx].id;
+}
+
 function findPotentialSets(hand: PlayingCard[]): PlayingCard[][] {
   const rankGroups = countRanks(hand);
-  // Only 2s are wild cards, jokers are NOT wild
   const wildcards = hand.filter(c => isWildCard(c));
   const potentialSets: PlayingCard[][] = [];
 
-  for (const [rank, cards] of rankGroups) {
+  for (const [_rank, cards] of rankGroups) {
     if (cards.length >= 3) {
       potentialSets.push(cards.slice(0, Math.min(cards.length, 4)));
     } else if (cards.length === 2 && wildcards.length >= 1) {
@@ -36,129 +85,203 @@ function findPotentialSets(hand: PlayingCard[]): PlayingCard[][] {
   }
 
   potentialSets.sort((a, b) => {
-    const scoreA = a.reduce((sum, c) => sum + getCardPoints(c), 0);
-    const scoreB = b.reduce((sum, c) => sum + getCardPoints(c), 0);
+    const scoreA = getSetPoints(a);
+    const scoreB = getSetPoints(b);
     return scoreB - scoreA;
   });
 
   return potentialSets;
 }
 
-function findCardsToAddToSets(hand: PlayingCard[], sets: CardSet[]): { cardId: string; setId: string }[] {
-  const additions: { cardId: string; setId: string }[] = [];
+function findCardsToAddToSets(hand: PlayingCard[], sets: CardSet[]): { cardId: string; setId: string; points: number }[] {
+  const additions: { cardId: string; setId: string; points: number }[] = [];
 
   for (const card of hand) {
     for (const set of sets) {
-      // 2s are wild (can add to any set), other cards must match the set's rank
       if (isWildCard(card) || card.rank === set.rank) {
-        additions.push({ cardId: card.id, setId: set.id });
+        additions.push({ cardId: card.id, setId: set.id, points: getCardPoints(card) });
       }
     }
   }
 
-  additions.sort((a, b) => {
-    const cardA = hand.find(c => c.id === a.cardId)!;
-    const cardB = hand.find(c => c.id === b.cardId)!;
-    return getCardPoints(cardB) - getCardPoints(cardA);
-  });
+  additions.sort((a, b) => b.points - a.points);
 
   return additions;
 }
 
-function selectBestDiscard(hand: PlayingCard[]): string {
-  const rankGroups = countRanks(hand);
-  const singleCards: PlayingCard[] = [];
-  const pairedCards: PlayingCard[] = [];
+function shouldPickupPile(
+  hand: PlayingCard[],
+  pickupPile: PlayingCard[],
+  playerSets: CardSet[],
+  state: GameState,
+  playerId: string
+): { shouldPickup: boolean; cardIds: string[] } {
+  if (pickupPile.length === 0) return { shouldPickup: false, cardIds: [] };
 
-  for (const card of hand) {
-    // Only skip wild cards (2s), jokers are regular cards
-    if (isWildCard(card)) continue;
-    
-    const group = rankGroups.get(card.rank) || [];
-    if (group.length === 1) {
-      singleCards.push(card);
-    } else {
-      pairedCards.push(card);
+  const topCard = pickupPile[pickupPile.length - 1];
+  const topCardPoints = getCardPoints(topCard);
+  const pileSize = pickupPile.length;
+
+  const hasSetWithRank = playerSets.some(s => s.rank === topCard.rank);
+  if (hasSetWithRank && !topCard.isJoker) {
+    return { shouldPickup: false, cardIds: [] };
+  }
+
+  const emergency = isEmergencyMode(state, playerId);
+  if (emergency && pileSize > 3) {
+    return { shouldPickup: false, cardIds: [] };
+  }
+
+  const findPickupCards = (): string[] | null => {
+    if (isWildCard(topCard)) {
+      const naturalCards = hand.filter(c => !isWildCard(c) && !c.isJoker);
+      const rankGroups = new Map<string, PlayingCard[]>();
+      for (const card of naturalCards) {
+        const existing = rankGroups.get(card.rank) || [];
+        existing.push(card);
+        rankGroups.set(card.rank, existing);
+      }
+      for (const cards of rankGroups.values()) {
+        if (cards.length >= 2) {
+          return cards.slice(0, 2).map(c => c.id);
+        }
+      }
+      return null;
+    }
+
+    const matchingCards = hand.filter(c => c.rank === topCard.rank);
+    const wildcards = hand.filter(c => isWildCard(c));
+
+    if (matchingCards.length >= 2) {
+      return matchingCards.slice(0, 2).map(c => c.id);
+    }
+    if (matchingCards.length >= 1 && wildcards.length >= 1) {
+      return [matchingCards[0].id, wildcards[0].id];
+    }
+    return null;
+  };
+
+  const cardIds = findPickupCards();
+  if (!cardIds) return { shouldPickup: false, cardIds: [] };
+
+  const pilePoints = pickupPile.reduce((sum, c) => sum + getCardPoints(c), 0);
+
+  if (pileSize <= 3) {
+    return { shouldPickup: true, cardIds };
+  }
+
+  if (pileSize <= 6 && topCardPoints >= 10) {
+    return { shouldPickup: true, cardIds };
+  }
+
+  if (pileSize <= 10 && topCardPoints >= 20) {
+    return { shouldPickup: true, cardIds };
+  }
+
+  if (pilePoints >= pileSize * 8 && pileSize <= 8) {
+    return { shouldPickup: true, cardIds };
+  }
+
+  if (topCard.rank === "Q" && topCard.suit === "spades") {
+    if (pileSize <= 12) {
+      return { shouldPickup: true, cardIds };
     }
   }
 
-  const sortByPoints = (cards: PlayingCard[]) => 
-    [...cards].sort((a, b) => getCardPoints(a) - getCardPoints(b));
-
-  if (singleCards.length > 0) {
-    const sorted = sortByPoints(singleCards);
-    return sorted[0].id;
+  if (topCard.isJoker && pileSize <= 8) {
+    return { shouldPickup: true, cardIds };
   }
 
-  if (pairedCards.length > 0) {
-    const sorted = sortByPoints(pairedCards);
-    return sorted[0].id;
+  if (hand.length <= 4 && pileSize > 5) {
+    return { shouldPickup: false, cardIds: [] };
   }
 
-  // Only 2s are wild cards
+  return { shouldPickup: false, cardIds: [] };
+}
+
+function selectBestDiscard(
+  hand: PlayingCard[],
+  state: GameState,
+  playerId: string
+): string {
+  const rankGroups = countRanks(hand);
+  const opponentSets = getOpponentSets(state, playerId);
+  const opponentSetRanks = new Set(opponentSets.map(s => s.rank));
+
+  const nextPlayerId = getNextPlayerId(state, playerId);
+  const nextPlayer = nextPlayerId ? state.players.find(p => p.id === nextPlayerId) : null;
+  const nextPlayerSetRanks = new Set((nextPlayer?.sets || []).map(s => s.rank));
+
+  const emergency = isEmergencyMode(state, playerId);
+  const desperate = isDesperate(state, playerId);
+
+  interface DiscardCandidate {
+    card: PlayingCard;
+    score: number;
+  }
+
+  const candidates: DiscardCandidate[] = [];
+
+  for (const card of hand) {
+    if (isWildCard(card)) continue;
+
+    let score = 0;
+    const group = rankGroups.get(card.rank) || [];
+    const points = getCardPoints(card);
+
+    if (group.length === 1) {
+      score += 100;
+    } else if (group.length === 2) {
+      score += 20;
+    } else {
+      score -= 50;
+    }
+
+    if (emergency || desperate) {
+      score += points * 3;
+    } else {
+      score -= points * 0.5;
+    }
+
+    if (opponentSetRanks.has(card.rank)) {
+      score -= 80;
+    }
+
+    if (nextPlayerSetRanks.has(card.rank)) {
+      score -= 40;
+    }
+
+    if (nextPlayer && !nextPlayer.displayName.startsWith("Bot")) {
+      const topOfPile = state.pickupPile.length > 0 ? state.pickupPile[state.pickupPile.length - 1] : null;
+      if (!topOfPile || topOfPile.rank !== card.rank) {
+        if (canPickupPile(nextPlayer.hand, card)) {
+          score -= 60;
+        }
+      }
+    }
+
+    if (card.rank === "Q" && card.suit === "spades") {
+      if (desperate) {
+        score += 500;
+      } else {
+        score -= 200;
+      }
+    }
+
+    candidates.push({ card, score });
+  }
+
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => b.score - a.score);
+    return candidates[0].card.id;
+  }
+
   const wildcards = hand.filter(c => isWildCard(c));
   if (wildcards.length > 0) {
     return wildcards[0].id;
   }
 
   return hand[0].id;
-}
-
-function shouldPickupPile(
-  hand: PlayingCard[],
-  pickupPile: PlayingCard[],
-  playerSets: CardSet[]
-): { shouldPickup: boolean; cardIds: string[] } {
-  if (pickupPile.length === 0) return { shouldPickup: false, cardIds: [] };
-
-  const topCard = pickupPile[pickupPile.length - 1];
-  
-  const hasSetWithRank = playerSets.some(s => s.rank === topCard.rank);
-  if (hasSetWithRank && !topCard.isJoker) {
-    return { shouldPickup: false, cardIds: [] };
-  }
-
-  // When picking up a wild card (2), need 2 natural cards of the same rank
-  // Cannot use another 2 to help pick up a 2
-  if (isWildCard(topCard)) {
-    const naturalCards = hand.filter(c => !isWildCard(c) && !c.isJoker);
-    // Group by rank and find a pair
-    const rankGroups = new Map<string, PlayingCard[]>();
-    for (const card of naturalCards) {
-      const existing = rankGroups.get(card.rank) || [];
-      existing.push(card);
-      rankGroups.set(card.rank, existing);
-    }
-    for (const cards of rankGroups.values()) {
-      if (cards.length >= 2) {
-        return {
-          shouldPickup: true,
-          cardIds: cards.slice(0, 2).map(c => c.id)
-        };
-      }
-    }
-    return { shouldPickup: false, cardIds: [] };
-  }
-
-  // Normal pickup: need 2 matching cards, or 1 matching + 1 wild
-  const matchingCards = hand.filter(c => c.rank === topCard.rank);
-  const wildcards = hand.filter(c => isWildCard(c));
-
-  if (matchingCards.length >= 2) {
-    return { 
-      shouldPickup: true, 
-      cardIds: matchingCards.slice(0, 2).map(c => c.id) 
-    };
-  }
-
-  if (matchingCards.length >= 1 && wildcards.length >= 1) {
-    return { 
-      shouldPickup: true, 
-      cardIds: [matchingCards[0].id, wildcards[0].id] 
-    };
-  }
-
-  return { shouldPickup: false, cardIds: [] };
 }
 
 export function getAIDrawDecision(state: GameState, playerId: string): AIDecision {
@@ -171,7 +294,7 @@ export function getAIDrawDecision(state: GameState, playerId: string): AIDecisio
       .filter(p => p.odexTeam === player.odexTeam)
       .flatMap(p => p.sets);
   }
-  const pickupCheck = shouldPickupPile(player.hand, state.pickupPile, allTeamSets);
+  const pickupCheck = shouldPickupPile(player.hand, state.pickupPile, allTeamSets, state, playerId);
   
   if (pickupCheck.shouldPickup && pickupCheck.cardIds.length >= 2) {
     return {
@@ -198,13 +321,47 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
       .flatMap(p => p.sets);
   }
 
+  const emergency = isEmergencyMode(state, playerId);
+  const handSize = simulatedHand.length;
+
   const potentialSets = findPotentialSets(simulatedHand);
+
+  const shouldHoldWild = (setCards: PlayingCard[]): boolean => {
+    if (emergency) return false;
+    if (handSize <= 5) return false;
+
+    const usesWild = setCards.some(c => isWildCard(c));
+    if (!usesWild) return false;
+
+    const setRank = setCards.find(c => !isWildCard(c))?.rank;
+    if (!setRank) return false;
+
+    const setPointsPerCard = getCardPoints(setCards.find(c => !isWildCard(c))!);
+
+    if (setPointsPerCard <= 5) {
+      const wildcards = simulatedHand.filter(c => isWildCard(c));
+      if (wildcards.length <= 1) {
+        const highPairs = Array.from(countRanks(simulatedHand).entries())
+          .filter(([_rank, cards]) => cards.length === 2 && getCardPoints(cards[0]) >= 10);
+        if (highPairs.length > 0) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
   for (const setCards of potentialSets) {
     if (setCards.every(c => simulatedHand.some(h => h.id === c.id))) {
       if (isValidSet(setCards) && simulatedHand.length - setCards.length >= 1) {
         const setRank = setCards.find(c => !isWildCard(c))?.rank || "2";
         const existingOwnSet = simulatedSets.find(s => s.rank === setRank);
         const existingTeamSet = existingOwnSet || teammateSets.find(s => s.rank === setRank);
+
+        if (shouldHoldWild(setCards)) {
+          continue;
+        }
 
         if (existingTeamSet) {
           for (const card of setCards) {
@@ -225,7 +382,7 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
           simulatedHand = simulatedHand.filter(c => !setCards.some(sc => sc.id === c.id));
           
           const newSet: CardSet = {
-            id: `temp_${Date.now()}`,
+            id: `temp_${Date.now()}_${Math.random()}`,
             cards: setCards,
             rank: setRank,
             ownerId: playerId,
@@ -242,13 +399,44 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
   }
 
   const additions = findCardsToAddToSets(simulatedHand, allSets);
+  
+  const shouldAddToSet = (card: PlayingCard): boolean => {
+    if (emergency) return true;
+
+    if (isWildCard(card)) {
+      const wildcards = simulatedHand.filter(c => isWildCard(c));
+      if (wildcards.length <= 1) {
+        const pairs = Array.from(countRanks(simulatedHand).entries())
+          .filter(([_rank, cards]) => cards.length === 2);
+        if (pairs.length > 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    const group = countRanks(simulatedHand).get(card.rank) || [];
+    if (group.length === 1) {
+      return true;
+    }
+
+    if (isHighValueCard(card) && group.length <= 2) {
+      return true;
+    }
+
+    return group.length === 1;
+  };
+
   for (const addition of additions) {
     if (simulatedHand.some(c => c.id === addition.cardId) && simulatedHand.length >= 2) {
+      const card = simulatedHand.find(c => c.id === addition.cardId);
+      if (!card) continue;
+
       const actualSet = state.players
         .flatMap(p => p.sets)
         .find(s => s.id === addition.setId);
       
-      if (actualSet) {
+      if (actualSet && shouldAddToSet(card)) {
         decisions.push({
           type: "add_to_set",
           cardId: addition.cardId,
@@ -268,7 +456,7 @@ export function getAIDiscardDecision(state: GameState, playerId: string): AIDeci
     return { type: "discard", cardId: "" };
   }
 
-  const cardId = selectBestDiscard(player.hand);
+  const cardId = selectBestDiscard(player.hand, state, playerId);
   return { type: "discard", cardId };
 }
 
