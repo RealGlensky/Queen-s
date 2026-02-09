@@ -364,6 +364,23 @@ export default function GameScreen() {
     return [...acc, ...player.sets];
   }, []).sort((a, b) => (setRankOrder[a.rank] || 0) - (setRankOrder[b.rank] || 0));
 
+  const playerGroupedSets = gameState.gameMode !== "2v2"
+    ? gameState.players
+        .map((p, idx) => ({
+          playerId: p.id,
+          displayName: p.displayName,
+          playerIndex: idx,
+          isMine: p.id === myPlayer.id,
+          sets: [...p.sets].sort((a, b) => (setRankOrder[a.rank] || 0) - (setRankOrder[b.rank] || 0)),
+        }))
+        .filter(g => g.sets.length > 0)
+        .sort((a, b) => {
+          if (a.isMine && !b.isMine) return -1;
+          if (!a.isMine && b.isMine) return 1;
+          return 0;
+        })
+    : [];
+
   // Team colors for 2v2 mode
   const teamColors: Record<number, string> = {
     1: "#4CAF50",
@@ -582,21 +599,30 @@ export default function GameScreen() {
                 ) : null}
               </>
             ) : (
-              allSets.map((set) => {
-                const { ownerName, ownerIndex, isMine } = getOwnerInfo(set.ownerId);
+              playerGroupedSets.map((group) => {
+                const playerColor = PLAYER_COLORS[group.playerIndex % PLAYER_COLORS.length];
                 return (
-                  <CardSet
-                    key={set.id}
-                    set={set}
-                    ownerName={ownerName}
-                    ownerIndex={ownerIndex}
-                    isMine={isMine}
-                    isTeamSet={isMine}
-                    canAddCard={isMyTurn && selectedCards.length >= 1 && isMine}
-                    onPress={isMyTurn && selectedCards.length >= 1 && isMine
-                      ? () => handleAddToSet(set.id)
-                      : undefined}
-                  />
+                  <View key={group.playerId} style={[styles.teamPile, { borderColor: playerColor }]}>
+                    <ThemedText style={[styles.teamPileLabel, { color: playerColor }]}>
+                      {group.isMine ? "You" : group.displayName}
+                    </ThemedText>
+                    <View style={styles.teamPileSets}>
+                      {group.sets.map((set) => (
+                        <CardSet
+                          key={set.id}
+                          set={set}
+                          ownerIndex={group.playerIndex}
+                          isMine={group.isMine}
+                          isTeamSet={group.isMine}
+                          hideOwnerName
+                          canAddCard={isMyTurn && selectedCards.length >= 1 && group.isMine}
+                          onPress={isMyTurn && selectedCards.length >= 1 && group.isMine
+                            ? () => handleAddToSet(set.id)
+                            : undefined}
+                        />
+                      ))}
+                    </View>
+                  </View>
                 );
               })
             )}
