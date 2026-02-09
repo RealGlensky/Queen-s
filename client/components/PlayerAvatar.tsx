@@ -61,7 +61,6 @@ export function PlayerAvatar({
                   : "rgba(255,255,255,0.3)",
             opacity: isConnected ? 1 : 0.5,
           },
-          isMe && !isCurrentTurn && styles.myAvatarContainer,
         ]}
       >
         <View
@@ -130,9 +129,6 @@ const styles = StyleSheet.create({
   initial: {
     color: "#FFFFFF",
     fontWeight: "700",
-  },
-  myAvatarContainer: {
-    borderColor: GameColors.gold,
   },
   dealerBadge: {
     position: "absolute",
