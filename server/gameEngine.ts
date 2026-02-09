@@ -242,8 +242,18 @@ export function processPickupPile(
   let setRank = topCard.rank;
   if (isWildCard(topCard)) {
     const naturalCards = selectedCards.filter(c => !isWildCard(c) && !c.isJoker);
+    const jokerCards = selectedCards.filter(c => c.isJoker);
     if (naturalCards.length > 0) {
       setRank = naturalCards[0].rank;
+    } else if (jokerCards.length > 0) {
+      setRank = "joker";
+    }
+  } else if (topCard.isJoker) {
+    const naturalCards = selectedCards.filter(c => !isWildCard(c) && !c.isJoker);
+    if (naturalCards.length > 0) {
+      setRank = naturalCards[0].rank;
+    } else {
+      setRank = "joker";
     }
   }
   
@@ -304,7 +314,8 @@ export function processLaySet(
   }
   
   const nonWildcards = cards.filter(c => !isWildCard(c) && !c.isJoker);
-  const rank = nonWildcards[0]?.rank || "2";
+  const jokers = cards.filter(c => c.isJoker);
+  const rank = nonWildcards[0]?.rank || (jokers.length > 0 ? "joker" : "2");
   
   // Block laying a set if the team (or player in solo) already has a set of this rank
   // Player should use "add to set" instead

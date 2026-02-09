@@ -333,10 +333,11 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
     const usesWild = setCards.some(c => isWildCard(c));
     if (!usesWild) return false;
 
-    const setRank = setCards.find(c => !isWildCard(c))?.rank;
+    const nonWild = setCards.find(c => !isWildCard(c) && !c.isJoker);
+    const setRank = nonWild?.rank;
     if (!setRank) return false;
 
-    const setPointsPerCard = getCardPoints(setCards.find(c => !isWildCard(c))!);
+    const setPointsPerCard = getCardPoints(nonWild);
 
     if (setPointsPerCard <= 5) {
       const wildcards = simulatedHand.filter(c => isWildCard(c));
@@ -355,7 +356,9 @@ export function getAIPlayDecisions(state: GameState, playerId: string): AIDecisi
   for (const setCards of potentialSets) {
     if (setCards.every(c => simulatedHand.some(h => h.id === c.id))) {
       if (isValidSet(setCards) && simulatedHand.length - setCards.length >= 1) {
-        const setRank = setCards.find(c => !isWildCard(c))?.rank || "2";
+        const nonWildNonJoker = setCards.find(c => !isWildCard(c) && !c.isJoker);
+        const hasJokers = setCards.some(c => c.isJoker);
+        const setRank = nonWildNonJoker?.rank || (hasJokers ? "joker" : "2");
         const existingOwnSet = simulatedSets.find(s => s.rank === setRank);
         const existingTeamSet = existingOwnSet || teammateSets.find(s => s.rank === setRank);
 
