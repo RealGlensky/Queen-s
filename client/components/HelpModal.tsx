@@ -347,9 +347,25 @@ function RulesContent() {
         <ThemedText style={styles.text}> for that round!</ThemedText>
       </SectionCard>
 
-      <SectionCard title="Deck Runs Out" icon="refresh-cw">
+      <SectionCard title="Deck Runs Out" icon="alert-triangle">
         <ThemedText style={styles.text}>
-          If the draw deck runs out of cards, the discard pile is automatically reshuffled into a new deck so the game can continue.
+          If the draw deck runs out of cards and the next player cannot pick up the discard pile (they don't have 2 matching cards, or the top card matches a set they already own), the round ends immediately.
+        </ThemedText>
+        <View style={styles.spacer} />
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>No winner:</ThemedText>
+          <ThemedText style={styles.text}> Since nobody went out, there is no winner for the round.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.boldText}>All hand cards are penalties:</ThemedText>
+          <ThemedText style={styles.text}> Every player loses points for cards still in their hand. Nobody is exempt.</ThemedText>
+        </BulletPoint>
+        <BulletPoint>
+          <ThemedText style={styles.text}>You still keep points from any sets you laid on the table.</ThemedText>
+        </BulletPoint>
+        <View style={styles.spacer} />
+        <ThemedText style={styles.noteText}>
+          Tip: Keep an eye on the deck size! If it's running low, lay your sets quickly and get rid of high-value cards to minimize penalties.
         </ThemedText>
       </SectionCard>
 

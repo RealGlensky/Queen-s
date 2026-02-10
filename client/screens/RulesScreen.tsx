@@ -104,6 +104,14 @@ export default function RulesScreen() {
           <RuleItem>Courtesy rule: Declare when you have one card left!</RuleItem>
         </RuleSection>
 
+        <RuleSection title="Deck Runs Out" icon="alert-triangle">
+          <RuleItem>If the deck is empty and the next player cannot pick up the pile, the round ends immediately</RuleItem>
+          <RuleItem>A player cannot pick up the pile if they don't have 2 matching cards, or if they already own a set of that rank</RuleItem>
+          <RuleItem>No winner - all players lose points for cards remaining in hand (no exemptions)</RuleItem>
+          <RuleItem>Points from sets already laid on the table still count</RuleItem>
+          <RuleItem>Tip: Watch the deck size and lay sets early to avoid big penalties!</RuleItem>
+        </RuleSection>
+
         <RuleSection title="Scoring" icon="award">
           <RuleItem>Cards in your sets = positive points</RuleItem>
           <RuleItem>Cards left in your hand = negative points</RuleItem>
