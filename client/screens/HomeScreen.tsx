@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, View, ImageBackground, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { GameButton } from "@/components/GameButton";
 import { GameColors, Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { useGameSocket } from "@/contexts/GameSocketContext";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -24,10 +25,48 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
+  const { gameState, roomInfo, leaveRoom } = useGameSocket();
+  const hasAutoNavigated = useRef(false);
+
+  useEffect(() => {
+    if (
+      gameState &&
+      roomInfo &&
+      roomInfo.status === "playing" &&
+      !hasAutoNavigated.current
+    ) {
+      hasAutoNavigated.current = true;
+      console.log("[HomeScreen] Active game detected, auto-navigating to Game screen");
+      navigation.reset({
+        index: 0,
+        routes: [
+          { name: "Home" },
+          { name: "Game", params: { roomCode: roomInfo.roomCode } },
+        ],
+      });
+    }
+  }, [gameState, roomInfo, navigation]);
+
+  const hasActiveGame = gameState && roomInfo && roomInfo.status === "playing";
 
   const handlePlay = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (hasActiveGame) {
+      leaveRoom();
+    }
     navigation.navigate("Lobby");
+  };
+
+  const handleResumeGame = async () => {
+    if (!roomInfo) return;
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    navigation.reset({
+      index: 0,
+      routes: [
+        { name: "Home" },
+        { name: "Game", params: { roomCode: roomInfo.roomCode } },
+      ],
+    });
   };
 
   const handleRules = async () => {
@@ -91,11 +130,21 @@ export default function HomeScreen() {
           entering={FadeIn.delay(600).duration(600)}
           style={styles.buttonsContainer}
         >
+          {hasActiveGame ? (
+            <GameButton
+              label="Resume Game"
+              icon="refresh-cw"
+              variant="primary"
+              size="large"
+              onPress={handleResumeGame}
+              style={styles.playButton}
+            />
+          ) : null}
           <GameButton
-            label="Play"
+            label={hasActiveGame ? "New Game" : "Play"}
             icon="play"
-            variant="primary"
-            size="large"
+            variant={hasActiveGame ? "outline" : "primary"}
+            size={hasActiveGame ? "normal" : "large"}
             onPress={handlePlay}
             style={styles.playButton}
           />
