@@ -75,7 +75,8 @@ export type GameActionType =
   | 'lay_set'
   | 'add_to_set'
   | 'discard'
-  | 'declare_last_card';
+  | 'declare_last_card'
+  | 'deck_exhausted';
 
 export interface GameAction {
   id: string; // Unique ID to prevent missing actions

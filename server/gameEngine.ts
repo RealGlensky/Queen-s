@@ -149,12 +149,6 @@ export function processDrawFromDeck(state: GameState, playerId: string): GameSta
   }
   
   if (state.deck.length === 0) {
-    const reshuffled = shuffleDeck([...state.discardPile]);
-    state.deck = reshuffled;
-    state.discardPile = [];
-  }
-  
-  if (state.deck.length === 0) {
     return null;
   }
   
@@ -509,8 +503,25 @@ export function processDiscard(
   
   const currentIndex = state.players.findIndex(p => p.id === playerId);
   const nextIndex = (currentIndex + 1) % state.players.length;
-  state.currentPlayerId = state.players[nextIndex].id;
+  const nextPlayer = state.players[nextIndex];
+  state.currentPlayerId = nextPlayer.id;
   state.turnPhase = "draw";
+  
+  if (state.deck.length === 0) {
+    const topCard = state.pickupPile.length > 0 ? state.pickupPile[state.pickupPile.length - 1] : null;
+    const canPickup = topCard ? canPlayerLegallyPickupPile(state, nextPlayer, topCard) : false;
+    
+    if (!canPickup) {
+      console.log(`[DeckExhausted] Deck empty and ${nextPlayer.displayName} cannot pick up pile. Ending round.`);
+      addAction(state, {
+        id: uuidv4(),
+        type: 'deck_exhausted',
+        playerId: nextPlayer.id,
+        timestamp: Date.now(),
+      });
+      return endRoundDeckExhausted(state);
+    }
+  }
   
   return state;
 }
@@ -531,6 +542,122 @@ export function processDeclareLastCard(
       playerId,
       timestamp: Date.now(),
     });
+  }
+  
+  return state;
+}
+
+function canPlayerLegallyPickupPile(state: GameState, player: Player, topCard: PlayingCard): boolean {
+  if (!canPickupPile(player.hand, topCard)) {
+    return false;
+  }
+  
+  if (!topCard.isJoker) {
+    let topCardRank = topCard.rank;
+    if (isWildCard(topCard)) {
+      const naturalCards = player.hand.filter(c => !isWildCard(c) && !c.isJoker);
+      const rankCounts = new Map<Rank, number>();
+      for (const card of naturalCards) {
+        rankCounts.set(card.rank, (rankCounts.get(card.rank) || 0) + 1);
+      }
+      let bestRank: Rank | null = null;
+      for (const [rank, count] of rankCounts.entries()) {
+        if (count >= 2) { bestRank = rank; break; }
+      }
+      if (!bestRank) return false;
+      topCardRank = bestRank;
+    }
+    
+    if (state.gameMode === "2v2") {
+      const teamHasSet = state.players.some(p =>
+        p.odexTeam === player.odexTeam && p.sets.some(s => s.rank === topCardRank)
+      );
+      if (teamHasSet) return false;
+    } else {
+      const playerHasSet = player.sets.some(s => s.rank === topCardRank);
+      if (playerHasSet) return false;
+    }
+  }
+  
+  return true;
+}
+
+function endRoundDeckExhausted(state: GameState): GameState {
+  for (const player of state.players) {
+    let setsScore = 0;
+    for (const set of player.sets) {
+      for (const card of set.cards) {
+        setsScore += getCardPoints(card);
+      }
+    }
+    
+    let handPenalty = 0;
+    for (const card of player.hand) {
+      handPenalty += getCardPoints(card);
+    }
+    
+    let perfectBonus = 0;
+    if (state.perfectCutBonus && player.id === state.dealerId) {
+      perfectBonus = 100;
+    }
+    
+    player.roundScore = setsScore - handPenalty + perfectBonus;
+    player.totalScore += player.roundScore;
+  }
+  
+  const roundHistoryEntry: RoundHistoryEntry = {
+    round: state.currentRound,
+    scores: state.players.map(p => ({
+      playerId: p.id,
+      displayName: p.displayName,
+      roundScore: p.roundScore,
+      cumulativeScore: p.totalScore,
+      teamId: p.odexTeam,
+    })),
+  };
+  state.scoreHistory.push(roundHistoryEntry);
+  
+  let gameOver = false;
+  let gameWinnerId: string | undefined;
+  let gameWinnerTeam: number | undefined;
+  
+  if (state.gameMode === "2v2") {
+    const team1Score = state.players
+      .filter(p => p.odexTeam === 1)
+      .reduce((sum, p) => sum + p.totalScore, 0);
+    const team2Score = state.players
+      .filter(p => p.odexTeam === 2)
+      .reduce((sum, p) => sum + p.totalScore, 0);
+    
+    if (team1Score >= state.pointThreshold || team2Score >= state.pointThreshold) {
+      gameOver = true;
+      gameWinnerTeam = team1Score >= team2Score ? 1 : 2;
+    }
+  } else {
+    for (const player of state.players) {
+      if (player.totalScore >= state.pointThreshold) {
+        gameOver = true;
+        const highestScorer = state.players.reduce((max, p) => 
+          p.totalScore > max.totalScore ? p : max
+        );
+        gameWinnerId = highestScorer.id;
+        break;
+      }
+    }
+  }
+  
+  if (gameOver) {
+    state.status = "game_over";
+    state.winner = {
+      playerId: gameWinnerId,
+      teamId: gameWinnerTeam,
+      finalScores: state.players.map(p => ({
+        playerId: p.id,
+        score: p.totalScore,
+      })),
+    };
+  } else {
+    state.status = "round_end";
   }
   
   return state;
