@@ -31,6 +31,7 @@ The server handles room management, game state, turn validation, and AI player d
 - Rooms are managed in-memory with a `Map<string, Room>` structure
 - Game state includes deck, pickup pile, player hands, and laid sets
 - Turn phases: draw → play → discard
+- Deck exhaustion: when the deck runs out and the next player cannot pick up the pile, the round ends immediately. All remaining hand cards count as negative points for all players (no winner exemption).
 - AI players use basic strategy for set building and pile pickup decisions
 
 ### AI Player System
