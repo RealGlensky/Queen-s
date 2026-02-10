@@ -71,9 +71,9 @@ export default function ScoreScreen() {
   const winnerTeam = gameState.winner?.teamId;
   const isTeamMode = gameState.gameMode === "2v2";
 
-  // Find the winning team (team of the player who went out - has empty hand)
   const roundWinner = gameState.players.find(p => p.hand.length === 0);
   const winningTeamId = isTeamMode ? roundWinner?.odexTeam : undefined;
+  const isDeckExhausted = !isGameOver && !roundWinner;
 
   const calculateScores = (player: typeof sortedPlayers[0]) => {
     const setsScore = player.sets.reduce((acc, set) => {
@@ -157,6 +157,11 @@ export default function ScoreScreen() {
               <ThemedText style={styles.roundTitle}>
                 Round {gameState.currentRound} Complete
               </ThemedText>
+              {isDeckExhausted ? (
+                <ThemedText style={styles.deckExhaustedText}>
+                  Deck ran out - all hand cards count against you!
+                </ThemedText>
+              ) : null}
               <ThemedText style={styles.subtitle}>
                 {isTeamMode && teamScoresSorted.length > 0
                   ? `${gameState.pointThreshold - teamScoresSorted[0].totalScore} points to go`
@@ -295,6 +300,13 @@ const styles = StyleSheet.create({
   subtitle: {
     color: "rgba(255,255,255,0.6)",
     fontSize: 16,
+  },
+  deckExhaustedText: {
+    color: "#FF6B6B",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: Spacing.xs,
   },
   scoresContainer: {
     gap: Spacing.md,

@@ -183,6 +183,9 @@ export default function GameScreen() {
         case "declare_last_card":
           actionText = "declared LAST CARD!";
           break;
+        case "deck_exhausted":
+          actionText = "cannot pick up pile - deck empty, round over!";
+          break;
         default:
           actionText = action.type;
       }
