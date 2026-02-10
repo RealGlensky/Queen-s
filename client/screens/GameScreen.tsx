@@ -164,13 +164,55 @@ export default function GameScreen() {
         case "pickup_pile":
           actionText = `picked up pile (${action.cards?.length || 0} cards)`;
           break;
-        case "lay_set":
-          const setRank = action.cards?.[0]?.rank || "?";
-          actionText = `laid set of ${setRank}s`;
+        case "lay_set": {
+          const cards = action.cards || [];
+          const totalCount = cards.length;
+          const naturalCards = cards.filter(c => !c.isJoker && c.rank !== "2");
+          const wildCards = cards.filter(c => !c.isJoker && c.rank === "2");
+          const jokerCards = cards.filter(c => c.isJoker);
+          const setRank = naturalCards.length > 0 ? naturalCards[0].rank : (jokerCards.length > 0 ? "Joker" : "?");
+          const isJokerSet = jokerCards.length > 0 && naturalCards.length === 0;
+
+          let setDesc = isJokerSet
+            ? `laid set of (${totalCount}) Jokers`
+            : `laid set of (${totalCount}) ${setRank}s`;
+
+          const parts: string[] = [];
+          if (isJokerSet) {
+            if (jokerCards.length > 0) parts.push(`${jokerCards.length} Joker${jokerCards.length > 1 ? "s" : ""}`);
+          } else {
+            if (naturalCards.length > 0) parts.push(`${naturalCards.length} ${setRank}${naturalCards.length > 1 ? "s" : ""}`);
+          }
+          if (wildCards.length > 0) parts.push(`${wildCards.length} wild 2`);
+
+          if (parts.length > 1) {
+            setDesc += ` using ${parts.join(" and ")}`;
+          }
+          actionText = setDesc;
           break;
-        case "add_to_set":
-          actionText = "added to a set";
+        }
+        case "add_to_set": {
+          const addedCard = action.cards?.[0];
+          let targetSetRank = "?";
+          if (action.setId && gameState) {
+            for (const p of gameState.players) {
+              const foundSet = p.sets.find(s => s.id === action.setId);
+              if (foundSet) {
+                targetSetRank = foundSet.rank;
+                break;
+              }
+            }
+          }
+          if (addedCard) {
+            const cardLabel = addedCard.isJoker ? "Joker" : (addedCard.rank === "2" ? "wild 2" : addedCard.rank);
+            const isJokerSet = targetSetRank === "joker";
+            const setLabel = isJokerSet ? "Jokers" : `${targetSetRank}s`;
+            actionText = `added (1) ${cardLabel} to set of ${setLabel}`;
+          } else {
+            actionText = "added to a set";
+          }
           break;
+        }
         case "discard":
           const discardCard = action.cards?.[0];
           if (discardCard) {
