@@ -37,13 +37,7 @@ export default function HomeScreen() {
     ) {
       hasAutoNavigated.current = true;
       console.log("[HomeScreen] Active game detected, auto-navigating to Game screen");
-      navigation.reset({
-        index: 0,
-        routes: [
-          { name: "Home" },
-          { name: "Game", params: { roomCode: roomInfo.roomCode } },
-        ],
-      });
+      navigation.navigate("Game", { roomCode: roomInfo.roomCode });
     }
   }, [gameState, roomInfo, navigation]);
 
@@ -60,13 +54,7 @@ export default function HomeScreen() {
   const handleResumeGame = async () => {
     if (!roomInfo) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    navigation.reset({
-      index: 0,
-      routes: [
-        { name: "Home" },
-        { name: "Game", params: { roomCode: roomInfo.roomCode } },
-      ],
-    });
+    navigation.navigate("Game", { roomCode: roomInfo.roomCode });
   };
 
   const handleRules = async () => {
