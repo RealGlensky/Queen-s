@@ -39,6 +39,15 @@ async function persistRoom(room: Room) {
   }
 }
 
+function isOnlyHumanInRoom(room: Room): boolean {
+  const humanPlayers = room.players.filter(p => !p.isAI);
+  return humanPlayers.length === 1;
+}
+
+function areAllHumansConnected(room: Room): boolean {
+  return room.players.filter(p => !p.isAI).every(p => p.isConnected);
+}
+
 interface Room {
   id: string;
   code: string;
@@ -337,12 +346,22 @@ export function setupSocketHandlers(io: Server) {
       });
 
       if (room.gameState) {
+        const gamePlayer = room.gameState.players.find(p => p.id === player.id);
+        if (gamePlayer) {
+          gamePlayer.isConnected = true;
+        }
+
         const playerGameState = getGameStateForPlayer(room.gameState, player.id);
         sendMessage(socket, {
           type: "game_state",
           payload: playerGameState,
           timestamp: Date.now(),
         });
+
+        if (isOnlyHumanInRoom(room) && room.gameState.status === "playing") {
+          console.log(`[Socket] Solo player reconnected in room ${roomCode}. Resuming AI turns.`);
+          scheduleAITurn(io, room);
+        }
       }
 
       socket.to(room.code).emit("message", {
@@ -619,6 +638,11 @@ function handlePlayerLeave(io: Server, socket: Socket, isDisconnect: boolean = f
         gamePlayer.isConnected = false;
       }
     }
+
+    if (isOnlyHumanInRoom(room)) {
+      console.log(`[Socket] Solo player disconnected from room ${roomCode} (AI-only opponents). Room preserved for reconnection.`);
+      persistRoom(room);
+    }
   }
 
   socketToRoom.delete(socket.id);
@@ -680,6 +704,11 @@ function broadcastGameState(io: Server, room: Room) {
 function scheduleAITurn(io: Server, room: Room) {
   if (!room.gameState || room.gameState.status !== "playing") {
     console.log("scheduleAITurn: Game not playing, status:", room.gameState?.status);
+    return;
+  }
+
+  if (isOnlyHumanInRoom(room) && !areAllHumansConnected(room)) {
+    console.log("scheduleAITurn: Pausing AI - solo human player is disconnected");
     return;
   }
 
