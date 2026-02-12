@@ -53,7 +53,7 @@ export function PlayerAvatar({
             borderRadius: (avatarSize + (isCurrentTurn ? 4 : 0)) / 2,
             borderWidth: isCurrentTurn ? 5 : isMe ? 4 : 3,
             borderColor: isCurrentTurn
-              ? GameColors.gold
+              ? (playerColor || (team ? teamColors[team as keyof typeof teamColors] : GameColors.gold))
               : playerColor
                 ? playerColor
                 : team
@@ -94,7 +94,10 @@ export function PlayerAvatar({
       <ThemedText
         style={[
           styles.name,
-          isCurrentTurn && styles.nameCurrent,
+          isCurrentTurn && {
+            color: playerColor || (team ? teamColors[team as keyof typeof teamColors] : GameColors.gold),
+            fontWeight: "600" as const,
+          },
         ]}
         numberOfLines={1}
       >
