@@ -26,14 +26,16 @@ export function FontSizeProvider({ children }: { children: React.ReactNode }) {
           setLargeFontEnabled(value === "true");
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error("[FontSizeContext] Failed to load preference:", err));
   }, []);
 
   const toggleLargeFont = async (value: boolean) => {
     setLargeFontEnabled(value);
     try {
       await AsyncStorage.setItem(LARGE_FONT_KEY, String(value));
-    } catch {}
+    } catch (err) {
+      console.error("[FontSizeContext] Failed to persist preference:", err);
+    }
   };
 
   const fs = (base: number) =>

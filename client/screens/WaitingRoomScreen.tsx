@@ -113,18 +113,18 @@ export default function WaitingRoomScreen() {
       />
       {index === 0 ? (
         <View style={styles.hostBadge}>
-          <ThemedText style={styles.hostBadgeText}>Host</ThemedText>
+          <ThemedText style={[styles.hostBadgeText, { fontSize: fs(10) }]}>Host</ThemedText>
         </View>
       ) : null}
     </View>
-  ), []);
+  ), [fs]);
 
   const EmptySlot = () => (
     <View style={styles.emptySlot}>
       <View style={styles.emptyAvatar}>
         <Feather name="user-plus" size={24} color="rgba(255,255,255,0.3)" />
       </View>
-      <ThemedText style={styles.emptyText}>Waiting...</ThemedText>
+      <ThemedText style={[styles.emptyText, { fontSize: fs(12) }]}>Waiting...</ThemedText>
     </View>
   );
 
@@ -175,12 +175,12 @@ export default function WaitingRoomScreen() {
         {reconnecting ? (
           <View style={styles.connectionStatus}>
             <ActivityIndicator size="small" color={GameColors.gold} />
-            <ThemedText style={styles.connectionText}>Reconnecting...</ThemedText>
+            <ThemedText style={[styles.connectionText, { fontSize: fs(12) }]}>Reconnecting...</ThemedText>
           </View>
         ) : !connected ? (
           <Pressable style={styles.connectionStatus} onPress={forceReconnect}>
             <Feather name="wifi-off" size={16} color="#FF6B6B" />
-            <ThemedText style={[styles.connectionText, { color: "#FF6B6B" }]}>Tap to reconnect</ThemedText>
+            <ThemedText style={[styles.connectionText, { color: "#FF6B6B", fontSize: fs(12) }]}>Tap to reconnect</ThemedText>
           </Pressable>
         ) : null}
 
@@ -197,9 +197,9 @@ export default function WaitingRoomScreen() {
             </View>
           </Pressable>
           {copied ? (
-            <ThemedText style={styles.copiedText}>Copied to clipboard!</ThemedText>
+            <ThemedText style={[styles.copiedText, { fontSize: fs(12) }]}>Copied to clipboard!</ThemedText>
           ) : (
-            <ThemedText style={styles.tapToCopyText}>Tap to copy</ThemedText>
+            <ThemedText style={[styles.tapToCopyText, { fontSize: fs(12) }]}>Tap to copy</ThemedText>
           )}
           <ThemedText style={[styles.modeLabel, { fontSize: fs(14) }]}>
             {roomInfo.gameMode === "2v2" ? "2v2 Teams" : "Solo"} • {roomInfo.pointThreshold} points
@@ -222,7 +222,7 @@ export default function WaitingRoomScreen() {
                 />
                 {index === 0 ? (
                   <View style={styles.hostBadge}>
-                    <ThemedText style={styles.hostBadgeText}>Host</ThemedText>
+                    <ThemedText style={[styles.hostBadgeText, { fontSize: fs(10) }]}>Host</ThemedText>
                   </View>
                 ) : null}
               </View>
