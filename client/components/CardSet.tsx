@@ -9,6 +9,7 @@ import { PlayingCard } from "@/components/PlayingCard";
 import { ThemedText } from "@/components/ThemedText";
 import type { CardSet as CardSetType } from "@shared/gameTypes";
 import { GameColors, CardDimensions, Spacing, BorderRadius, PLAYER_COLORS } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 interface CardSetProps {
   set: CardSetType;
@@ -36,32 +37,34 @@ export function CardSet({
   style,
 }: CardSetProps) {
   const ownerColor = PLAYER_COLORS[ownerIndex % PLAYER_COLORS.length];
-  const scale = useSharedValue(1);
+  const scaleAnim = useSharedValue(1);
+  const { fs, scale } = useFontSize();
+
+  const scaledSmallWidth = Math.round(CardDimensions.smallWidth * scale);
+  const scaledSmallHeight = Math.round(CardDimensions.smallHeight * scale);
+  const cardOverlap = Math.round(35 * scale);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scaleAnim.value }],
   }));
 
   const handlePressIn = () => {
     if (onPress) {
-      scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
+      scaleAnim.value = withSpring(0.95, { damping: 15, stiffness: 200 });
     }
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+    scaleAnim.value = withSpring(1, { damping: 15, stiffness: 200 });
   };
 
   const hasQueenOfSpades = set.cards.some(
     (c) => c.rank === "Q" && c.suit === "spades"
   );
 
-  // Sort cards for display: 2s first (underneath), then normal cards, Queen of Spades last (on top)
   const sortedCards = [...set.cards].sort((a, b) => {
-    // Queen of Spades goes to very end (on top visually - highest zIndex)
     if (a.rank === "Q" && a.suit === "spades") return 1;
     if (b.rank === "Q" && b.suit === "spades") return -1;
-    // Wild cards (2s) go to beginning (underneath visually - lowest zIndex)
     if (a.rank === "2" && b.rank !== "2") return -1;
     if (a.rank !== "2" && b.rank === "2") return 1;
     return 0;
@@ -86,21 +89,29 @@ export function CardSet({
         animatedStyle,
       ]}
     >
-      <View style={styles.cardsContainer}>
+      <View style={[styles.cardsContainer, { paddingRight: scaledSmallWidth - cardOverlap }]}>
         {sortedCards.slice(0, 4).map((card, index) => (
           <View
             key={card.id}
             style={[
               styles.cardWrapper,
-              { marginLeft: index === 0 ? 0 : -35, zIndex: index },
+              { marginLeft: index === 0 ? 0 : -cardOverlap, zIndex: index },
             ]}
           >
             <PlayingCard card={card} size="small" />
           </View>
         ))}
         {sortedCards.length > 4 ? (
-          <View style={[styles.moreCards, { zIndex: 5 }]}>
-            <ThemedText style={styles.moreCardsText}>
+          <View style={[
+            styles.moreCards,
+            {
+              width: scaledSmallWidth,
+              height: scaledSmallHeight,
+              marginLeft: -cardOverlap,
+              zIndex: 5,
+            },
+          ]}>
+            <ThemedText style={[styles.moreCardsText, { fontSize: fs(14) }]}>
               +{sortedCards.length - 4}
             </ThemedText>
           </View>
@@ -108,15 +119,15 @@ export function CardSet({
       </View>
       <View style={styles.labelContainer}>
         {!hideOwnerName ? (
-          <ThemedText style={[styles.ownerLabel, { color: ownerColor }]}>
+          <ThemedText style={[styles.ownerLabel, { color: ownerColor, fontSize: fs(10) }]}>
             {ownerName || "Unknown"}
           </ThemedText>
         ) : null}
-        <ThemedText style={styles.setLabel}>
+        <ThemedText style={[styles.setLabel, { fontSize: fs(12) }]}>
           {set.rank}s
         </ThemedText>
         {hasQueenOfSpades ? (
-          <ThemedText style={styles.specialLabel}>
+          <ThemedText style={[styles.specialLabel, { fontSize: fs(10) }]}>
             Queen of Spades
           </ThemedText>
         ) : null}
@@ -135,7 +146,6 @@ const styles = StyleSheet.create({
   cardsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingRight: CardDimensions.smallWidth - 35,
   },
   cardWrapper: {
     alignItems: "center",
@@ -145,32 +155,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ownerLabel: {
-    fontSize: 10,
     fontWeight: "700",
     textTransform: "uppercase",
   },
   setLabel: {
-    fontSize: 12,
     fontWeight: "600",
     color: "#FFFFFF",
   },
   specialLabel: {
-    fontSize: 10,
     color: GameColors.gold,
     fontWeight: "500",
   },
   moreCards: {
-    width: CardDimensions.smallWidth,
-    height: CardDimensions.smallHeight,
     borderRadius: CardDimensions.borderRadius,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: -35,
   },
   moreCardsText: {
     color: "#FFFFFF",
-    fontSize: 14,
     fontWeight: "600",
   },
 });

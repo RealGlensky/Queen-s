@@ -48,19 +48,27 @@ export function PlayingCard({
   onPress,
   style,
 }: PlayingCardProps) {
-  const scale = useSharedValue(1);
+  const scaleAnim = useSharedValue(1);
   const translateY = useSharedValue(0);
-  const { fs } = useFontSize();
+  const { scale } = useFontSize();
 
   const isRed = card.suit === "hearts" || card.suit === "diamonds" || card.jokerColor === "red";
   const suitColor = isRed ? GameColors.redSuit : GameColors.blackSuit;
 
-  const cardWidth = size === "small" ? CardDimensions.smallWidth : CardDimensions.width;
-  const cardHeight = size === "small" ? CardDimensions.smallHeight : CardDimensions.height;
+  const baseWidth = size === "small" ? CardDimensions.smallWidth : CardDimensions.width;
+  const baseHeight = size === "small" ? CardDimensions.smallHeight : CardDimensions.height;
+  const cardWidth = Math.round(baseWidth * scale);
+  const cardHeight = Math.round(baseHeight * scale);
+
+  const cornerRankSize = size === "small" ? Math.round(12 * scale) : Math.round(16 * scale);
+  const cornerSuitSize = size === "small" ? Math.round(10 * scale) : Math.round(14 * scale);
+  const centerBoxSize = size === "small" ? Math.round(28 * scale) : Math.round(40 * scale);
+  const centerSuitSize = size === "small" ? Math.round(24 * scale) : Math.round(32 * scale);
+  const jokerFontSize = size === "small" ? Math.round(10 * scale) : Math.round(12 * scale);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: scale.value },
+      { scale: scaleAnim.value },
       { translateY: translateY.value },
     ],
   }));
@@ -71,12 +79,12 @@ export function PlayingCard({
 
   const handlePressIn = () => {
     if (!disabled && onPress) {
-      scale.value = withSpring(0.95, springConfig);
+      scaleAnim.value = withSpring(0.95, springConfig);
     }
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, springConfig);
+    scaleAnim.value = withSpring(1, springConfig);
   };
 
   if (faceDown) {
@@ -129,7 +137,7 @@ export function PlayingCard({
               styles.jokerText,
               {
                 color: card.jokerColor === "red" ? GameColors.redSuit : GameColors.blackSuit,
-                fontSize: fs(size === "small" ? 10 : 12),
+                fontSize: jokerFontSize,
               },
             ]}
           >
@@ -140,34 +148,23 @@ export function PlayingCard({
         <>
           <View style={styles.topLeft}>
             <ThemedText
-              style={[
-                styles.rank,
-                { color: suitColor, fontSize: fs(size === "small" ? 12 : 16) },
-              ]}
+              style={[styles.rank, { color: suitColor, fontSize: cornerRankSize }]}
             >
               {rankDisplay}
             </ThemedText>
             <ThemedText
-              style={[
-                styles.suit,
-                { color: suitColor, fontSize: fs(size === "small" ? 10 : 14) },
-              ]}
+              style={[styles.suit, { color: suitColor, fontSize: cornerSuitSize }]}
             >
               {suitSymbol}
             </ThemedText>
           </View>
           <View style={[styles.center, { marginTop: size === "small" ? 4 : 6 }]}>
-            <View style={{ 
-              width: size === "small" ? 28 : 40, 
-              height: size === "small" ? 28 : 40,
-              justifyContent: "center",
-              alignItems: "center",
-            }}>
+            <View style={{ width: centerBoxSize, height: centerBoxSize, justifyContent: "center", alignItems: "center" }}>
               <ThemedText
                 style={{
-                  color: suitColor, 
-                  fontSize: fs(size === "small" ? 24 : 32),
-                  lineHeight: size === "small" ? 28 : 40,
+                  color: suitColor,
+                  fontSize: centerSuitSize,
+                  lineHeight: centerBoxSize,
                   textAlign: "center",
                 }}
               >
@@ -177,18 +174,12 @@ export function PlayingCard({
           </View>
           <View style={styles.bottomRight}>
             <ThemedText
-              style={[
-                styles.suit,
-                { color: suitColor, fontSize: fs(size === "small" ? 10 : 14), transform: [{ rotate: "180deg" }] },
-              ]}
+              style={[styles.suit, { color: suitColor, fontSize: cornerSuitSize, transform: [{ rotate: "180deg" }] }]}
             >
               {suitSymbol}
             </ThemedText>
             <ThemedText
-              style={[
-                styles.rank,
-                { color: suitColor, fontSize: fs(size === "small" ? 12 : 16), transform: [{ rotate: "180deg" }] },
-              ]}
+              style={[styles.rank, { color: suitColor, fontSize: cornerRankSize, transform: [{ rotate: "180deg" }] }]}
             >
               {rankDisplay}
             </ThemedText>
@@ -241,17 +232,10 @@ const styles = StyleSheet.create({
   },
   rank: {
     fontWeight: "700",
-    lineHeight: 18,
     includeFontPadding: false,
   },
   suit: {
-    lineHeight: 16,
     includeFontPadding: false,
-  },
-  centerSuit: {
-    fontWeight: "400",
-    lineHeight: 44,
-    textAlignVertical: "center",
   },
   jokerContent: {
     flex: 1,

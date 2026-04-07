@@ -3,6 +3,7 @@ import { StyleSheet, View, ScrollView } from "react-native";
 import { PlayingCard } from "@/components/PlayingCard";
 import type { PlayingCard as PlayingCardType } from "@shared/gameTypes";
 import { CardDimensions, Spacing } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 interface CardHandProps {
   cards: PlayingCardType[];
@@ -23,9 +24,11 @@ export function CardHand({
   onCardPress,
   style,
 }: CardHandProps) {
-  const overlap = compact ? -40 : -30;
+  const { scale } = useFontSize();
+  const baseCardWidth = compact ? CardDimensions.smallWidth : CardDimensions.width;
+  const cardWidth = Math.round(baseCardWidth * scale);
+  const overlap = compact ? -Math.round(40 * scale) : -Math.round(30 * scale);
   const cardSize = compact ? "small" : "normal";
-  const cardWidth = compact ? CardDimensions.smallWidth : CardDimensions.width;
 
   if (cards.length === 0) {
     return null;

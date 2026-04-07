@@ -7,6 +7,7 @@ import { Feather } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 interface RuleSectionProps {
   title: string;
@@ -15,11 +16,12 @@ interface RuleSectionProps {
 }
 
 function RuleSection({ title, icon, children }: RuleSectionProps) {
+  const { fs } = useFontSize();
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Feather name={icon} size={20} color={GameColors.gold} />
-        <ThemedText style={styles.sectionTitle}>{title}</ThemedText>
+        <ThemedText style={[styles.sectionTitle, { fontSize: fs(18) }]}>{title}</ThemedText>
       </View>
       <View style={styles.sectionContent}>{children}</View>
     </View>
@@ -27,10 +29,11 @@ function RuleSection({ title, icon, children }: RuleSectionProps) {
 }
 
 function RuleItem({ children }: { children: React.ReactNode }) {
+  const { fs } = useFontSize();
   return (
     <View style={styles.ruleItem}>
       <View style={styles.bullet} />
-      <ThemedText style={styles.ruleText}>{children}</ThemedText>
+      <ThemedText style={[styles.ruleText, { fontSize: fs(14) }]}>{children}</ThemedText>
     </View>
   );
 }
@@ -155,7 +158,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: "#FFFFFF",
-    fontSize: 18,
     fontWeight: "600",
   },
   sectionContent: {
@@ -176,7 +178,6 @@ const styles = StyleSheet.create({
   ruleText: {
     flex: 1,
     color: "rgba(255,255,255,0.8)",
-    fontSize: 14,
     lineHeight: 22,
   },
 });

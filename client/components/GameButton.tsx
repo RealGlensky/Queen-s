@@ -9,6 +9,7 @@ import * as Haptics from "expo-haptics";
 import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, BorderRadius, Spacing } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 interface GameButtonProps {
   label: string;
@@ -33,57 +34,48 @@ export function GameButton({
   onPress,
   style,
 }: GameButtonProps) {
-  const scale = useSharedValue(1);
+  const scaleAnim = useSharedValue(1);
+  const { fs } = useFontSize();
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scaleAnim.value }],
   }));
 
   const handlePressIn = () => {
     if (!disabled && !loading) {
-      scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
+      scaleAnim.value = withSpring(0.95, { damping: 15, stiffness: 200 });
     }
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+    scaleAnim.value = withSpring(1, { damping: 15, stiffness: 200 });
   };
 
   const handlePress = () => {
     if (disabled || loading || !onPress) return;
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch (e) {
-      // Haptics not available on web
-    }
+    } catch (e) {}
     onPress();
   };
 
   const getBackgroundColor = () => {
     if (disabled) return "rgba(255,255,255,0.1)";
     switch (variant) {
-      case "primary":
-        return GameColors.gold;
-      case "secondary":
-        return GameColors.richWood;
-      case "danger":
-        return "#F44336";
-      case "outline":
-        return "transparent";
-      default:
-        return GameColors.gold;
+      case "primary": return GameColors.gold;
+      case "secondary": return GameColors.richWood;
+      case "danger": return "#F44336";
+      case "outline": return "transparent";
+      default: return GameColors.gold;
     }
   };
 
   const getTextColor = () => {
     if (disabled) return "rgba(255,255,255,0.4)";
     switch (variant) {
-      case "primary":
-        return "#000000";
-      case "outline":
-        return GameColors.gold;
-      default:
-        return "#FFFFFF";
+      case "primary": return "#000000";
+      case "outline": return GameColors.gold;
+      default: return "#FFFFFF";
     }
   };
 
@@ -96,25 +88,21 @@ export function GameButton({
 
   const getPadding = () => {
     switch (size) {
-      case "small":
-        return { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg };
-      case "large":
-        return { paddingVertical: Spacing.xl, paddingHorizontal: Spacing["3xl"] };
-      default:
-        return { paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl };
+      case "small": return { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg };
+      case "large": return { paddingVertical: Spacing.xl, paddingHorizontal: Spacing["3xl"] };
+      default: return { paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl };
     }
   };
 
-  const getFontSize = () => {
+  const getBaseFontSize = () => {
     switch (size) {
-      case "small":
-        return 14;
-      case "large":
-        return 18;
-      default:
-        return 16;
+      case "small": return 14;
+      case "large": return 18;
+      default: return 16;
     }
   };
+
+  const fontSize = fs(getBaseFontSize());
 
   return (
     <AnimatedPressable
@@ -137,16 +125,13 @@ export function GameButton({
       {icon ? (
         <Feather
           name={icon}
-          size={getFontSize() + 2}
+          size={fontSize + 2}
           color={getTextColor()}
           style={styles.icon}
         />
       ) : null}
       <ThemedText
-        style={[
-          styles.label,
-          { color: getTextColor(), fontSize: getFontSize() },
-        ]}
+        style={[styles.label, { color: getTextColor(), fontSize }]}
       >
         {loading ? "..." : label}
       </ThemedText>

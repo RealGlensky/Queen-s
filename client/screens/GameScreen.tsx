@@ -59,7 +59,7 @@ export default function GameScreen() {
     clearError,
   } = useGameSocket();
 
-  const { fs } = useFontSize();
+  const { fs, scale } = useFontSize();
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [targetSetId, setTargetSetId] = useState<string | null>(null);
@@ -764,33 +764,33 @@ export default function GameScreen() {
       {/* Right Side Panel - Score Breakdown, Move History, Tips */}
       <View style={[styles.rightSidePanel, { top: insets.top + 60 }]}>
         <Pressable 
-          style={[styles.sidePanelButton, showScoreHistory && styles.sidePanelButtonActive]}
+          style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showScoreHistory && styles.sidePanelButtonActive]}
           onPress={() => setShowScoreHistory(true)}
         >
           <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
-          <ThemedText style={styles.sidePanelLabel}>Scores</ThemedText>
+          <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Scores</ThemedText>
         </Pressable>
 
         <Pressable 
-          style={[styles.sidePanelButton, showMoveLog && styles.sidePanelButtonActive]}
+          style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showMoveLog && styles.sidePanelButtonActive]}
           onPress={() => setShowMoveLog(!showMoveLog)}
         >
           <Feather name="list" size={20} color="#FFFFFF" />
-          <ThemedText style={styles.sidePanelLabel}>Moves</ThemedText>
+          <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Moves</ThemedText>
         </Pressable>
 
         <Pressable 
-          style={[styles.sidePanelButton, showHelp && styles.sidePanelButtonActive]}
+          style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showHelp && styles.sidePanelButtonActive]}
           onPress={() => setShowHelp(true)}
         >
           <Feather name="help-circle" size={20} color={GameColors.gold} />
-          <ThemedText style={styles.sidePanelLabel}>Help</ThemedText>
+          <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Help</ThemedText>
         </Pressable>
       </View>
 
       {/* Move Log Panel */}
       {showMoveLog ? (
-        <View style={[styles.moveLogPanel, { top: insets.top + 60 + 48 }]}>
+        <View style={[styles.moveLogPanel, { top: insets.top + 60 + Math.round(48 * scale), width: Math.round(200 * scale), maxHeight: Math.round(250 * scale), right: Spacing.sm + Math.round(44 * scale) + Spacing.sm }]}>
           <View style={styles.moveLogHeader}>
             <ThemedText style={[styles.moveLogTitle, { fontSize: fs(14) }]}>Move History</ThemedText>
             <Pressable onPress={() => setShowMoveLog(false)}>

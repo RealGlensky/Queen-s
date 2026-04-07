@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, BorderRadius, Spacing, PLAYER_COLORS } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 import type { GameState } from "@shared/gameTypes";
 
 interface ScoreHistoryModalProps {
@@ -26,6 +27,7 @@ export function ScoreHistoryModal({
   myPlayerId,
 }: ScoreHistoryModalProps) {
   const insets = useSafeAreaInsets();
+  const { fs } = useFontSize();
   const isTeamMode = gameState.gameMode === "2v2";
   const scoreHistory = gameState.scoreHistory || [];
 
@@ -64,17 +66,17 @@ export function ScoreHistoryModal({
           style={styles.container}
         >
           <View style={styles.header}>
-            <ThemedText style={styles.title}>Score History</ThemedText>
+            <ThemedText style={[styles.title, { fontSize: fs(20) }]}>Score History</ThemedText>
             <Pressable style={styles.closeButton} onPress={onClose}>
               <Feather name="x" size={24} color="#FFFFFF" />
             </Pressable>
           </View>
 
           <View style={styles.roundInfo}>
-            <ThemedText style={styles.roundLabel}>
+            <ThemedText style={[styles.roundLabel, { fontSize: fs(16) }]}>
               {gameState.status === "playing" ? `Playing Round ${gameState.currentRound}` : `Round ${gameState.currentRound}`}
             </ThemedText>
-            <ThemedText style={styles.thresholdLabel}>
+            <ThemedText style={[styles.thresholdLabel, { fontSize: fs(14) }]}>
               Goal: {gameState.pointThreshold} pts
             </ThemedText>
           </View>
@@ -84,7 +86,7 @@ export function ScoreHistoryModal({
               <View style={styles.tableContainer}>
                 <View style={styles.tableHeader}>
                   <View style={styles.roundColumn}>
-                    <ThemedText style={styles.columnHeader}>Round</ThemedText>
+                    <ThemedText style={[styles.columnHeader, { fontSize: fs(12) }]}>Round</ThemedText>
                   </View>
                   {teamsSorted.map(team => {
                     const isMyTeam = team.players.some(p => p.id === myPlayerId);
@@ -92,7 +94,7 @@ export function ScoreHistoryModal({
                       <View key={team.teamId} style={styles.teamColumn}>
                         <ThemedText style={[
                           styles.columnHeader,
-                          { color: teamColors[team.teamId as keyof typeof teamColors] }
+                          { fontSize: fs(12), color: teamColors[team.teamId as keyof typeof teamColors] }
                         ]}>
                           {isMyTeam ? "Your Team" : "Opponents"}
                         </ThemedText>
@@ -105,7 +107,7 @@ export function ScoreHistoryModal({
                   scoreHistory.map(entry => (
                     <View key={entry.round} style={styles.tableRow}>
                       <View style={styles.roundColumn}>
-                        <ThemedText style={styles.roundNumber}>{entry.round}</ThemedText>
+                        <ThemedText style={[styles.roundNumber, { fontSize: fs(14) }]}>{entry.round}</ThemedText>
                       </View>
                       {teamsSorted.map(team => {
                         const { roundScore, cumulative } = getTeamRoundScore(entry.round, team.teamId);
@@ -113,11 +115,12 @@ export function ScoreHistoryModal({
                           <View key={team.teamId} style={styles.teamColumn}>
                             <ThemedText style={[
                               styles.roundScoreValue,
+                              { fontSize: fs(14) },
                               roundScore >= 0 ? styles.positiveScore : styles.negativeScore
                             ]}>
                               {roundScore >= 0 ? `+${roundScore}` : roundScore}
                             </ThemedText>
-                            <ThemedText style={styles.cumulativeScore}>
+                            <ThemedText style={[styles.cumulativeScore, { fontSize: fs(10) }]}>
                               Total: {cumulative}
                             </ThemedText>
                           </View>
@@ -128,7 +131,7 @@ export function ScoreHistoryModal({
                 ) : (
                   <View style={styles.noHistory}>
                     <Feather name="clock" size={24} color="rgba(255,255,255,0.4)" />
-                    <ThemedText style={styles.noHistoryText}>
+                    <ThemedText style={[styles.noHistoryText, { fontSize: fs(14) }]}>
                       No rounds completed yet
                     </ThemedText>
                   </View>
@@ -136,11 +139,11 @@ export function ScoreHistoryModal({
 
                 <View style={[styles.tableRow, styles.totalRow]}>
                   <View style={styles.roundColumn}>
-                    <ThemedText style={styles.totalLabel}>Total</ThemedText>
+                    <ThemedText style={[styles.totalLabel, { fontSize: fs(14) }]}>Total</ThemedText>
                   </View>
                   {teamsSorted.map(team => (
                     <View key={team.teamId} style={styles.teamColumn}>
-                      <ThemedText style={styles.totalScore}>{team.totalScore}</ThemedText>
+                      <ThemedText style={[styles.totalScore, { fontSize: fs(18) }]}>{team.totalScore}</ThemedText>
                     </View>
                   ))}
                 </View>
@@ -149,16 +152,16 @@ export function ScoreHistoryModal({
               <View style={styles.tableContainer}>
                 <View style={styles.tableHeader}>
                   <View style={styles.roundColumn}>
-                    <ThemedText style={styles.columnHeader}>Round</ThemedText>
+                    <ThemedText style={[styles.columnHeader, { fontSize: fs(12) }]}>Round</ThemedText>
                   </View>
-                  {sortedPlayers.map((player, idx) => {
+                  {sortedPlayers.map((player) => {
                     const isMe = player.id === myPlayerId;
                     const playerIndex = gameState.players.findIndex(p => p.id === player.id);
                     const playerColor = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length];
                     return (
                       <View key={player.id} style={styles.playerColumn}>
-                        <ThemedText 
-                          style={[styles.columnHeader, { color: playerColor }]}
+                        <ThemedText
+                          style={[styles.columnHeader, { fontSize: fs(12), color: playerColor }]}
                           numberOfLines={1}
                         >
                           {isMe ? "You" : player.displayName}
@@ -172,7 +175,7 @@ export function ScoreHistoryModal({
                   scoreHistory.map(entry => (
                     <View key={entry.round} style={styles.tableRow}>
                       <View style={styles.roundColumn}>
-                        <ThemedText style={styles.roundNumber}>{entry.round}</ThemedText>
+                        <ThemedText style={[styles.roundNumber, { fontSize: fs(14) }]}>{entry.round}</ThemedText>
                       </View>
                       {sortedPlayers.map(player => {
                         const scoreData = entry.scores.find(s => s.playerId === player.id);
@@ -182,11 +185,12 @@ export function ScoreHistoryModal({
                           <View key={player.id} style={styles.playerColumn}>
                             <ThemedText style={[
                               styles.roundScoreValue,
+                              { fontSize: fs(14) },
                               roundScore >= 0 ? styles.positiveScore : styles.negativeScore
                             ]}>
                               {roundScore >= 0 ? `+${roundScore}` : roundScore}
                             </ThemedText>
-                            <ThemedText style={styles.cumulativeScore}>
+                            <ThemedText style={[styles.cumulativeScore, { fontSize: fs(10) }]}>
                               {cumulative}
                             </ThemedText>
                           </View>
@@ -197,7 +201,7 @@ export function ScoreHistoryModal({
                 ) : (
                   <View style={styles.noHistory}>
                     <Feather name="clock" size={24} color="rgba(255,255,255,0.4)" />
-                    <ThemedText style={styles.noHistoryText}>
+                    <ThemedText style={[styles.noHistoryText, { fontSize: fs(14) }]}>
                       No rounds completed yet
                     </ThemedText>
                   </View>
@@ -205,11 +209,11 @@ export function ScoreHistoryModal({
 
                 <View style={[styles.tableRow, styles.totalRow]}>
                   <View style={styles.roundColumn}>
-                    <ThemedText style={styles.totalLabel}>Total</ThemedText>
+                    <ThemedText style={[styles.totalLabel, { fontSize: fs(14) }]}>Total</ThemedText>
                   </View>
                   {sortedPlayers.map(player => (
                     <View key={player.id} style={styles.playerColumn}>
-                      <ThemedText style={styles.totalScore}>{player.totalScore}</ThemedText>
+                      <ThemedText style={[styles.totalScore, { fontSize: fs(18) }]}>{player.totalScore}</ThemedText>
                     </View>
                   ))}
                 </View>
@@ -243,7 +247,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.1)",
   },
   title: {
-    fontSize: 20,
     fontWeight: "700",
     color: "#FFFFFF",
   },
@@ -259,12 +262,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.2)",
   },
   roundLabel: {
-    fontSize: 16,
     fontWeight: "600",
     color: GameColors.gold,
   },
   thresholdLabel: {
-    fontSize: 14,
     color: "rgba(255,255,255,0.7)",
   },
   scrollArea: {
@@ -313,18 +314,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   columnHeader: {
-    fontSize: 12,
     fontWeight: "700",
     color: "rgba(255,255,255,0.8)",
     textAlign: "center",
   },
   roundNumber: {
-    fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
   },
   roundScoreValue: {
-    fontSize: 14,
     fontWeight: "700",
   },
   positiveScore: {
@@ -334,17 +332,14 @@ const styles = StyleSheet.create({
     color: "#F44336",
   },
   cumulativeScore: {
-    fontSize: 10,
     color: "rgba(255,255,255,0.5)",
     marginTop: 2,
   },
   totalLabel: {
-    fontSize: 14,
     fontWeight: "700",
     color: GameColors.gold,
   },
   totalScore: {
-    fontSize: 18,
     fontWeight: "700",
     color: GameColors.gold,
   },
@@ -355,7 +350,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   noHistoryText: {
-    fontSize: 14,
     color: "rgba(255,255,255,0.5)",
   },
 });

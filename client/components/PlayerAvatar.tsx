@@ -39,8 +39,11 @@ export function PlayerAvatar({
   isMe = false,
   style,
 }: PlayerAvatarProps) {
-  const { fs } = useFontSize();
-  const avatarSize = size === "small" ? 36 : size === "large" ? 56 : 44;
+  const { fs, scale } = useFontSize();
+  const baseAvatarSize = size === "small" ? 36 : size === "large" ? 56 : 44;
+  const avatarSize = Math.round(baseAvatarSize * scale);
+  const badgeSize = Math.round(18 * scale);
+  const badgeFontSize = Math.round(10 * scale);
   const initialFontSize = size === "small" ? 14 : size === "large" ? 22 : 18;
   const initial = displayName.charAt(0).toUpperCase();
 
@@ -78,18 +81,18 @@ export function PlayerAvatar({
             },
           ]}
         >
-          <ThemedText style={[styles.initial, { fontSize: fs(initialFontSize) }]}>
+          <ThemedText style={[styles.initial, { fontSize: Math.round(initialFontSize * scale) }]}>
             {initial}
           </ThemedText>
         </View>
         {isDealer ? (
-          <View style={styles.dealerBadge}>
-            <ThemedText style={[styles.dealerText, { fontSize: fs(10) }]}>D</ThemedText>
+          <View style={[styles.dealerBadge, { width: badgeSize, height: badgeSize, borderRadius: badgeSize / 2 }]}>
+            <ThemedText style={[styles.dealerText, { fontSize: badgeFontSize }]}>D</ThemedText>
           </View>
         ) : null}
         {hasLastCard ? (
-          <View style={styles.lastCardBadge}>
-            <Feather name="alert-circle" size={12} color="#FFFFFF" />
+          <View style={[styles.lastCardBadge, { width: badgeSize, height: badgeSize, borderRadius: badgeSize / 2 }]}>
+            <Feather name="alert-circle" size={Math.round(12 * scale)} color="#FFFFFF" />
           </View>
         ) : null}
       </View>
@@ -140,9 +143,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: -2,
     right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
     backgroundColor: GameColors.gold,
     justifyContent: "center",
     alignItems: "center",
@@ -155,9 +155,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
     backgroundColor: "#F44336",
     justifyContent: "center",
     alignItems: "center",
@@ -166,10 +163,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.8)",
     fontWeight: "500",
     maxWidth: 80,
-  },
-  nameCurrent: {
-    color: GameColors.gold,
-    fontWeight: "600",
   },
   cardCountContainer: {
     flexDirection: "row",

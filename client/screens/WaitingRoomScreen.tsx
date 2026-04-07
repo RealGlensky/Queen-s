@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { StyleSheet, View, FlatList, ActivityIndicator, Pressable } from "react-native";
+import { StyleSheet, View, FlatList, ActivityIndicator, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -163,14 +163,17 @@ export default function WaitingRoomScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      <View
-        style={[
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
           styles.content,
           {
             paddingTop: headerHeight + Spacing.lg,
             paddingBottom: insets.bottom + Spacing.xl,
           },
         ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {reconnecting ? (
           <View style={styles.connectionStatus}>
@@ -286,7 +289,7 @@ export default function WaitingRoomScreen() {
             style={styles.leaveButton}
           />
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -311,8 +314,10 @@ const styles = StyleSheet.create({
   backButton: {
     marginTop: Spacing.lg,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     paddingHorizontal: Spacing.lg,
   },
   connectionStatus: {
@@ -382,7 +387,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   playersSection: {
-    flex: 1,
     gap: Spacing.lg,
   },
   playersTitle: {

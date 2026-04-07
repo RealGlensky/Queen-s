@@ -8,12 +8,14 @@ interface FontSizeContextType {
   largeFontEnabled: boolean;
   toggleLargeFont: (value: boolean) => void;
   fs: (base: number) => number;
+  scale: number;
 }
 
 const FontSizeContext = createContext<FontSizeContextType>({
   largeFontEnabled: false,
   toggleLargeFont: () => {},
   fs: (base) => base,
+  scale: 1,
 });
 
 export function FontSizeProvider({ children }: { children: React.ReactNode }) {
@@ -38,11 +40,11 @@ export function FontSizeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fs = (base: number) =>
-    largeFontEnabled ? Math.round(base * SCALE_FACTOR) : base;
+  const scale = largeFontEnabled ? SCALE_FACTOR : 1;
+  const fs = (base: number) => largeFontEnabled ? Math.round(base * SCALE_FACTOR) : base;
 
   return (
-    <FontSizeContext.Provider value={{ largeFontEnabled, toggleLargeFont, fs }}>
+    <FontSizeContext.Provider value={{ largeFontEnabled, toggleLargeFont, fs, scale }}>
       {children}
     </FontSizeContext.Provider>
   );
