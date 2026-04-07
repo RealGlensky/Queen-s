@@ -11,6 +11,7 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { ThemedText } from "@/components/ThemedText";
 import { GameButton } from "@/components/GameButton";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 const STORAGE_KEYS = {
   DISPLAY_NAME: "@queens/displayName",
@@ -21,6 +22,7 @@ const STORAGE_KEYS = {
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const { largeFontEnabled, toggleLargeFont, fs } = useFontSize();
 
   const [displayName, setDisplayName] = useState("");
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
@@ -70,6 +72,13 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleToggleLargeFont = async (value: boolean) => {
+    toggleLargeFont(value);
+    if (hapticsEnabled) {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -88,11 +97,11 @@ export default function SettingsScreen() {
         ]}
       >
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Profile</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { fontSize: fs(14) }]}>Profile</ThemedText>
           <View style={styles.inputContainer}>
-            <ThemedText style={styles.inputLabel}>Display Name</ThemedText>
+            <ThemedText style={[styles.inputLabel, { fontSize: fs(13) }]}>Display Name</ThemedText>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { fontSize: fs(16) }]}
               value={displayName}
               onChangeText={setDisplayName}
               placeholder="Your name"
@@ -104,14 +113,14 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Preferences</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { fontSize: fs(14) }]}>Preferences</ThemedText>
           
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Feather name="smartphone" size={20} color="#FFFFFF" />
               <View>
-                <ThemedText style={styles.settingLabel}>Haptic Feedback</ThemedText>
-                <ThemedText style={styles.settingDescription}>
+                <ThemedText style={[styles.settingLabel, { fontSize: fs(16) }]}>Haptic Feedback</ThemedText>
+                <ThemedText style={[styles.settingDescription, { fontSize: fs(12) }]}>
                   Vibration on button presses
                 </ThemedText>
               </View>
@@ -128,8 +137,8 @@ export default function SettingsScreen() {
             <View style={styles.settingInfo}>
               <Feather name="volume-2" size={20} color="#FFFFFF" />
               <View>
-                <ThemedText style={styles.settingLabel}>Sound Effects</ThemedText>
-                <ThemedText style={styles.settingDescription}>
+                <ThemedText style={[styles.settingLabel, { fontSize: fs(16) }]}>Sound Effects</ThemedText>
+                <ThemedText style={[styles.settingDescription, { fontSize: fs(12) }]}>
                   Card and game sounds
                 </ThemedText>
               </View>
@@ -144,12 +153,35 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>About</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { fontSize: fs(14) }]}>Accessibility</ThemedText>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Feather name="type" size={20} color="#FFFFFF" />
+              <View>
+                <ThemedText style={[styles.settingLabel, { fontSize: fs(16) }]}>Large Text</ThemedText>
+                <ThemedText style={[styles.settingDescription, { fontSize: fs(12) }]}>
+                  Increase text size throughout the game
+                </ThemedText>
+              </View>
+            </View>
+            <Switch
+              value={largeFontEnabled}
+              onValueChange={handleToggleLargeFont}
+              trackColor={{ false: "rgba(255,255,255,0.2)", true: GameColors.gold }}
+              thumbColor="#FFFFFF"
+              testID="switch-large-text"
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText style={[styles.sectionTitle, { fontSize: fs(14) }]}>About</ThemedText>
           <View style={styles.aboutContainer}>
-            <ThemedText style={styles.aboutText}>
+            <ThemedText style={[styles.aboutText, { fontSize: fs(16) }]}>
               Queens - The Card Game
             </ThemedText>
-            <ThemedText style={styles.versionText}>
+            <ThemedText style={[styles.versionText, { fontSize: fs(12) }]}>
               Version 1.0.0
             </ThemedText>
           </View>
@@ -187,7 +219,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: "#FFFFFF",
-    fontSize: 14,
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -197,14 +228,12 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     color: "rgba(255,255,255,0.6)",
-    fontSize: 13,
   },
   input: {
     backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    fontSize: 16,
     color: "#FFFFFF",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
@@ -221,15 +250,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
+    flex: 1,
+    marginRight: Spacing.md,
   },
   settingLabel: {
     color: "#FFFFFF",
-    fontSize: 16,
     fontWeight: "500",
   },
   settingDescription: {
     color: "rgba(255,255,255,0.5)",
-    fontSize: 12,
+    marginTop: 2,
   },
   aboutContainer: {
     backgroundColor: "rgba(255,255,255,0.05)",
@@ -240,12 +270,10 @@ const styles = StyleSheet.create({
   },
   aboutText: {
     color: "#FFFFFF",
-    fontSize: 16,
     fontWeight: "500",
   },
   versionText: {
     color: "rgba(255,255,255,0.5)",
-    fontSize: 12,
   },
   actions: {
     paddingTop: Spacing.lg,

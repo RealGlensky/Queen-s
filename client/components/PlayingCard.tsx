@@ -8,6 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, CardDimensions } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 import type { PlayingCard as PlayingCardType, Suit } from "@shared/gameTypes";
 
 interface PlayingCardProps {
@@ -49,6 +50,7 @@ export function PlayingCard({
 }: PlayingCardProps) {
   const scale = useSharedValue(1);
   const translateY = useSharedValue(0);
+  const { fs } = useFontSize();
 
   const isRed = card.suit === "hearts" || card.suit === "diamonds" || card.jokerColor === "red";
   const suitColor = isRed ? GameColors.redSuit : GameColors.blackSuit;
@@ -127,7 +129,7 @@ export function PlayingCard({
               styles.jokerText,
               {
                 color: card.jokerColor === "red" ? GameColors.redSuit : GameColors.blackSuit,
-                fontSize: size === "small" ? 10 : 12,
+                fontSize: fs(size === "small" ? 10 : 12),
               },
             ]}
           >
@@ -140,7 +142,7 @@ export function PlayingCard({
             <ThemedText
               style={[
                 styles.rank,
-                { color: suitColor, fontSize: size === "small" ? 12 : 16 },
+                { color: suitColor, fontSize: fs(size === "small" ? 12 : 16) },
               ]}
             >
               {rankDisplay}
@@ -148,7 +150,7 @@ export function PlayingCard({
             <ThemedText
               style={[
                 styles.suit,
-                { color: suitColor, fontSize: size === "small" ? 10 : 14 },
+                { color: suitColor, fontSize: fs(size === "small" ? 10 : 14) },
               ]}
             >
               {suitSymbol}
@@ -164,7 +166,7 @@ export function PlayingCard({
               <ThemedText
                 style={{
                   color: suitColor, 
-                  fontSize: size === "small" ? 24 : 32,
+                  fontSize: fs(size === "small" ? 24 : 32),
                   lineHeight: size === "small" ? 28 : 40,
                   textAlign: "center",
                 }}
@@ -177,7 +179,7 @@ export function PlayingCard({
             <ThemedText
               style={[
                 styles.suit,
-                { color: suitColor, fontSize: size === "small" ? 10 : 14, transform: [{ rotate: "180deg" }] },
+                { color: suitColor, fontSize: fs(size === "small" ? 10 : 14), transform: [{ rotate: "180deg" }] },
               ]}
             >
               {suitSymbol}
@@ -185,7 +187,7 @@ export function PlayingCard({
             <ThemedText
               style={[
                 styles.rank,
-                { color: suitColor, fontSize: size === "small" ? 12 : 16, transform: [{ rotate: "180deg" }] },
+                { color: suitColor, fontSize: fs(size === "small" ? 12 : 16), transform: [{ rotate: "180deg" }] },
               ]}
             >
               {rankDisplay}

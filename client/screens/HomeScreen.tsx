@@ -18,6 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { GameButton } from "@/components/GameButton";
 import { GameColors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { useGameSocket } from "@/contexts/GameSocketContext";
+import { useFontSize } from "@/contexts/FontSizeContext";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -26,6 +27,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { gameState, roomInfo, leaveRoom } = useGameSocket();
+  const { fs } = useFontSize();
   const hasAutoNavigated = useRef(false);
 
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function HomeScreen() {
             <Feather name="award" size={48} color={GameColors.gold} />
           </View>
           <ThemedText style={styles.title}>QUEENS</ThemedText>
-          <ThemedText style={styles.subtitle}>The Card Game</ThemedText>
+          <ThemedText style={[styles.subtitle, { fontSize: fs(16) }]}>The Card Game</ThemedText>
         </Animated.View>
 
         <Animated.View
@@ -150,7 +152,7 @@ export default function HomeScreen() {
           entering={FadeIn.delay(800).duration(600)}
           style={styles.footer}
         >
-          <ThemedText style={styles.footerText}>
+          <ThemedText style={[styles.footerText, { fontSize: fs(13) }]}>
             A classic rummy-style card game
           </ThemedText>
         </Animated.View>

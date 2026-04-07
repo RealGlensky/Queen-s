@@ -12,6 +12,7 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { ThemedText } from "@/components/ThemedText";
 import { GameButton } from "@/components/GameButton";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -22,6 +23,7 @@ export default function LobbyScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<NavigationProp>();
+  const { fs } = useFontSize();
 
   const [displayName, setDisplayName] = useState("");
   const [gameMode, setGameMode] = useState<GameMode>("solo");
@@ -75,7 +77,7 @@ export default function LobbyScreen() {
         ]}
       >
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Your Name</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { fontSize: fs(14) }]}>Your Name</ThemedText>
           <TextInput
             style={styles.input}
             value={displayName}
@@ -88,7 +90,7 @@ export default function LobbyScreen() {
         </View>
 
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Game Mode</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { fontSize: fs(14) }]}>Game Mode</ThemedText>
           <View style={styles.modeButtons}>
             <Pressable
               onPress={() => {
@@ -109,6 +111,7 @@ export default function LobbyScreen() {
                 style={[
                   styles.modeButtonText,
                   gameMode === "solo" && styles.modeButtonTextActive,
+                  { fontSize: fs(16) },
                 ]}
               >
                 Solo
@@ -117,6 +120,7 @@ export default function LobbyScreen() {
                 style={[
                   styles.modeButtonSubtext,
                   gameMode === "solo" && styles.modeButtonTextActive,
+                  { fontSize: fs(12) },
                 ]}
               >
                 1000 points
@@ -141,6 +145,7 @@ export default function LobbyScreen() {
                 style={[
                   styles.modeButtonText,
                   gameMode === "2v2" && styles.modeButtonTextActive,
+                  { fontSize: fs(16) },
                 ]}
               >
                 2v2 Teams
@@ -149,6 +154,7 @@ export default function LobbyScreen() {
                 style={[
                   styles.modeButtonSubtext,
                   gameMode === "2v2" && styles.modeButtonTextActive,
+                  { fontSize: fs(12) },
                 ]}
               >
                 1500 points
@@ -159,7 +165,7 @@ export default function LobbyScreen() {
 
         {gameMode === "solo" ? (
           <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Number of Players</ThemedText>
+            <ThemedText style={[styles.sectionTitle, { fontSize: fs(14) }]}>Number of Players</ThemedText>
             <View style={styles.playerCountButtons}>
               {playerCountOptions.map((count) => (
                 <Pressable
@@ -174,6 +180,7 @@ export default function LobbyScreen() {
                     style={[
                       styles.countButtonText,
                       playerCount === count && styles.countButtonTextActive,
+                      { fontSize: fs(18) },
                     ]}
                   >
                     {count}
@@ -181,7 +188,7 @@ export default function LobbyScreen() {
                 </Pressable>
               ))}
             </View>
-            <ThemedText style={styles.deckInfo}>
+            <ThemedText style={[styles.deckInfo, { fontSize: fs(12) }]}>
               {Math.ceil(playerCount / 2)} deck{Math.ceil(playerCount / 2) > 1 ? "s" : ""} will be used
             </ThemedText>
           </View>

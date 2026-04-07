@@ -13,6 +13,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ScoreCard } from "@/components/ScoreCard";
 import { GameButton } from "@/components/GameButton";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
 import { getCardPoints } from "@shared/gameTypes";
@@ -27,6 +28,7 @@ export default function ScoreScreen() {
   const route = useRoute<ScoreRouteProp>();
 
   const { gameState, nextRound, leaveRoom } = useGameSocket();
+  const { fs } = useFontSize();
 
   useEffect(() => {
     if (gameState?.status === "playing") {
@@ -59,7 +61,7 @@ export default function ScoreScreen() {
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.loadingContainer}>
-          <ThemedText style={styles.loadingText}>Loading scores...</ThemedText>
+          <ThemedText style={[styles.loadingText, { fontSize: fs(16) }]}>Loading scores...</ThemedText>
         </View>
       </View>
     );
@@ -145,8 +147,8 @@ export default function ScoreScreen() {
           {isGameOver ? (
             <>
               <Feather name="award" size={48} color={GameColors.gold} />
-              <ThemedText style={styles.title}>Game Over!</ThemedText>
-              <ThemedText style={styles.subtitle}>
+              <ThemedText style={[styles.title, { fontSize: fs(32) }]}>Game Over!</ThemedText>
+              <ThemedText style={[styles.subtitle, { fontSize: fs(16) }]}>
                 {winnerTeam
                   ? `Team ${winnerTeam} Wins!`
                   : sortedPlayers[0]?.displayName + " Wins!"}
@@ -154,15 +156,15 @@ export default function ScoreScreen() {
             </>
           ) : (
             <>
-              <ThemedText style={styles.roundTitle}>
+              <ThemedText style={[styles.roundTitle, { fontSize: fs(24) }]}>
                 Round {gameState.currentRound} Complete
               </ThemedText>
               {isDeckExhausted ? (
-                <ThemedText style={styles.deckExhaustedText}>
+                <ThemedText style={[styles.deckExhaustedText, { fontSize: fs(14) }]}>
                   Deck ran out - all hand cards count against you!
                 </ThemedText>
               ) : null}
-              <ThemedText style={styles.subtitle}>
+              <ThemedText style={[styles.subtitle, { fontSize: fs(16) }]}>
                 {isTeamMode && teamScoresSorted.length > 0
                   ? `${gameState.pointThreshold - teamScoresSorted[0].totalScore} points to go`
                   : `${gameState.pointThreshold - Math.max(...sortedPlayers.map(p => p.totalScore))} points to go`

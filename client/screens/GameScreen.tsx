@@ -18,6 +18,7 @@ import { GameButton } from "@/components/GameButton";
 import { ScoreHistoryModal } from "@/components/ScoreHistoryModal";
 import { HelpModal } from "@/components/HelpModal";
 import { GameColors, Spacing, BorderRadius, CardDimensions, PLAYER_COLORS } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
 import type { PlayingCard as PlayingCardType, CardSet as CardSetType, Player, GameAction } from "@shared/gameTypes";
@@ -57,6 +58,8 @@ export default function GameScreen() {
     forceReconnect,
     clearError,
   } = useGameSocket();
+
+  const { fs } = useFontSize();
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [targetSetId, setTargetSetId] = useState<string | null>(null);
@@ -503,7 +506,7 @@ export default function GameScreen() {
         >
           <View style={styles.actionMessageBubble}>
             <Feather name="alert-circle" size={16} color="#fff" />
-            <ThemedText style={styles.actionMessageText}>{actionMessage}</ThemedText>
+            <ThemedText style={[styles.actionMessageText, { fontSize: fs(14) }]}>{actionMessage}</ThemedText>
           </View>
         </Animated.View>
       ) : null}
@@ -514,24 +517,24 @@ export default function GameScreen() {
             <View style={styles.myScoreContainer}>
               <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
               <View>
-                <ThemedText style={styles.myScoreLabel}>
+                <ThemedText style={[styles.myScoreLabel, { fontSize: fs(10) }]}>
                   {gameState.gameMode === "2v2" ? "Your Team" : "You"}
                 </ThemedText>
-                <ThemedText style={styles.myScoreValue}>
+                <ThemedText style={[styles.myScoreValue, { fontSize: fs(14) }]}>
                   {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
                 </ThemedText>
               </View>
             </View>
             <View style={styles.roundInfo}>
-              <ThemedText style={styles.roundText}>Round {gameState.currentRound}</ThemedText>
-              <ThemedText style={styles.thresholdText}>Goal: {gameState.pointThreshold}</ThemedText>
+              <ThemedText style={[styles.roundText, { fontSize: fs(16) }]}>Round {gameState.currentRound}</ThemedText>
+              <ThemedText style={[styles.thresholdText, { fontSize: fs(12) }]}>Goal: {gameState.pointThreshold}</ThemedText>
             </View>
             {gameState.gameMode === "2v2" ? (
               <View style={styles.opponentScoreContainer}>
                 <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
                 <View>
-                  <ThemedText style={styles.myScoreLabel}>Opponents</ThemedText>
-                  <ThemedText style={styles.myScoreValue}>{opponentTeamScore} pts</ThemedText>
+                  <ThemedText style={[styles.myScoreLabel, { fontSize: fs(10) }]}>Opponents</ThemedText>
+                  <ThemedText style={[styles.myScoreValue, { fontSize: fs(14) }]}>{opponentTeamScore} pts</ThemedText>
                 </View>
               </View>
             ) : null}
@@ -591,7 +594,7 @@ export default function GameScreen() {
                 {/* Team 1 Pile */}
                 {team1Sets.length > 0 ? (
                   <View style={[styles.teamPile, { borderColor: teamColors[1] }]}>
-                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[1] }]}>
+                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[1], fontSize: fs(12) }]}>
                       Team 1
                     </ThemedText>
                     <View style={styles.teamPileSets}>
@@ -618,7 +621,7 @@ export default function GameScreen() {
                 {/* Team 2 Pile */}
                 {team2Sets.length > 0 ? (
                   <View style={[styles.teamPile, { borderColor: teamColors[2] }]}>
-                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[2] }]}>
+                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[2], fontSize: fs(12) }]}>
                       Team 2
                     </ThemedText>
                     <View style={styles.teamPileSets}>
@@ -648,7 +651,7 @@ export default function GameScreen() {
                 const playerColor = PLAYER_COLORS[group.playerIndex % PLAYER_COLORS.length];
                 return (
                   <View key={group.playerId} style={[styles.teamPile, { borderColor: playerColor }]}>
-                    <ThemedText style={[styles.teamPileLabel, { color: playerColor }]}>
+                    <ThemedText style={[styles.teamPileLabel, { color: playerColor, fontSize: fs(12) }]}>
                       {group.isMine ? "You" : group.displayName}
                     </ThemedText>
                     <View style={styles.teamPileSets}>
@@ -700,8 +703,8 @@ export default function GameScreen() {
             entering={FadeIn.duration(300)}
             style={styles.turnIndicator}
           >
-            <ThemedText style={styles.turnText}>Your Turn</ThemedText>
-            <ThemedText style={styles.phaseText}>
+            <ThemedText style={[styles.turnText, { fontSize: fs(16) }]}>Your Turn</ThemedText>
+            <ThemedText style={[styles.phaseText, { fontSize: fs(12) }]}>
               {gameState.turnPhase === "draw" ? "Draw a card" :
                gameState.turnPhase === "play" ? "Lay sets or add cards" :
                "Discard a card"}
@@ -789,7 +792,7 @@ export default function GameScreen() {
       {showMoveLog ? (
         <View style={[styles.moveLogPanel, { top: insets.top + 60 + 48 }]}>
           <View style={styles.moveLogHeader}>
-            <ThemedText style={styles.moveLogTitle}>Move History</ThemedText>
+            <ThemedText style={[styles.moveLogTitle, { fontSize: fs(14) }]}>Move History</ThemedText>
             <Pressable onPress={() => setShowMoveLog(false)}>
               <Feather name="x" size={18} color="rgba(255,255,255,0.7)" />
             </Pressable>
@@ -800,12 +803,12 @@ export default function GameScreen() {
             onContentSizeChange={() => moveLogScrollRef.current?.scrollToEnd({ animated: true })}
           >
             {moveLog.length === 0 ? (
-              <ThemedText style={styles.moveLogEmpty}>No moves yet</ThemedText>
+              <ThemedText style={[styles.moveLogEmpty, { fontSize: fs(12) }]}>No moves yet</ThemedText>
             ) : (
               moveLog.map((entry) => (
                 <View key={entry.id} style={styles.moveLogEntry}>
-                  <ThemedText style={styles.moveLogPlayer}>{entry.playerName}</ThemedText>
-                  <ThemedText style={styles.moveLogAction}>{entry.action}</ThemedText>
+                  <ThemedText style={[styles.moveLogPlayer, { fontSize: fs(11) }]}>{entry.playerName}</ThemedText>
+                  <ThemedText style={[styles.moveLogAction, { fontSize: fs(11) }]}>{entry.action}</ThemedText>
                 </View>
               ))
             )}

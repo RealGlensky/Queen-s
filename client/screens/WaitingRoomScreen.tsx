@@ -13,6 +13,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { GameButton } from "@/components/GameButton";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
 import type { Player } from "@shared/gameTypes";
@@ -43,6 +44,7 @@ export default function WaitingRoomScreen() {
     forceReconnect,
   } = useGameSocket();
 
+  const { fs } = useFontSize();
   const [isStarting, setIsStarting] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -135,7 +137,7 @@ export default function WaitingRoomScreen() {
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={GameColors.gold} />
-          <ThemedText style={styles.loadingText}>
+          <ThemedText style={[styles.loadingText, { fontSize: fs(16) }]}>
             {error || "Connecting to room..."}
           </ThemedText>
           {error ? (
@@ -183,9 +185,9 @@ export default function WaitingRoomScreen() {
         ) : null}
 
         <View style={styles.roomCodeContainer}>
-          <ThemedText style={styles.roomCodeLabel}>Room Code</ThemedText>
+          <ThemedText style={[styles.roomCodeLabel, { fontSize: fs(12) }]}>Room Code</ThemedText>
           <Pressable onPress={handleCopyCode} style={styles.roomCodeRow}>
-            <ThemedText style={styles.roomCode}>{roomInfo.roomCode}</ThemedText>
+            <ThemedText style={[styles.roomCode, { fontSize: fs(32) }]}>{roomInfo.roomCode}</ThemedText>
             <View style={styles.copyButton}>
               <Feather 
                 name={copied ? "check" : "copy"} 
@@ -199,13 +201,13 @@ export default function WaitingRoomScreen() {
           ) : (
             <ThemedText style={styles.tapToCopyText}>Tap to copy</ThemedText>
           )}
-          <ThemedText style={styles.modeLabel}>
+          <ThemedText style={[styles.modeLabel, { fontSize: fs(14) }]}>
             {roomInfo.gameMode === "2v2" ? "2v2 Teams" : "Solo"} • {roomInfo.pointThreshold} points
           </ThemedText>
         </View>
 
         <View style={styles.playersSection}>
-          <ThemedText style={styles.playersTitle}>
+          <ThemedText style={[styles.playersTitle, { fontSize: fs(14) }]}>
             Players ({players.length}/{totalSlots})
           </ThemedText>
           
@@ -269,7 +271,7 @@ export default function WaitingRoomScreen() {
           ) : (
             <View style={styles.waitingMessage}>
               <Feather name="clock" size={20} color="rgba(255,255,255,0.6)" />
-              <ThemedText style={styles.waitingText}>
+              <ThemedText style={[styles.waitingText, { fontSize: fs(16) }]}>
                 Waiting for host to start...
               </ThemedText>
             </View>
