@@ -33,7 +33,7 @@ export function HelpModal({ visible, onClose }: HelpModalProps) {
     { key: "tips", label: "Tips", icon: "zap" },
   ];
 
-  const contentHeight = SCREEN_HEIGHT * (largeFontEnabled ? 0.82 : 0.62);
+  const contentHeight = SCREEN_HEIGHT * (largeFontEnabled ? 0.85 : 0.62);
 
   return (
     <Modal

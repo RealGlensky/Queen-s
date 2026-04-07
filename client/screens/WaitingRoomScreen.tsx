@@ -44,7 +44,7 @@ export default function WaitingRoomScreen() {
     forceReconnect,
   } = useGameSocket();
 
-  const { fs } = useFontSize();
+  const { fs, scale } = useFontSize();
   const [isStarting, setIsStarting] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -112,12 +112,12 @@ export default function WaitingRoomScreen() {
         isConnected={item.isConnected}
       />
       {index === 0 ? (
-        <View style={styles.hostBadge}>
+        <View style={[styles.hostBadge, { paddingHorizontal: Math.round(Spacing.sm * scale), paddingVertical: Math.round(2 * scale) }]}>
           <ThemedText style={[styles.hostBadgeText, { fontSize: fs(10) }]}>Host</ThemedText>
         </View>
       ) : null}
     </View>
-  ), [fs]);
+  ), [fs, scale]);
 
   const EmptySlot = () => (
     <View style={styles.emptySlot}>
@@ -224,7 +224,7 @@ export default function WaitingRoomScreen() {
                   isConnected={player.isConnected}
                 />
                 {index === 0 ? (
-                  <View style={styles.hostBadge}>
+                  <View style={[styles.hostBadge, { paddingHorizontal: Math.round(Spacing.sm * scale), paddingVertical: Math.round(2 * scale) }]}>
                     <ThemedText style={[styles.hostBadgeText, { fontSize: fs(10) }]}>Host</ThemedText>
                   </View>
                 ) : null}

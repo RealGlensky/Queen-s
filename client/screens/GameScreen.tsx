@@ -361,26 +361,26 @@ export default function GameScreen() {
           {showError ? (
             <>
               <Feather name="alert-circle" size={48} color="rgba(255,255,255,0.7)" style={{ marginBottom: Spacing.md }} />
-              <ThemedText style={styles.loadingText}>{errorMessage}</ThemedText>
+              <ThemedText style={[styles.loadingText, { fontSize: fs(16) }]}>{errorMessage}</ThemedText>
               <View style={{ flexDirection: "row", gap: Spacing.md, marginTop: Spacing.lg }}>
                 <Pressable
                   style={styles.loadingRetryButton}
                   onPress={forceReconnect}
                 >
-                  <ThemedText style={styles.loadingRetryText}>Retry</ThemedText>
+                  <ThemedText style={[styles.loadingRetryText, { fontSize: fs(15) }]}>Retry</ThemedText>
                 </Pressable>
                 <Pressable
                   style={[styles.loadingRetryButton, { backgroundColor: "rgba(255,255,255,0.15)" }]}
                   onPress={handleGoBack}
                 >
-                  <ThemedText style={styles.loadingRetryText}>Go Back</ThemedText>
+                  <ThemedText style={[styles.loadingRetryText, { fontSize: fs(15) }]}>Go Back</ThemedText>
                 </Pressable>
               </View>
             </>
           ) : (
             <>
               <ActivityIndicator size="large" color="rgba(255,255,255,0.7)" style={{ marginBottom: Spacing.md }} />
-              <ThemedText style={styles.loadingText}>Loading game...</ThemedText>
+              <ThemedText style={[styles.loadingText, { fontSize: fs(16) }]}>Loading game...</ThemedText>
             </>
           )}
         </View>
