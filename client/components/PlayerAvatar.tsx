@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, BorderRadius, Spacing } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 interface PlayerAvatarProps {
   displayName: string;
@@ -38,8 +39,9 @@ export function PlayerAvatar({
   isMe = false,
   style,
 }: PlayerAvatarProps) {
+  const { fs } = useFontSize();
   const avatarSize = size === "small" ? 36 : size === "large" ? 56 : 44;
-  const fontSize = size === "small" ? 14 : size === "large" ? 22 : 18;
+  const initialFontSize = size === "small" ? 14 : size === "large" ? 22 : 18;
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
@@ -76,13 +78,13 @@ export function PlayerAvatar({
             },
           ]}
         >
-          <ThemedText style={[styles.initial, { fontSize }]}>
+          <ThemedText style={[styles.initial, { fontSize: fs(initialFontSize) }]}>
             {initial}
           </ThemedText>
         </View>
         {isDealer ? (
           <View style={styles.dealerBadge}>
-            <ThemedText style={styles.dealerText}>D</ThemedText>
+            <ThemedText style={[styles.dealerText, { fontSize: fs(10) }]}>D</ThemedText>
           </View>
         ) : null}
         {hasLastCard ? (
@@ -94,6 +96,7 @@ export function PlayerAvatar({
       <ThemedText
         style={[
           styles.name,
+          { fontSize: fs(12) },
           isCurrentTurn && {
             color: playerColor || (team ? teamColors[team as keyof typeof teamColors] : GameColors.gold),
             fontWeight: "600" as const,
@@ -106,11 +109,11 @@ export function PlayerAvatar({
       {cardCount !== undefined ? (
         <View style={styles.cardCountContainer}>
           <Feather name="layers" size={10} color="rgba(255,255,255,0.6)" />
-          <ThemedText style={styles.cardCount}>{cardCount}</ThemedText>
+          <ThemedText style={[styles.cardCount, { fontSize: fs(10) }]}>{cardCount}</ThemedText>
         </View>
       ) : null}
       {score !== undefined ? (
-        <ThemedText style={styles.score}>{score} pts</ThemedText>
+        <ThemedText style={[styles.score, { fontSize: fs(10) }]}>{score} pts</ThemedText>
       ) : null}
     </View>
   );
@@ -146,7 +149,6 @@ const styles = StyleSheet.create({
   },
   dealerText: {
     color: "#000000",
-    fontSize: 10,
     fontWeight: "700",
   },
   lastCardBadge: {
@@ -162,7 +164,6 @@ const styles = StyleSheet.create({
   },
   name: {
     color: "rgba(255,255,255,0.8)",
-    fontSize: 12,
     fontWeight: "500",
     maxWidth: 80,
   },
@@ -177,11 +178,9 @@ const styles = StyleSheet.create({
   },
   cardCount: {
     color: "rgba(255,255,255,0.6)",
-    fontSize: 10,
   },
   score: {
     color: GameColors.gold,
-    fontSize: 10,
     fontWeight: "600",
   },
 });

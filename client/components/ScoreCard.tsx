@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, BorderRadius, Spacing } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 interface ScoreCardProps {
   displayName: string;
@@ -36,6 +37,8 @@ export function ScoreCard({
   rank,
   style,
 }: ScoreCardProps) {
+  const { fs } = useFontSize();
+
   return (
     <View
       style={[
@@ -49,50 +52,51 @@ export function ScoreCard({
         <View style={styles.nameContainer}>
           {rank !== undefined ? (
             <View style={[styles.rankBadge, isWinner && styles.winnerRank]}>
-              <ThemedText style={styles.rankText}>#{rank}</ThemedText>
+              <ThemedText style={[styles.rankText, { fontSize: fs(12) }]}>#{rank}</ThemedText>
             </View>
           ) : null}
           <View>
-            <ThemedText style={styles.name}>{displayName}</ThemedText>
+            <ThemedText style={[styles.name, { fontSize: fs(16) }]}>{displayName}</ThemedText>
             {subtitle ? (
-              <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
+              <ThemedText style={[styles.subtitle, { fontSize: fs(12) }]}>{subtitle}</ThemedText>
             ) : null}
           </View>
           {isWinner ? (
             <Feather name="award" size={20} color={GameColors.gold} />
           ) : null}
         </View>
-        <ThemedText style={[styles.totalScore, isWinner && styles.winnerScore]}>
+        <ThemedText style={[styles.totalScore, { fontSize: fs(24) }, isWinner && styles.winnerScore]}>
           {totalScore}
         </ThemedText>
       </View>
 
       <View style={styles.breakdown}>
         <View style={styles.breakdownRow}>
-          <ThemedText style={styles.breakdownLabel}>Sets laid down</ThemedText>
-          <ThemedText style={[styles.breakdownValue, styles.positive]}>
+          <ThemedText style={[styles.breakdownLabel, { fontSize: fs(13) }]}>Sets laid down</ThemedText>
+          <ThemedText style={[styles.breakdownValue, { fontSize: fs(13) }, styles.positive]}>
             +{setsScore}
           </ThemedText>
         </View>
         <View style={styles.breakdownRow}>
-          <ThemedText style={styles.breakdownLabel}>Cards in hand</ThemedText>
-          <ThemedText style={[styles.breakdownValue, styles.negative]}>
+          <ThemedText style={[styles.breakdownLabel, { fontSize: fs(13) }]}>Cards in hand</ThemedText>
+          <ThemedText style={[styles.breakdownValue, { fontSize: fs(13) }, styles.negative]}>
             -{handPenalty}
           </ThemedText>
         </View>
         {perfectCutBonus ? (
           <View style={styles.breakdownRow}>
-            <ThemedText style={styles.breakdownLabel}>Perfect cut bonus</ThemedText>
-            <ThemedText style={[styles.breakdownValue, styles.bonus]}>
+            <ThemedText style={[styles.breakdownLabel, { fontSize: fs(13) }]}>Perfect cut bonus</ThemedText>
+            <ThemedText style={[styles.breakdownValue, { fontSize: fs(13) }, styles.bonus]}>
               +100
             </ThemedText>
           </View>
         ) : null}
         <View style={[styles.breakdownRow, styles.roundTotal]}>
-          <ThemedText style={styles.roundLabel}>Round score</ThemedText>
+          <ThemedText style={[styles.roundLabel, { fontSize: fs(14) }]}>Round score</ThemedText>
           <ThemedText
             style={[
               styles.roundValue,
+              { fontSize: fs(16) },
               roundScore >= 0 ? styles.positive : styles.negative,
             ]}
           >
@@ -139,21 +143,17 @@ const styles = StyleSheet.create({
   },
   rankText: {
     color: "#FFFFFF",
-    fontSize: 12,
     fontWeight: "700",
   },
   name: {
     color: "#FFFFFF",
-    fontSize: 16,
     fontWeight: "600",
   },
   subtitle: {
     color: "rgba(255,255,255,0.6)",
-    fontSize: 12,
   },
   totalScore: {
     color: "#FFFFFF",
-    fontSize: 24,
     fontWeight: "700",
   },
   winnerScore: {
@@ -169,10 +169,8 @@ const styles = StyleSheet.create({
   },
   breakdownLabel: {
     color: "rgba(255,255,255,0.6)",
-    fontSize: 13,
   },
   breakdownValue: {
-    fontSize: 13,
     fontWeight: "500",
   },
   positive: {
@@ -192,11 +190,9 @@ const styles = StyleSheet.create({
   },
   roundLabel: {
     color: "#FFFFFF",
-    fontSize: 14,
     fontWeight: "500",
   },
   roundValue: {
-    fontSize: 16,
     fontWeight: "700",
   },
 });
