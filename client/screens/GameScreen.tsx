@@ -799,7 +799,7 @@ export default function GameScreen() {
           </View>
           <ScrollView 
             ref={moveLogScrollRef}
-            style={styles.moveLogScroll}
+            style={[styles.moveLogScroll, { maxHeight: Math.round(180 * scale) }]}
             onContentSizeChange={() => moveLogScrollRef.current?.scrollToEnd({ animated: true })}
           >
             {moveLog.length === 0 ? (
