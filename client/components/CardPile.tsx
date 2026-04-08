@@ -70,7 +70,7 @@ export function CardPile({
           backgroundColor: "rgba(212, 175, 55, 0.2)",
           borderWidth: scaledHighlightBorder,
           borderColor: GameColors.gold,
-          borderRadius: BorderRadius.sm,
+          borderRadius: Math.round(BorderRadius.sm * scale),
         },
         style,
         animatedStyle,
