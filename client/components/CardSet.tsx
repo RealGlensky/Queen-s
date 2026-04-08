@@ -43,6 +43,10 @@ export function CardSet({
   const scaledSmallWidth = Math.round(CardDimensions.smallWidth * scale);
   const scaledSmallHeight = Math.round(CardDimensions.smallHeight * scale);
   const cardOverlap = Math.round(35 * scale);
+  const scaledPadding = Math.round(Spacing.sm * scale);
+  const scaledBorderWidth = Math.round(2 * scale);
+  const scaledBorderRadius = Math.round(BorderRadius.sm * scale);
+  const scaledLabelMarginTop = Math.round(Spacing.xs * scale);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scaleAnim.value }],
@@ -80,7 +84,9 @@ export function CardSet({
         styles.container,
         {
           borderColor: canAddCard ? GameColors.gold : ownerColor,
-          borderWidth: 2,
+          borderWidth: scaledBorderWidth,
+          borderRadius: scaledBorderRadius,
+          padding: scaledPadding,
           backgroundColor: isMine
             ? "rgba(212, 175, 55, 0.15)"
             : `${ownerColor}22`,
@@ -117,7 +123,7 @@ export function CardSet({
           </View>
         ) : null}
       </View>
-      <View style={styles.labelContainer}>
+      <View style={[styles.labelContainer, { marginTop: scaledLabelMarginTop }]}>
         {!hideOwnerName ? (
           <ThemedText style={[styles.ownerLabel, { color: ownerColor, fontSize: fs(10) }]}>
             {ownerName || "Unknown"}

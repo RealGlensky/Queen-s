@@ -124,7 +124,7 @@ export function PlayingCard({
           height: cardHeight,
           backgroundColor: GameColors.cardFace,
           borderColor: highlighted ? "#FFD700" : selected ? GameColors.gold : "transparent",
-          borderWidth: highlighted || selected ? 3 : 0,
+          borderWidth: highlighted || selected ? Math.round(3 * scale) : 0,
         },
         style,
         animatedStyle,

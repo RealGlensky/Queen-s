@@ -46,6 +46,9 @@ export function PlayerAvatar({
   const badgeFontSize = Math.round(10 * scale);
   const initialFontSize = size === "small" ? 14 : size === "large" ? 22 : 18;
   const initial = displayName.charAt(0).toUpperCase();
+  const borderWidthValue = isCurrentTurn ? 5 : isMe ? 4 : 3;
+  const outerSize = avatarSize + (isCurrentTurn ? 4 : 0);
+  const innerSize = outerSize - 2 * borderWidthValue;
 
   return (
     <View style={[styles.container, style]}>
@@ -53,10 +56,10 @@ export function PlayerAvatar({
         style={[
           styles.avatarContainer,
           {
-            width: avatarSize + (isCurrentTurn ? 4 : 0),
-            height: avatarSize + (isCurrentTurn ? 4 : 0),
-            borderRadius: (avatarSize + (isCurrentTurn ? 4 : 0)) / 2,
-            borderWidth: isCurrentTurn ? 5 : isMe ? 4 : 3,
+            width: outerSize,
+            height: outerSize,
+            borderRadius: outerSize / 2,
+            borderWidth: borderWidthValue,
             borderColor: isCurrentTurn
               ? (playerColor || (team ? teamColors[team as keyof typeof teamColors] : GameColors.gold))
               : playerColor
@@ -72,9 +75,10 @@ export function PlayerAvatar({
           style={[
             styles.avatar,
             {
-              width: avatarSize - 4,
-              height: avatarSize - 4,
-              borderRadius: (avatarSize - 4) / 2,
+              width: innerSize,
+              height: innerSize,
+              borderRadius: innerSize / 2,
+              overflow: "hidden",
               backgroundColor: team
                 ? teamColors[team as keyof typeof teamColors]
                 : GameColors.richWood,

@@ -9,6 +9,7 @@ import { PlayingCard } from "@/components/PlayingCard";
 import { ThemedText } from "@/components/ThemedText";
 import type { PlayingCard as PlayingCardType } from "@shared/gameTypes";
 import { GameColors, CardDimensions, Spacing, BorderRadius } from "@/constants/theme";
+import { useFontSize } from "@/contexts/FontSizeContext";
 
 interface CardPileProps {
   cards: PlayingCardType[];
@@ -31,23 +32,30 @@ export function CardPile({
   onPress,
   style,
 }: CardPileProps) {
-  const scale = useSharedValue(1);
+  const { fs, scale } = useFontSize();
+  const pressScale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: pressScale.value }],
   }));
 
   const handlePressIn = () => {
     if (onPress) {
-      scale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
+      pressScale.value = withSpring(0.95, { damping: 15, stiffness: 200 });
     }
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+    pressScale.value = withSpring(1, { damping: 15, stiffness: 200 });
   };
 
   const topCard = cards.length > 0 ? cards[cards.length - 1] : null;
+
+  const scaledWidth = Math.round(CardDimensions.width * scale);
+  const scaledHeight = Math.round(CardDimensions.height * scale);
+  const scaledBorderRadius = Math.round(CardDimensions.borderRadius * scale);
+  const scaledPadding = Math.round(Spacing.sm * scale);
+  const scaledHighlightBorder = Math.round(2 * scale);
 
   return (
     <AnimatedPressable
@@ -57,30 +65,57 @@ export function CardPile({
       disabled={!onPress || cards.length === 0}
       style={[
         styles.container,
-        highlighted && styles.highlighted,
+        { padding: scaledPadding },
+        highlighted && {
+          backgroundColor: "rgba(212, 175, 55, 0.2)",
+          borderWidth: scaledHighlightBorder,
+          borderColor: GameColors.gold,
+          borderRadius: BorderRadius.sm,
+        },
         style,
         animatedStyle,
       ]}
     >
-      <View style={styles.pileContainer}>
+      <View style={[styles.pileContainer, { width: scaledWidth, height: scaledHeight }]}>
         {cards.length > 2 ? (
-          <View style={[styles.shadowCard, styles.shadowCard2]} />
+          <View
+            style={[
+              styles.shadowCard,
+              styles.shadowCard2,
+              { width: scaledWidth, height: scaledHeight, borderRadius: scaledBorderRadius },
+            ]}
+          />
         ) : null}
         {cards.length > 1 ? (
-          <View style={[styles.shadowCard, styles.shadowCard1]} />
+          <View
+            style={[
+              styles.shadowCard,
+              styles.shadowCard1,
+              { width: scaledWidth, height: scaledHeight, borderRadius: scaledBorderRadius },
+            ]}
+          />
         ) : null}
         {topCard ? (
           <PlayingCard card={topCard} faceDown={faceDown} />
         ) : (
-          <View style={styles.emptyPile}>
-            <ThemedText style={styles.emptyText}>Empty</ThemedText>
+          <View
+            style={[
+              styles.emptyPile,
+              {
+                width: scaledWidth,
+                height: scaledHeight,
+                borderRadius: scaledBorderRadius,
+              },
+            ]}
+          >
+            <ThemedText style={[styles.emptyText, { fontSize: fs(12) }]}>Empty</ThemedText>
           </View>
         )}
       </View>
       <View style={styles.labelContainer}>
-        <ThemedText style={styles.label}>{label}</ThemedText>
+        <ThemedText style={[styles.label, { fontSize: fs(12) }]}>{label}</ThemedText>
         {showCount && cards.length > 0 ? (
-          <ThemedText style={styles.count}>{cards.length}</ThemedText>
+          <ThemedText style={[styles.count, { fontSize: fs(12) }]}>{cards.length}</ThemedText>
         ) : null}
       </View>
     </AnimatedPressable>
@@ -90,25 +125,14 @@ export function CardPile({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    padding: Spacing.sm,
     borderRadius: BorderRadius.sm,
   },
-  highlighted: {
-    backgroundColor: "rgba(212, 175, 55, 0.2)",
-    borderWidth: 2,
-    borderColor: GameColors.gold,
-  },
   pileContainer: {
-    width: CardDimensions.width,
-    height: CardDimensions.height,
     position: "relative",
   },
   shadowCard: {
     position: "absolute",
-    width: CardDimensions.width,
-    height: CardDimensions.height,
     backgroundColor: GameColors.cardBack,
-    borderRadius: CardDimensions.borderRadius,
   },
   shadowCard1: {
     top: -2,
@@ -121,9 +145,6 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   emptyPile: {
-    width: CardDimensions.width,
-    height: CardDimensions.height,
-    borderRadius: CardDimensions.borderRadius,
     borderWidth: 2,
     borderColor: "rgba(255,255,255,0.2)",
     borderStyle: "dashed",
@@ -132,7 +153,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: "rgba(255,255,255,0.3)",
-    fontSize: 12,
   },
   labelContainer: {
     flexDirection: "row",
@@ -142,12 +162,10 @@ const styles = StyleSheet.create({
   },
   label: {
     color: "#FFFFFF",
-    fontSize: 12,
     fontWeight: "500",
   },
   count: {
     color: GameColors.gold,
-    fontSize: 12,
     fontWeight: "600",
   },
 });
