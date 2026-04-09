@@ -558,7 +558,7 @@ export default function GameScreen() {
         </View>
       </View>
 
-      <View style={styles.playersArea}>
+      <View style={[styles.playersArea, { minHeight: Math.round(100 * scale), marginTop: Math.round(Spacing.md * scale), paddingBottom: Math.round(Spacing.sm * scale) }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -587,12 +587,12 @@ export default function GameScreen() {
         </ScrollView>
       </View>
 
-      <View style={styles.tableArea}>
+      <View style={[styles.tableArea, { gap: Math.round(Spacing.xl * scale), paddingVertical: Math.round(Spacing.sm * scale) }]}>
         <View style={[styles.setsArea, { minHeight: Math.round(120 * scale), maxHeight: Math.round(280 * scale) }]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.setsScroll}
+            contentContainerStyle={[styles.setsScroll, { gap: Math.round(Spacing.md * scale) }]}
           >
             {gameState.gameMode === "2v2" ? (
               <>
@@ -682,7 +682,7 @@ export default function GameScreen() {
           </ScrollView>
         </View>
 
-        <View style={styles.pilesArea}>
+        <View style={[styles.pilesArea, { gap: Math.round(Spacing["3xl"] * scale) }]}>
           <CardPile
             cards={gameState.deck}
             label="Deck"

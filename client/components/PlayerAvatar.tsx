@@ -79,7 +79,7 @@ export function PlayerAvatar({
               height: innerSize,
               borderRadius: innerSize / 2,
               overflow: "hidden",
-              padding: Math.round(3 * scale),
+              padding: Math.round(6 * scale),
               backgroundColor: team
                 ? teamColors[team as keyof typeof teamColors]
                 : GameColors.richWood,
@@ -143,7 +143,6 @@ const styles = StyleSheet.create({
   initial: {
     color: "#FFFFFF",
     fontWeight: "700",
-    includeFontPadding: false,
     textAlign: "center",
   },
   dealerBadge: {
