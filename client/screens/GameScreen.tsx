@@ -60,6 +60,11 @@ export default function GameScreen() {
   } = useGameSocket();
 
   const { fs, scale } = useFontSize();
+  const scaledTeamPileStyle = {
+    padding: Math.round(Spacing.sm * scale),
+    borderWidth: Math.round(2 * scale),
+    borderRadius: Math.round(BorderRadius.lg * scale),
+  };
 
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [targetSetId, setTargetSetId] = useState<string | null>(null);
@@ -583,7 +588,7 @@ export default function GameScreen() {
       </View>
 
       <View style={styles.tableArea}>
-        <View style={styles.setsArea}>
+        <View style={[styles.setsArea, { minHeight: Math.round(120 * scale), maxHeight: Math.round(280 * scale) }]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -593,7 +598,7 @@ export default function GameScreen() {
               <>
                 {/* Team 1 Pile */}
                 {team1Sets.length > 0 ? (
-                  <View style={[styles.teamPile, { borderColor: teamColors[1] }]}>
+                  <View style={[styles.teamPile, scaledTeamPileStyle, { borderColor: teamColors[1] }]}>
                     <ThemedText style={[styles.teamPileLabel, { color: teamColors[1], fontSize: fs(12) }]}>
                       Team 1
                     </ThemedText>
@@ -620,7 +625,7 @@ export default function GameScreen() {
                 ) : null}
                 {/* Team 2 Pile */}
                 {team2Sets.length > 0 ? (
-                  <View style={[styles.teamPile, { borderColor: teamColors[2] }]}>
+                  <View style={[styles.teamPile, scaledTeamPileStyle, { borderColor: teamColors[2] }]}>
                     <ThemedText style={[styles.teamPileLabel, { color: teamColors[2], fontSize: fs(12) }]}>
                       Team 2
                     </ThemedText>
@@ -650,7 +655,7 @@ export default function GameScreen() {
               playerGroupedSets.map((group) => {
                 const playerColor = PLAYER_COLORS[group.playerIndex % PLAYER_COLORS.length];
                 return (
-                  <View key={group.playerId} style={[styles.teamPile, { borderColor: playerColor }]}>
+                  <View key={group.playerId} style={[styles.teamPile, scaledTeamPileStyle, { borderColor: playerColor }]}>
                     <ThemedText style={[styles.teamPileLabel, { color: playerColor, fontSize: fs(12) }]}>
                       {group.isMine ? "You" : group.displayName}
                     </ThemedText>
@@ -742,7 +747,7 @@ export default function GameScreen() {
           ) : null}
         </View>
 
-        <View style={[styles.handContainer, { paddingBottom: insets.bottom + Spacing.sm }]}>
+        <View style={[styles.handContainer, { paddingBottom: insets.bottom + Spacing.sm, minHeight: Math.round((CardDimensions.height + Spacing.xl) * scale) }]}>
           <CardHand
             cards={sortedHand}
             selectedCardIds={selectedCards}
