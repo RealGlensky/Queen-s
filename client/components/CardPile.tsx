@@ -65,11 +65,11 @@ export function CardPile({
       disabled={!onPress || cards.length === 0}
       style={[
         styles.container,
-        { padding: scaledPadding },
-        highlighted && {
-          backgroundColor: "rgba(212, 175, 55, 0.2)",
+        {
+          padding: scaledPadding,
           borderWidth: scaledHighlightBorder,
-          borderColor: GameColors.gold,
+          borderColor: highlighted ? GameColors.gold : "transparent",
+          backgroundColor: highlighted ? "rgba(212, 175, 55, 0.2)" : "transparent",
           borderRadius: Math.round(BorderRadius.sm * scale),
         },
         style,
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.cardBack,
   },
   shadowCard1: {
-    top: -2,
-    left: -2,
+    top: 2,
+    left: 2,
     opacity: 0.7,
   },
   shadowCard2: {
-    top: -4,
-    left: -4,
+    top: 4,
+    left: 4,
     opacity: 0.4,
   },
   emptyPile: {

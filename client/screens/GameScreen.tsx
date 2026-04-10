@@ -562,14 +562,15 @@ export default function GameScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.playersScroll}
+          contentContainerStyle={[styles.playersScroll, { gap: Math.round(Spacing.lg * scale) }]}
         >
           {gameState.players.map((player, index) => {
             const isMe = player.id === myPlayer.id;
+            const label = isMe ? "You" : player.displayName.length > 9 ? player.displayName.slice(0, 8) + "…" : player.displayName;
             return (
-              <View key={player.id} style={styles.playerContainer}>
+              <View key={player.id} style={[styles.playerContainer, { width: Math.round(72 * scale) }]}>
                 <PlayerAvatar
-                  displayName={isMe ? "You" : player.displayName}
+                  displayName={label}
                   isCurrentTurn={gameState.currentPlayerId === player.id}
                   isDealer={gameState.dealerId === player.id}
                   team={player.odexTeam}
@@ -702,7 +703,7 @@ export default function GameScreen() {
         </View>
       </View>
 
-      <View style={styles.playerArea}>
+      <View style={[styles.playerArea, { minHeight: Math.round(160 * scale) }]}>
         {isMyTurn ? (
           <Animated.View
             entering={FadeIn.duration(300)}
@@ -1090,7 +1091,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     padding: Spacing.sm,
     backgroundColor: "rgba(0,0,0,0.2)",
-    marginRight: Spacing.md,
   },
   teamPileLabel: {
     fontSize: 12,
@@ -1101,7 +1101,7 @@ const styles = StyleSheet.create({
   teamPileSets: {
     flexDirection: "row",
     gap: Spacing.sm,
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
   },
   actionMessageContainer: {
     position: "absolute",

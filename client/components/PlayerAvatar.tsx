@@ -104,7 +104,7 @@ export function PlayerAvatar({
       <ThemedText
         style={[
           styles.name,
-          { fontSize: fs(12) },
+          { fontSize: fs(12), maxWidth: Math.round(80 * scale) },
           isCurrentTurn && {
             color: playerColor || (team ? teamColors[team as keyof typeof teamColors] : GameColors.gold),
             fontWeight: "600" as const,
@@ -168,7 +168,6 @@ const styles = StyleSheet.create({
   name: {
     color: "rgba(255,255,255,0.8)",
     fontWeight: "500",
-    maxWidth: 80,
   },
   cardCountContainer: {
     flexDirection: "row",
