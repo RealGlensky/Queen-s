@@ -1,0 +1,27 @@
+Looking at your screenshots, I can see a few UI issues: the player avatars/turn indicator overlap in tight spaces, the “Bot Jord…” name gets truncated, set cards in the table area crowd each other, and the pickup pile overlaps when empty vs. populated.
+Here’s a comprehensive prompt you can give your Replit agent:
+
+PROMPT FOR REPLIT AGENT:
+“I need you to create a comprehensive plan and then implement a complete UI layout audit and fix for this card game app. The goal is to eliminate ALL element overlap, truncation, and crowding issues permanently. Please do the following:
+1. Audit Phase — identify every screen where these issues occur:
+	•	Player avatar row (names truncating like ‘Bot Jord…’, avatars overlapping turn indicators/badges)
+	•	Table/sets area (set cards crowding or overflowing horizontally off-screen)
+	•	Deck + Pickup pile area (empty state vs. populated state causing layout shift or overlap)
+	•	Bottom hand tray (cards in hand overflowing or getting clipped)
+	•	Action banners like ‘Your Turn’ overlapping hand cards
+2. Fix Strategy — implement ALL of the following:
+	•	Use a single responsive layout system (flexbox or CSS Grid) for every screen — no absolute positioning for elements that need to coexist dynamically
+	•	Player avatar row: enforce a max-width per avatar cell, use text-overflow: ellipsis with a fixed width OR shorten names consistently in code (max 8 chars), never let badges/indicators position absolutely over adjacent elements
+	•	Sets/table area: make it horizontally scrollable with a fixed height container — never let sets wrap onto the deck/pickup row
+	•	Deck + Pickup row: give it a fixed reserved height regardless of whether pickup has a card or not (use a min-height placeholder when empty)
+	•	Bottom hand: put it in a fixed-height scrollable row pinned to the bottom — it should never shift upward when banners appear
+	•	Action banners (‘Your Turn’, ‘Draw a card’): render these inside the reserved hand area header, not as a floating overlay
+3. Testing Checklist — after implementing, verify each scenario:
+	•	4 players shown with long bot names — no truncation or overlap
+	•	Table with 3+ sets laid down — scrollable, doesn’t push deck off screen
+	•	Pickup pile empty vs. has 2+ cards — layout stays identical
+	•	‘Your Turn’ banner visible with full hand visible below it
+	•	Works on iPhone SE size (smallest) AND iPhone Pro Max (largest)
+Please make a written plan first, confirm it with me, then implement all fixes in one pass.”
+
+This forces the agent to audit before fixing, which is why piecemeal prompts haven’t worked. Want me to tailor this further for a specific framework (React Native, plain HTML/CSS, etc.)?​​​​​​​​​​​​​​​​
