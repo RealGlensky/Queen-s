@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, ActivityIndicator, Pressable, ScrollView, Dimensions } from "react-native";
+import { StyleSheet, View, ActivityIndicator, Pressable, ScrollView, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -20,9 +20,8 @@ import { useGameSocket } from "@/hooks/useGameSocket";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type WaitingRoomRouteProp = RouteProp<RootStackParamList, "WaitingRoom">;
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-
 export default function WaitingRoomScreen() {
+  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<NavigationProp>();
@@ -48,7 +47,7 @@ export default function WaitingRoomScreen() {
   const { fs, scale } = useFontSize();
   const CONTENT_PADDING = Spacing.lg;
   const COLUMN_GAP = Math.round(Spacing.lg * scale);
-  const itemWidth = Math.floor((SCREEN_WIDTH - CONTENT_PADDING * 2 - COLUMN_GAP) / 2);
+  const itemWidth = Math.floor((width - CONTENT_PADDING * 2 - COLUMN_GAP) / 2);
   const [isStarting, setIsStarting] = useState(false);
   const [copied, setCopied] = useState(false);
 
