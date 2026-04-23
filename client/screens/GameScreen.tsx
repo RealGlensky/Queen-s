@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { StyleSheet, View, ScrollView, Pressable, Dimensions, ActivityIndicator } from "react-native";
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -33,8 +33,6 @@ interface MoveLogEntry {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type GameRouteProp = RouteProp<RootStackParamList, "Game">;
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();

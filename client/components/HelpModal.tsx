@@ -5,7 +5,7 @@ import {
   Modal,
   ScrollView,
   Pressable,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -20,9 +20,8 @@ interface HelpModalProps {
 
 type TabType = "controls" | "rules" | "tips";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 export function HelpModal({ visible, onClose }: HelpModalProps) {
+  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { fs, largeFontEnabled } = useFontSize();
   const [activeTab, setActiveTab] = useState<TabType>("controls");
