@@ -214,12 +214,17 @@ export default function WaitingRoomScreen() {
             Players ({players.length}/{totalSlots})
           </ThemedText>
           
-          <View style={styles.playersGrid}>
-            {players.map((player, index) => (
+          <View style={[styles.playersGrid, { gap: Math.round(Spacing.lg * scale) }]}>
+            {players.map((player, index) => {
+              const label = player.displayName.length > 9 ? player.displayName.slice(0, 8) + "…" : player.displayName;
+              const provisionalTeam = roomInfo?.gameMode === "2v2" && !player.odexTeam
+                ? (index % 2) + 1
+                : player.odexTeam;
+              return (
               <View key={player.id} style={styles.playerItem}>
                 <PlayerAvatar
-                  displayName={player.displayName}
-                  team={player.odexTeam}
+                  displayName={label}
+                  team={provisionalTeam}
                   size="large"
                   isConnected={player.isConnected}
                 />
@@ -229,7 +234,8 @@ export default function WaitingRoomScreen() {
                   </View>
                 ) : null}
               </View>
-            ))}
+              );
+            })}
             {emptySlots.map((_, index) => (
               <EmptySlot key={`empty-${index}`} />
             ))}
@@ -400,11 +406,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.lg,
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
   playerItem: {
     alignItems: "center",
-    width: 100,
+    width: "47%",
   },
   hostBadge: {
     marginTop: Spacing.xs,
@@ -421,7 +427,7 @@ const styles = StyleSheet.create({
   },
   emptySlot: {
     alignItems: "center",
-    width: 100,
+    width: "47%",
     opacity: 0.5,
   },
   emptyAvatar: {
