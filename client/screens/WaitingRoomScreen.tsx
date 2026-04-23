@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { StyleSheet, View, FlatList, ActivityIndicator, Pressable, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View, ActivityIndicator, Pressable, ScrollView, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -16,10 +16,11 @@ import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
 import { useFontSize } from "@/contexts/FontSizeContext";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGameSocket } from "@/hooks/useGameSocket";
-import type { Player } from "@shared/gameTypes";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type WaitingRoomRouteProp = RouteProp<RootStackParamList, "WaitingRoom">;
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function WaitingRoomScreen() {
   const insets = useSafeAreaInsets();
@@ -45,6 +46,9 @@ export default function WaitingRoomScreen() {
   } = useGameSocket();
 
   const { fs, scale } = useFontSize();
+  const CONTENT_PADDING = Spacing.lg;
+  const COLUMN_GAP = Math.round(Spacing.lg * scale);
+  const itemWidth = Math.floor((SCREEN_WIDTH - CONTENT_PADDING * 2 - COLUMN_GAP) / 2);
   const [isStarting, setIsStarting] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -102,31 +106,6 @@ export default function WaitingRoomScreen() {
   
   const hasAIPlayers = players.some(p => p.displayName.startsWith("Bot "));
   const canAddAI = isHost && players.length < (roomInfo?.maxPlayers || maxPlayers || 4);
-
-  const renderPlayer = useCallback(({ item, index }: { item: Player; index: number }) => (
-    <View style={styles.playerItem}>
-      <PlayerAvatar
-        displayName={item.displayName}
-        team={item.odexTeam}
-        size="large"
-        isConnected={item.isConnected}
-      />
-      {index === 0 ? (
-        <View style={[styles.hostBadge, { paddingHorizontal: Math.round(Spacing.sm * scale), paddingVertical: Math.round(2 * scale) }]}>
-          <ThemedText style={[styles.hostBadgeText, { fontSize: fs(10) }]}>Host</ThemedText>
-        </View>
-      ) : null}
-    </View>
-  ), [fs, scale]);
-
-  const EmptySlot = () => (
-    <View style={styles.emptySlot}>
-      <View style={styles.emptyAvatar}>
-        <Feather name="user-plus" size={24} color="rgba(255,255,255,0.3)" />
-      </View>
-      <ThemedText style={[styles.emptyText, { fontSize: fs(12) }]}>Waiting...</ThemedText>
-    </View>
-  );
 
   if (!connected || !roomInfo) {
     return (
@@ -214,14 +193,14 @@ export default function WaitingRoomScreen() {
             Players ({players.length}/{totalSlots})
           </ThemedText>
           
-          <View style={[styles.playersGrid, { gap: Math.round(Spacing.lg * scale) }]}>
+          <View style={[styles.playersGrid, { gap: COLUMN_GAP }]}>
             {players.map((player, index) => {
               const label = player.displayName.length > 9 ? player.displayName.slice(0, 8) + "…" : player.displayName;
               const provisionalTeam = roomInfo?.gameMode === "2v2" && !player.odexTeam
                 ? (index % 2) + 1
                 : player.odexTeam;
               return (
-              <View key={player.id} style={styles.playerItem}>
+              <View key={player.id} style={[styles.playerItem, { width: itemWidth }]}>
                 <PlayerAvatar
                   displayName={label}
                   team={provisionalTeam}
@@ -237,7 +216,12 @@ export default function WaitingRoomScreen() {
               );
             })}
             {emptySlots.map((_, index) => (
-              <EmptySlot key={`empty-${index}`} />
+              <View key={`empty-${index}`} style={[styles.emptySlot, { width: itemWidth }]}>
+                <View style={styles.emptyAvatar}>
+                  <Feather name="user-plus" size={24} color="rgba(255,255,255,0.3)" />
+                </View>
+                <ThemedText style={[styles.emptyText, { fontSize: fs(12) }]}>Waiting...</ThemedText>
+              </View>
             ))}
           </View>
         </View>
@@ -410,7 +394,6 @@ const styles = StyleSheet.create({
   },
   playerItem: {
     alignItems: "center",
-    width: "47%",
   },
   hostBadge: {
     marginTop: Spacing.xs,
@@ -427,7 +410,6 @@ const styles = StyleSheet.create({
   },
   emptySlot: {
     alignItems: "center",
-    width: "47%",
     opacity: 0.5,
   },
   emptyAvatar: {

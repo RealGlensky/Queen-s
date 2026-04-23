@@ -78,7 +78,6 @@ export function PlayerAvatar({
               width: innerSize,
               height: innerSize,
               borderRadius: innerSize / 2,
-              overflow: "hidden",
               padding: Math.round(6 * scale),
               backgroundColor: team
                 ? teamColors[team as keyof typeof teamColors]
@@ -86,7 +85,10 @@ export function PlayerAvatar({
             },
           ]}
         >
-          <ThemedText style={[styles.initial, { fontSize: Math.round(initialFontSize * scale) }]}>
+          <ThemedText style={[styles.initial, {
+            fontSize: Math.round(initialFontSize * scale),
+            lineHeight: Math.round(initialFontSize * scale),
+          }]}>
             {initial}
           </ThemedText>
         </View>
