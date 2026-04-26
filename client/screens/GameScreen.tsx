@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -36,6 +36,8 @@ type GameRouteProp = RouteProp<RootStackParamList, "Game">;
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<GameRouteProp>();
 
@@ -492,6 +494,307 @@ export default function GameScreen() {
     return (suitOrder[a.suit || ""] || 5) - (suitOrder[b.suit || ""] || 5);
   });
 
+  const setsScrollContent = (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[styles.setsScroll, { gap: Math.round(Spacing.md * scale) }]}
+    >
+      {gameState.gameMode === "2v2" ? (
+        <>
+          {team1Sets.length > 0 ? (
+            <View style={[styles.teamPile, scaledTeamPileStyle, { borderColor: teamColors[1] }]}>
+              <ThemedText style={[styles.teamPileLabel, { color: teamColors[1], fontSize: fs(12) }]}>
+                Team 1
+              </ThemedText>
+              <View style={styles.teamPileSets}>
+                {team1Sets.map((set) => {
+                  const isMyTeamSet = myPlayer.odexTeam === 1;
+                  return (
+                    <CardSet
+                      key={set.id}
+                      set={set}
+                      ownerIndex={0}
+                      isMine={isMyTeamSet}
+                      isTeamSet={isMyTeamSet}
+                      hideOwnerName
+                      canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
+                      onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
+                        ? () => handleAddToSet(set.id)
+                        : undefined}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+          {team2Sets.length > 0 ? (
+            <View style={[styles.teamPile, scaledTeamPileStyle, { borderColor: teamColors[2] }]}>
+              <ThemedText style={[styles.teamPileLabel, { color: teamColors[2], fontSize: fs(12) }]}>
+                Team 2
+              </ThemedText>
+              <View style={styles.teamPileSets}>
+                {team2Sets.map((set) => {
+                  const isMyTeamSet = myPlayer.odexTeam === 2;
+                  return (
+                    <CardSet
+                      key={set.id}
+                      set={set}
+                      ownerIndex={1}
+                      isMine={isMyTeamSet}
+                      isTeamSet={isMyTeamSet}
+                      hideOwnerName
+                      canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
+                      onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
+                        ? () => handleAddToSet(set.id)
+                        : undefined}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+        </>
+      ) : (
+        playerGroupedSets.map((group) => {
+          const playerColor = PLAYER_COLORS[group.playerIndex % PLAYER_COLORS.length];
+          return (
+            <View key={group.playerId} style={[styles.teamPile, scaledTeamPileStyle, { borderColor: playerColor }]}>
+              <ThemedText style={[styles.teamPileLabel, { color: playerColor, fontSize: fs(12) }]}>
+                {group.isMine ? "You" : group.displayName}
+              </ThemedText>
+              <View style={styles.teamPileSets}>
+                {group.sets.map((set) => (
+                  <CardSet
+                    key={set.id}
+                    set={set}
+                    ownerIndex={group.playerIndex}
+                    isMine={group.isMine}
+                    isTeamSet={group.isMine}
+                    hideOwnerName
+                    canAddCard={isMyTurn && selectedCards.length >= 1 && group.isMine}
+                    onPress={isMyTurn && selectedCards.length >= 1 && group.isMine
+                      ? () => handleAddToSet(set.id)
+                      : undefined}
+                  />
+                ))}
+              </View>
+            </View>
+          );
+        })
+      )}
+    </ScrollView>
+  );
+
+  const pilesContent = (
+    <>
+      <CardPile
+        cards={gameState.deck}
+        label="Deck"
+        faceDown
+        showCount
+        highlighted={isMyTurn && gameState.turnPhase === "draw"}
+        onPress={isMyTurn && gameState.turnPhase === "draw" ? handleDrawFromDeck : undefined}
+      />
+      <CardPile
+        cards={gameState.pickupPile}
+        label="Pickup"
+        faceDown={false}
+        showCount
+        highlighted={!!canPickup}
+        onPress={canPickup ? handlePickupPile : undefined}
+      />
+    </>
+  );
+
+  const scoresRow = (
+    <View style={styles.scoresRow}>
+      <View style={styles.myScoreContainer}>
+        <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
+        <View>
+          <ThemedText style={[styles.myScoreLabel, { fontSize: fs(10) }]}>
+            {gameState.gameMode === "2v2" ? "Your Team" : "You"}
+          </ThemedText>
+          <ThemedText style={[styles.myScoreValue, { fontSize: fs(14) }]}>
+            {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
+          </ThemedText>
+        </View>
+      </View>
+      <View style={styles.roundInfo}>
+        <ThemedText style={[styles.roundText, { fontSize: fs(16) }]}>Round {gameState.currentRound}</ThemedText>
+        <ThemedText style={[styles.thresholdText, { fontSize: fs(12) }]}>Goal: {gameState.pointThreshold}</ThemedText>
+      </View>
+      {gameState.gameMode === "2v2" ? (
+        <View style={styles.opponentScoreContainer}>
+          <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
+          <View>
+            <ThemedText style={[styles.myScoreLabel, { fontSize: fs(10) }]}>Opponents</ThemedText>
+            <ThemedText style={[styles.myScoreValue, { fontSize: fs(14) }]}>{opponentTeamScore} pts</ThemedText>
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const compactScores = (
+    <View style={styles.compactScoresColumn}>
+      <ThemedText style={[styles.roundText, { fontSize: fs(13), textAlign: "center" }]}>
+        Round {gameState.currentRound}
+      </ThemedText>
+      <ThemedText style={[styles.thresholdText, { fontSize: fs(10), textAlign: "center" }]}>
+        Goal: {gameState.pointThreshold}
+      </ThemedText>
+      <View style={styles.compactScoreRow}>
+        <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
+        <ThemedText style={[styles.myScoreValue, { fontSize: fs(11) }]}>
+          {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
+        </ThemedText>
+      </View>
+      {gameState.gameMode === "2v2" ? (
+        <View style={styles.compactScoreRow}>
+          <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
+          <ThemedText style={[styles.myScoreValue, { fontSize: fs(11) }]}>{opponentTeamScore} pts</ThemedText>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const playersListContent = gameState.players.map((player, index) => {
+    const isMe = player.id === myPlayer.id;
+    const label = isMe ? "You" : player.displayName.length > 9 ? player.displayName.slice(0, 8) + "…" : player.displayName;
+    return (
+      <View key={player.id} style={[styles.playerContainer, { width: Math.round(72 * scale) }]}>
+        <PlayerAvatar
+          displayName={label}
+          isCurrentTurn={gameState.currentPlayerId === player.id}
+          isDealer={gameState.dealerId === player.id}
+          team={player.odexTeam}
+          cardCount={player.hand.length}
+          score={gameState.gameMode === "2v2" ? undefined : player.totalScore}
+          playerColor={PLAYER_COLORS[index % PLAYER_COLORS.length]}
+          hasLastCard={player.hasLastCard}
+          isConnected={player.isConnected}
+          size="small"
+          isMe={isMe}
+        />
+      </View>
+    );
+  });
+
+  const actionButtonsContent = (
+    <View style={styles.actionButtons}>
+      {isMyTurn && gameState.turnPhase === "play" && selectedCards.length >= 3 ? (
+        <GameButton
+          label="Lay Set"
+          icon="layers"
+          variant="primary"
+          size="small"
+          onPress={handleLaySet}
+        />
+      ) : null}
+      {isMyTurn && (gameState.turnPhase === "play" || gameState.turnPhase === "discard") && selectedCards.length === 1 ? (
+        <GameButton
+          label="Discard"
+          icon="corner-down-left"
+          variant="secondary"
+          size="small"
+          onPress={handleDiscard}
+        />
+      ) : null}
+      {myPlayer.hand.length === 1 ? (
+        <GameButton
+          label="Last Card!"
+          icon="alert-circle"
+          variant="danger"
+          size="small"
+          onPress={handleDeclareLastCard}
+        />
+      ) : null}
+    </View>
+  );
+
+  const handContent = (
+    <CardHand
+      cards={sortedHand}
+      selectedCardIds={selectedCards}
+      highlightedCardIds={highlightedCards}
+      onCardPress={handleCardPress}
+    />
+  );
+
+  const connectionIndicatorContent = reconnecting ? (
+    <View style={styles.connectionIndicator}>
+      <ActivityIndicator size="small" color={GameColors.gold} />
+    </View>
+  ) : !connected ? (
+    <Pressable style={styles.connectionIndicator} onPress={forceReconnect}>
+      <Feather name="wifi-off" size={18} color="#FF6B6B" />
+    </Pressable>
+  ) : null;
+
+  const sidePanelRight = insets.right + Spacing.sm;
+
+  const sidePanelContent = (
+    <View style={[styles.rightSidePanel, { top: isLandscape ? insets.top + 8 : insets.top + 60, right: sidePanelRight }]}>
+      <Pressable
+        style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showScoreHistory && styles.sidePanelButtonActive]}
+        onPress={() => setShowScoreHistory(true)}
+      >
+        <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
+        <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Scores</ThemedText>
+      </Pressable>
+      <Pressable
+        style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showMoveLog && styles.sidePanelButtonActive]}
+        onPress={() => setShowMoveLog(!showMoveLog)}
+      >
+        <Feather name="list" size={20} color="#FFFFFF" />
+        <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Moves</ThemedText>
+      </Pressable>
+      <Pressable
+        style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showHelp && styles.sidePanelButtonActive]}
+        onPress={() => setShowHelp(true)}
+      >
+        <Feather name="help-circle" size={20} color={GameColors.gold} />
+        <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Help</ThemedText>
+      </Pressable>
+    </View>
+  );
+
+  const moveLogContent = showMoveLog ? (
+    <View style={[
+      styles.moveLogPanel,
+      {
+        top: isLandscape ? insets.top + 8 + Math.round(48 * scale) : insets.top + 60 + Math.round(48 * scale),
+        width: Math.round(200 * scale),
+        maxHeight: Math.round(250 * scale),
+        right: sidePanelRight + Math.round(44 * scale) + Spacing.sm,
+      },
+    ]}>
+      <View style={styles.moveLogHeader}>
+        <ThemedText style={[styles.moveLogTitle, { fontSize: fs(14) }]}>Move History</ThemedText>
+        <Pressable onPress={() => setShowMoveLog(false)}>
+          <Feather name="x" size={18} color="rgba(255,255,255,0.7)" />
+        </Pressable>
+      </View>
+      <ScrollView
+        ref={moveLogScrollRef}
+        style={[styles.moveLogScroll, { maxHeight: Math.round(180 * scale) }]}
+        onContentSizeChange={() => moveLogScrollRef.current?.scrollToEnd({ animated: true })}
+      >
+        {moveLog.length === 0 ? (
+          <ThemedText style={[styles.moveLogEmpty, { fontSize: fs(12) }]}>No moves yet</ThemedText>
+        ) : (
+          moveLog.map((entry) => (
+            <View key={entry.id} style={styles.moveLogEntry}>
+              <ThemedText style={[styles.moveLogPlayer, { fontSize: fs(11) }]}>{entry.playerName}</ThemedText>
+              <ThemedText style={[styles.moveLogAction, { fontSize: fs(11) }]}>{entry.action}</ThemedText>
+            </View>
+          ))
+        )}
+      </ScrollView>
+    </View>
+  ) : null;
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -514,311 +817,121 @@ export default function GameScreen() {
         </Animated.View>
       ) : null}
 
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <View style={styles.headerCenter}>
-          <View style={styles.scoresRow}>
-            <View style={styles.myScoreContainer}>
-              <View style={[styles.myColorDot, { backgroundColor: gameState.gameMode === "2v2" ? teamColors[myPlayer.odexTeam || 1] : myPlayerColor }]} />
-              <View>
-                <ThemedText style={[styles.myScoreLabel, { fontSize: fs(10) }]}>
-                  {gameState.gameMode === "2v2" ? "Your Team" : "You"}
-                </ThemedText>
-                <ThemedText style={[styles.myScoreValue, { fontSize: fs(14) }]}>
-                  {gameState.gameMode === "2v2" ? myTeamScore : myPlayer.totalScore} pts
-                </ThemedText>
+      {isLandscape ? (
+        /* ── LANDSCAPE: two-column layout ── */
+        <View style={[styles.landscapeRoot, { paddingLeft: insets.left, paddingRight: insets.right }]}>
+          {/* Left column: scores + players + piles */}
+          <View style={[styles.landscapeLeft, { paddingTop: insets.top + 52, paddingBottom: insets.bottom }]}>
+            {/* Compact score header */}
+            <View style={styles.landscapeScores}>
+              {compactScores}
+              {connectionIndicatorContent ? (
+                <View style={{ alignItems: "center", marginTop: 2 }}>{connectionIndicatorContent}</View>
+              ) : null}
+            </View>
+
+            {/* Players - vertical scroll */}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={[styles.landscapePlayersScroll, { gap: Math.round(Spacing.sm * scale) }]}
+              style={{ flex: 1 }}
+            >
+              {playersListContent}
+            </ScrollView>
+
+            {/* Piles stacked vertically */}
+            <View style={[styles.landscapePiles, { gap: Math.round(Spacing.lg * scale), paddingBottom: Math.round(Spacing.sm * scale) }]}>
+              {pilesContent}
+            </View>
+          </View>
+
+          {/* Right column: sets + turn info + actions + hand */}
+          <View style={[styles.landscapeRight, { paddingTop: insets.top + Spacing.xs, paddingBottom: insets.bottom, paddingRight: Math.round(44 * scale) + sidePanelRight }]}>
+            {/* Sets area */}
+            <View style={[styles.landscapeSets, { minHeight: Math.round(120 * scale) }]}>
+              {setsScrollContent}
+            </View>
+
+            {/* Player area: turn indicator + actions + hand */}
+            <View style={[styles.playerArea, { flex: 1 }]}>
+              {isMyTurn ? (
+                <Animated.View entering={FadeIn.duration(300)} style={styles.turnIndicator}>
+                  <ThemedText style={[styles.turnText, { fontSize: fs(14) }]}>Your Turn</ThemedText>
+                  <ThemedText style={[styles.phaseText, { fontSize: fs(11) }]}>
+                    {gameState.turnPhase === "draw" ? "Draw a card" :
+                     gameState.turnPhase === "play" ? "Lay sets or add cards" :
+                     "Discard a card"}
+                  </ThemedText>
+                </Animated.View>
+              ) : null}
+              {actionButtonsContent}
+              <View style={[styles.handContainer, { paddingBottom: Spacing.xs, flex: 1, justifyContent: "flex-end" }]}>
+                {handContent}
               </View>
             </View>
-            <View style={styles.roundInfo}>
-              <ThemedText style={[styles.roundText, { fontSize: fs(16) }]}>Round {gameState.currentRound}</ThemedText>
-              <ThemedText style={[styles.thresholdText, { fontSize: fs(12) }]}>Goal: {gameState.pointThreshold}</ThemedText>
-            </View>
-            {gameState.gameMode === "2v2" ? (
-              <View style={styles.opponentScoreContainer}>
-                <View style={[styles.myColorDot, { backgroundColor: teamColors[myPlayer.odexTeam === 1 ? 2 : 1] }]} />
-                <View>
-                  <ThemedText style={[styles.myScoreLabel, { fontSize: fs(10) }]}>Opponents</ThemedText>
-                  <ThemedText style={[styles.myScoreValue, { fontSize: fs(14) }]}>{opponentTeamScore} pts</ThemedText>
-                </View>
-              </View>
-            ) : null}
           </View>
         </View>
-        <View style={styles.headerButtons}>
-          {reconnecting ? (
-            <View style={styles.connectionIndicator}>
-              <ActivityIndicator size="small" color={GameColors.gold} />
+      ) : (
+        /* ── PORTRAIT: original vertical layout ── */
+        <>
+          <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+            <View style={styles.headerCenter}>
+              {scoresRow}
             </View>
-          ) : !connected ? (
-            <Pressable style={styles.connectionIndicator} onPress={forceReconnect}>
-              <Feather name="wifi-off" size={18} color="#FF6B6B" />
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
+            <View style={styles.headerButtons}>
+              {connectionIndicatorContent}
+            </View>
+          </View>
 
-      <View style={[styles.playersArea, { minHeight: Math.round(100 * scale), marginTop: Math.round(Spacing.md * scale), paddingBottom: Math.round(Spacing.sm * scale) }]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.playersScroll, { gap: Math.round(Spacing.lg * scale) }]}
-        >
-          {gameState.players.map((player, index) => {
-            const isMe = player.id === myPlayer.id;
-            const label = isMe ? "You" : player.displayName.length > 9 ? player.displayName.slice(0, 8) + "…" : player.displayName;
-            return (
-              <View key={player.id} style={[styles.playerContainer, { width: Math.round(72 * scale) }]}>
-                <PlayerAvatar
-                  displayName={label}
-                  isCurrentTurn={gameState.currentPlayerId === player.id}
-                  isDealer={gameState.dealerId === player.id}
-                  team={player.odexTeam}
-                  cardCount={player.hand.length}
-                  score={gameState.gameMode === "2v2" ? undefined : player.totalScore}
-                  playerColor={PLAYER_COLORS[index % PLAYER_COLORS.length]}
-                  hasLastCard={player.hasLastCard}
-                  isConnected={player.isConnected}
-                  size="small"
-                  isMe={isMe}
-                />
-              </View>
-            );
-          })}
-        </ScrollView>
-      </View>
+          <View style={[styles.playersArea, { minHeight: Math.round(100 * scale), marginTop: Math.round(Spacing.md * scale), paddingBottom: Math.round(Spacing.sm * scale) }]}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={[styles.playersScroll, { gap: Math.round(Spacing.lg * scale) }]}
+            >
+              {playersListContent}
+            </ScrollView>
+          </View>
 
-      <View style={[styles.tableArea, { gap: Math.round(Spacing.xl * scale), paddingVertical: Math.round(Spacing.sm * scale) }]}>
-        <View style={[styles.setsArea, { minHeight: Math.round(120 * scale), maxHeight: Math.round(280 * scale) }]}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.setsScroll, { gap: Math.round(Spacing.md * scale) }]}
-          >
-            {gameState.gameMode === "2v2" ? (
-              <>
-                {/* Team 1 Pile */}
-                {team1Sets.length > 0 ? (
-                  <View style={[styles.teamPile, scaledTeamPileStyle, { borderColor: teamColors[1] }]}>
-                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[1], fontSize: fs(12) }]}>
-                      Team 1
-                    </ThemedText>
-                    <View style={styles.teamPileSets}>
-                      {team1Sets.map((set) => {
-                        const isMyTeamSet = myPlayer.odexTeam === 1;
-                        return (
-                          <CardSet
-                            key={set.id}
-                            set={set}
-                            ownerIndex={0}
-                            isMine={isMyTeamSet}
-                            isTeamSet={isMyTeamSet}
-                            hideOwnerName
-                            canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
-                            onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
-                              ? () => handleAddToSet(set.id)
-                              : undefined}
-                          />
-                        );
-                      })}
-                    </View>
-                  </View>
-                ) : null}
-                {/* Team 2 Pile */}
-                {team2Sets.length > 0 ? (
-                  <View style={[styles.teamPile, scaledTeamPileStyle, { borderColor: teamColors[2] }]}>
-                    <ThemedText style={[styles.teamPileLabel, { color: teamColors[2], fontSize: fs(12) }]}>
-                      Team 2
-                    </ThemedText>
-                    <View style={styles.teamPileSets}>
-                      {team2Sets.map((set) => {
-                        const isMyTeamSet = myPlayer.odexTeam === 2;
-                        return (
-                          <CardSet
-                            key={set.id}
-                            set={set}
-                            ownerIndex={1}
-                            isMine={isMyTeamSet}
-                            isTeamSet={isMyTeamSet}
-                            hideOwnerName
-                            canAddCard={isMyTurn && selectedCards.length >= 1 && isMyTeamSet}
-                            onPress={isMyTurn && selectedCards.length >= 1 && isMyTeamSet
-                              ? () => handleAddToSet(set.id)
-                              : undefined}
-                          />
-                        );
-                      })}
-                    </View>
-                  </View>
-                ) : null}
-              </>
-            ) : (
-              playerGroupedSets.map((group) => {
-                const playerColor = PLAYER_COLORS[group.playerIndex % PLAYER_COLORS.length];
-                return (
-                  <View key={group.playerId} style={[styles.teamPile, scaledTeamPileStyle, { borderColor: playerColor }]}>
-                    <ThemedText style={[styles.teamPileLabel, { color: playerColor, fontSize: fs(12) }]}>
-                      {group.isMine ? "You" : group.displayName}
-                    </ThemedText>
-                    <View style={styles.teamPileSets}>
-                      {group.sets.map((set) => (
-                        <CardSet
-                          key={set.id}
-                          set={set}
-                          ownerIndex={group.playerIndex}
-                          isMine={group.isMine}
-                          isTeamSet={group.isMine}
-                          hideOwnerName
-                          canAddCard={isMyTurn && selectedCards.length >= 1 && group.isMine}
-                          onPress={isMyTurn && selectedCards.length >= 1 && group.isMine
-                            ? () => handleAddToSet(set.id)
-                            : undefined}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </ScrollView>
-        </View>
+          <View style={[styles.tableArea, { gap: Math.round(Spacing.xl * scale), paddingVertical: Math.round(Spacing.sm * scale) }]}>
+            <View style={[styles.setsArea, { minHeight: Math.round(120 * scale), maxHeight: Math.round(280 * scale) }]}>
+              {setsScrollContent}
+            </View>
+            <View style={[styles.pilesArea, { gap: Math.round(Spacing["3xl"] * scale) }]}>
+              {pilesContent}
+            </View>
+          </View>
 
-        <View style={[styles.pilesArea, { gap: Math.round(Spacing["3xl"] * scale) }]}>
-          <CardPile
-            cards={gameState.deck}
-            label="Deck"
-            faceDown
-            showCount
-            highlighted={isMyTurn && gameState.turnPhase === "draw"}
-            onPress={isMyTurn && gameState.turnPhase === "draw" ? handleDrawFromDeck : undefined}
-          />
-          <CardPile
-            cards={gameState.pickupPile}
-            label="Pickup"
-            faceDown={false}
-            showCount
-            highlighted={!!canPickup}
-            onPress={canPickup ? handlePickupPile : undefined}
-          />
-        </View>
-      </View>
-
-      <View style={[styles.playerArea, { minHeight: Math.round(160 * scale) }]}>
-        {isMyTurn ? (
-          <Animated.View
-            entering={FadeIn.duration(300)}
-            style={styles.turnIndicator}
-          >
-            <ThemedText style={[styles.turnText, { fontSize: fs(16) }]}>Your Turn</ThemedText>
-            <ThemedText style={[styles.phaseText, { fontSize: fs(12) }]}>
-              {gameState.turnPhase === "draw" ? "Draw a card" :
-               gameState.turnPhase === "play" ? "Lay sets or add cards" :
-               "Discard a card"}
-            </ThemedText>
-          </Animated.View>
-        ) : null}
-
-        <View style={styles.actionButtons}>
-          {isMyTurn && gameState.turnPhase === "play" && selectedCards.length >= 3 ? (
-            <GameButton
-              label="Lay Set"
-              icon="layers"
-              variant="primary"
-              size="small"
-              onPress={handleLaySet}
-            />
-          ) : null}
-          {isMyTurn && (gameState.turnPhase === "play" || gameState.turnPhase === "discard") && selectedCards.length === 1 ? (
-            <GameButton
-              label="Discard"
-              icon="corner-down-left"
-              variant="secondary"
-              size="small"
-              onPress={handleDiscard}
-            />
-          ) : null}
-          {myPlayer.hand.length === 1 ? (
-            <GameButton
-              label="Last Card!"
-              icon="alert-circle"
-              variant="danger"
-              size="small"
-              onPress={handleDeclareLastCard}
-            />
-          ) : null}
-        </View>
-
-        <View style={[styles.handContainer, { paddingBottom: insets.bottom + Spacing.sm, minHeight: Math.round((CardDimensions.height + Spacing.xl) * scale) }]}>
-          <CardHand
-            cards={sortedHand}
-            selectedCardIds={selectedCards}
-            highlightedCardIds={highlightedCards}
-            onCardPress={handleCardPress}
-          />
-        </View>
-      </View>
+          <View style={[styles.playerArea, { minHeight: Math.round(160 * scale) }]}>
+            {isMyTurn ? (
+              <Animated.View entering={FadeIn.duration(300)} style={styles.turnIndicator}>
+                <ThemedText style={[styles.turnText, { fontSize: fs(16) }]}>Your Turn</ThemedText>
+                <ThemedText style={[styles.phaseText, { fontSize: fs(12) }]}>
+                  {gameState.turnPhase === "draw" ? "Draw a card" :
+                   gameState.turnPhase === "play" ? "Lay sets or add cards" :
+                   "Discard a card"}
+                </ThemedText>
+              </Animated.View>
+            ) : null}
+            {actionButtonsContent}
+            <View style={[styles.handContainer, { paddingBottom: insets.bottom + Spacing.sm, minHeight: Math.round((CardDimensions.height + Spacing.xl) * scale) }]}>
+              {handContent}
+            </View>
+          </View>
+        </>
+      )}
 
       {/* Back Button - Top Left */}
       <Pressable
-        style={[styles.backButton, { top: insets.top + 8 }]}
+        style={[styles.backButton, { top: insets.top + 8, left: insets.left + Spacing.sm }]}
         onPress={handleExitGame}
         testID="button-exit-game"
       >
         <Feather name="arrow-left" size={22} color="#FFFFFF" />
       </Pressable>
 
-      {/* Right Side Panel - Score Breakdown, Move History, Tips */}
-      <View style={[styles.rightSidePanel, { top: insets.top + 60 }]}>
-        <Pressable 
-          style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showScoreHistory && styles.sidePanelButtonActive]}
-          onPress={() => setShowScoreHistory(true)}
-        >
-          <Feather name="bar-chart-2" size={20} color="#FFFFFF" />
-          <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Scores</ThemedText>
-        </Pressable>
-
-        <Pressable 
-          style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showMoveLog && styles.sidePanelButtonActive]}
-          onPress={() => setShowMoveLog(!showMoveLog)}
-        >
-          <Feather name="list" size={20} color="#FFFFFF" />
-          <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Moves</ThemedText>
-        </Pressable>
-
-        <Pressable 
-          style={[styles.sidePanelButton, { width: Math.round(44 * scale), height: Math.round(44 * scale) }, showHelp && styles.sidePanelButtonActive]}
-          onPress={() => setShowHelp(true)}
-        >
-          <Feather name="help-circle" size={20} color={GameColors.gold} />
-          <ThemedText style={[styles.sidePanelLabel, { fontSize: fs(8) }]}>Help</ThemedText>
-        </Pressable>
-      </View>
-
-      {/* Move Log Panel */}
-      {showMoveLog ? (
-        <View style={[styles.moveLogPanel, { top: insets.top + 60 + Math.round(48 * scale), width: Math.round(200 * scale), maxHeight: Math.round(250 * scale), right: Spacing.sm + Math.round(44 * scale) + Spacing.sm }]}>
-          <View style={styles.moveLogHeader}>
-            <ThemedText style={[styles.moveLogTitle, { fontSize: fs(14) }]}>Move History</ThemedText>
-            <Pressable onPress={() => setShowMoveLog(false)}>
-              <Feather name="x" size={18} color="rgba(255,255,255,0.7)" />
-            </Pressable>
-          </View>
-          <ScrollView 
-            ref={moveLogScrollRef}
-            style={[styles.moveLogScroll, { maxHeight: Math.round(180 * scale) }]}
-            onContentSizeChange={() => moveLogScrollRef.current?.scrollToEnd({ animated: true })}
-          >
-            {moveLog.length === 0 ? (
-              <ThemedText style={[styles.moveLogEmpty, { fontSize: fs(12) }]}>No moves yet</ThemedText>
-            ) : (
-              moveLog.map((entry) => (
-                <View key={entry.id} style={styles.moveLogEntry}>
-                  <ThemedText style={[styles.moveLogPlayer, { fontSize: fs(11) }]}>{entry.playerName}</ThemedText>
-                  <ThemedText style={[styles.moveLogAction, { fontSize: fs(11) }]}>{entry.action}</ThemedText>
-                </View>
-              ))
-            )}
-          </ScrollView>
-        </View>
-      ) : null}
+      {sidePanelContent}
+      {moveLogContent}
 
       <ScoreHistoryModal
         visible={showScoreHistory}
@@ -1100,6 +1213,52 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: Spacing.sm,
     flexWrap: "nowrap",
+  },
+  landscapeRoot: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  landscapeLeft: {
+    width: 160,
+    flexDirection: "column",
+    borderRightWidth: 1,
+    borderRightColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(0,0,0,0.15)",
+    paddingHorizontal: Spacing.xs,
+  },
+  landscapeScores: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+    marginBottom: Spacing.xs,
+  },
+  landscapePlayersScroll: {
+    alignItems: "center",
+    paddingVertical: Spacing.xs,
+  },
+  landscapePiles: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+  },
+  landscapeRight: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  landscapeSets: {
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+  },
+  compactScoresColumn: {
+    alignItems: "center",
+    gap: 2,
+  },
+  compactScoreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
   actionMessageContainer: {
     position: "absolute",
