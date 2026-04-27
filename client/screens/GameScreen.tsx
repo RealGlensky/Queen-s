@@ -593,6 +593,7 @@ export default function GameScreen() {
         label="Deck"
         faceDown
         showCount
+        compact={isLandscape}
         highlighted={isMyTurn && gameState.turnPhase === "draw"}
         onPress={isMyTurn && gameState.turnPhase === "draw" ? handleDrawFromDeck : undefined}
       />
@@ -601,6 +602,7 @@ export default function GameScreen() {
         label="Pickup"
         faceDown={false}
         showCount
+        compact={isLandscape}
         highlighted={!!canPickup}
         onPress={canPickup ? handlePickupPile : undefined}
       />

@@ -19,6 +19,7 @@ interface CardPileProps {
   highlighted?: boolean;
   onPress?: () => void;
   style?: any;
+  compact?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -31,6 +32,7 @@ export function CardPile({
   highlighted = false,
   onPress,
   style,
+  compact = false,
 }: CardPileProps) {
   const { fs, scale } = useFontSize();
   const pressScale = useSharedValue(1);
@@ -51,8 +53,10 @@ export function CardPile({
 
   const topCard = cards.length > 0 ? cards[cards.length - 1] : null;
 
-  const scaledWidth = Math.round(CardDimensions.width * scale);
-  const scaledHeight = Math.round(CardDimensions.height * scale);
+  const baseWidth = compact ? CardDimensions.smallWidth : CardDimensions.width;
+  const baseHeight = compact ? CardDimensions.smallHeight : CardDimensions.height;
+  const scaledWidth = Math.round(baseWidth * scale);
+  const scaledHeight = Math.round(baseHeight * scale);
   const scaledBorderRadius = Math.round(CardDimensions.borderRadius * scale);
   const scaledPadding = Math.round(Spacing.sm * scale);
   const scaledHighlightBorder = Math.round(2 * scale);
@@ -96,7 +100,7 @@ export function CardPile({
           />
         ) : null}
         {topCard ? (
-          <PlayingCard card={topCard} faceDown={faceDown} />
+          <PlayingCard card={topCard} faceDown={faceDown} size={compact ? "small" : "normal"} />
         ) : (
           <View
             style={[
@@ -113,9 +117,9 @@ export function CardPile({
         )}
       </View>
       <View style={styles.labelContainer}>
-        <ThemedText style={[styles.label, { fontSize: fs(12) }]}>{label}</ThemedText>
+        <ThemedText style={[styles.label, { fontSize: fs(compact ? 10 : 12) }]}>{label}</ThemedText>
         {showCount && cards.length > 0 ? (
-          <ThemedText style={[styles.count, { fontSize: fs(12) }]}>{cards.length}</ThemedText>
+          <ThemedText style={[styles.count, { fontSize: fs(compact ? 10 : 12) }]}>{cards.length}</ThemedText>
         ) : null}
       </View>
     </AnimatedPressable>
