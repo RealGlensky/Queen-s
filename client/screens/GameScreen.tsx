@@ -1250,7 +1250,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   landscapePiles: {
-    flexDirection: "column",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: Spacing.sm,
