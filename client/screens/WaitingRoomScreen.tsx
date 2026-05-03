@@ -153,16 +153,11 @@ export default function WaitingRoomScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {reconnecting ? (
-          <View style={styles.connectionStatus}>
+        {(!connected || reconnecting) ? (
+          <View style={styles.reconnectBanner}>
             <ActivityIndicator size="small" color={GameColors.gold} />
-            <ThemedText style={[styles.connectionText, { fontSize: fs(12) }]}>Reconnecting...</ThemedText>
+            <ThemedText style={[styles.reconnectText, { fontSize: fs(13) }]}>Connecting to server…</ThemedText>
           </View>
-        ) : !connected ? (
-          <Pressable style={styles.connectionStatus} onPress={forceReconnect}>
-            <Feather name="wifi-off" size={16} color="#FF6B6B" />
-            <ThemedText style={[styles.connectionText, { color: "#FF6B6B", fontSize: fs(12) }]}>Tap to reconnect</ThemedText>
-          </Pressable>
         ) : null}
 
         <View style={styles.roomCodeContainer}>
@@ -309,6 +304,17 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
   },
+  reconnectBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    paddingVertical: 8,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    marginHorizontal: -Spacing.lg,
+  },
   connectionStatus: {
     flexDirection: "row",
     alignItems: "center",
@@ -319,6 +325,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.sm,
+  },
+  reconnectText: {
+    color: GameColors.gold,
+    fontSize: 13,
+    letterSpacing: 0.5,
   },
   connectionText: {
     color: GameColors.gold,
