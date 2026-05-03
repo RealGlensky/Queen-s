@@ -313,9 +313,21 @@ export function getAIDrawDecision(state: GameState, playerId: string): AIDecisio
     const pile = state.pickupPile;
     if (pile.length > 0) {
       const topCard = pile[pile.length - 1];
-      const forcedIds = findForcedPickupCardIds(player.hand, topCard);
-      if (forcedIds) {
-        return { type: "pickup_pile", cardIds: forcedIds };
+      let alreadyHasRank = false;
+      if (!topCard.isJoker) {
+        if (state.gameMode === "2v2") {
+          alreadyHasRank = state.players.some(p =>
+            p.odexTeam === player.odexTeam && p.sets.some(s => s.rank === topCard.rank)
+          );
+        } else {
+          alreadyHasRank = player.sets.some(s => s.rank === topCard.rank);
+        }
+      }
+      if (!alreadyHasRank) {
+        const forcedIds = findForcedPickupCardIds(player.hand, topCard);
+        if (forcedIds) {
+          return { type: "pickup_pile", cardIds: forcedIds };
+        }
       }
     }
     return { type: "draw_deck" };

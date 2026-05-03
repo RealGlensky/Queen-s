@@ -677,7 +677,14 @@ export function checkAndEndIfDeckExhausted(
   const canPickup = topCard
     ? canPlayerLegallyPickupPile(state, nextPlayer, topCard)
     : false;
-  return canPickup ? null : endRoundDeckExhausted(state);
+  if (canPickup) return null;
+  addAction(state, {
+    id: uuidv4(),
+    type: 'deck_exhausted',
+    playerId: nextPlayerId,
+    timestamp: Date.now(),
+  });
+  return endRoundDeckExhausted(state);
 }
 
 function endRound(state: GameState, winnerId: string): GameState {
