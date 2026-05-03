@@ -6,7 +6,10 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+} from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { PlayingCard } from "@/components/PlayingCard";
@@ -819,6 +822,12 @@ export default function GameScreen() {
         </Animated.View>
       ) : null}
 
+      <Animated.View
+        key={isLandscape ? "landscape" : "portrait"}
+        entering={FadeIn.duration(220)}
+        exiting={FadeOut.duration(130)}
+        style={{ flex: 1 }}
+      >
       {isLandscape ? (
         /* ── LANDSCAPE: two-column layout ── */
         <View style={[styles.landscapeRoot, { paddingLeft: insets.left, paddingRight: insets.right }]}>
@@ -922,6 +931,7 @@ export default function GameScreen() {
           </View>
         </>
       )}
+      </Animated.View>
 
       {/* Back Button - Top Left */}
       <Pressable
