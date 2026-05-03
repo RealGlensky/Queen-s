@@ -219,7 +219,9 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     });
 
     socket.on("connect_error", (err) => {
-      console.error("[Socket] Connection error:", err.message);
+      console.log("[Socket] Connection error:", err.message, "(retrying)");
+      setConnected(false);
+      setReconnecting(true);
     });
 
     socket.on("message", handleMessage);

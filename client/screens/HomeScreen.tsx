@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { StyleSheet, View, ImageBackground, Pressable } from "react-native";
+import { StyleSheet, View, ImageBackground, Pressable, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -26,7 +26,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { gameState, roomInfo, leaveRoom } = useGameSocket();
+  const { gameState, roomInfo, leaveRoom, connected, reconnecting } = useGameSocket();
   const { fs } = useFontSize();
   const hasAutoNavigated = useRef(false);
 
@@ -44,6 +44,7 @@ export default function HomeScreen() {
   }, [gameState, roomInfo, navigation]);
 
   const hasActiveGame = gameState && roomInfo && roomInfo.status === "playing";
+  const isOffline = !connected || reconnecting;
 
   const handlePlay = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -79,6 +80,13 @@ export default function HomeScreen() {
       />
 
       <View style={styles.feltOverlay} />
+
+      {isOffline ? (
+        <View style={[styles.reconnectBanner, { top: insets.top }]}>
+          <ActivityIndicator size="small" color={GameColors.gold} style={styles.reconnectSpinner} />
+          <ThemedText style={styles.reconnectText}>Connecting to server…</ThemedText>
+        </View>
+      ) : null}
 
       <Pressable
         onPress={handleSettings}
@@ -127,6 +135,7 @@ export default function HomeScreen() {
               variant="primary"
               size="large"
               onPress={handleResumeGame}
+              disabled={isOffline}
               style={styles.playButton}
             />
           ) : null}
@@ -136,6 +145,7 @@ export default function HomeScreen() {
             variant={hasActiveGame ? "outline" : "primary"}
             size={hasActiveGame ? "normal" : "large"}
             onPress={handlePlay}
+            disabled={isOffline}
             style={styles.playButton}
           />
           <GameButton
@@ -257,5 +267,26 @@ const styles = StyleSheet.create({
   footerText: {
     color: "rgba(255,255,255,0.4)",
     fontSize: 13,
+  },
+  reconnectBanner: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.75)",
+    paddingVertical: 8,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  reconnectSpinner: {
+    marginRight: 4,
+  },
+  reconnectText: {
+    color: GameColors.gold,
+    fontSize: 13,
+    letterSpacing: 0.5,
   },
 });
