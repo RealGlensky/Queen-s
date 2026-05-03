@@ -4,6 +4,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withSequence,
   WithSpringConfig,
 } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
@@ -22,11 +23,25 @@ interface PlayingCardProps {
   style?: any;
 }
 
-const springConfig: WithSpringConfig = {
+const pressConfig: WithSpringConfig = {
   damping: 15,
   mass: 0.3,
   stiffness: 200,
   overshootClamping: true,
+};
+
+const selectionBounceConfig: WithSpringConfig = {
+  damping: 10,
+  mass: 0.4,
+  stiffness: 280,
+  overshootClamping: false,
+};
+
+const selectionSettleConfig: WithSpringConfig = {
+  damping: 18,
+  mass: 0.3,
+  stiffness: 220,
+  overshootClamping: false,
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -74,17 +89,26 @@ export function PlayingCard({
   }));
 
   React.useEffect(() => {
-    translateY.value = withSpring(selected ? -10 : 0, springConfig);
+    if (selected) {
+      translateY.value = withSpring(-12, selectionBounceConfig);
+      scaleAnim.value = withSequence(
+        withSpring(1.12, selectionBounceConfig),
+        withSpring(1, selectionSettleConfig)
+      );
+    } else {
+      translateY.value = withSpring(0, pressConfig);
+      scaleAnim.value = withSpring(1, pressConfig);
+    }
   }, [selected]);
 
   const handlePressIn = () => {
     if (!disabled && onPress) {
-      scaleAnim.value = withSpring(0.95, springConfig);
+      scaleAnim.value = withSpring(0.93, pressConfig);
     }
   };
 
   const handlePressOut = () => {
-    scaleAnim.value = withSpring(1, springConfig);
+    scaleAnim.value = withSpring(1, pressConfig);
   };
 
   if (faceDown) {
