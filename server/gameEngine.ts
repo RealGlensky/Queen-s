@@ -663,6 +663,23 @@ function endRoundDeckExhausted(state: GameState): GameState {
   return state;
 }
 
+export function checkAndEndIfDeckExhausted(
+  state: GameState,
+  nextPlayerId: string
+): GameState | null {
+  if (state.deck.length > 0) return null;
+  const nextPlayer = state.players.find(p => p.id === nextPlayerId);
+  if (!nextPlayer) return null;
+  const topCard =
+    state.pickupPile.length > 0
+      ? state.pickupPile[state.pickupPile.length - 1]
+      : null;
+  const canPickup = topCard
+    ? canPlayerLegallyPickupPile(state, nextPlayer, topCard)
+    : false;
+  return canPickup ? null : endRoundDeckExhausted(state);
+}
+
 function endRound(state: GameState, winnerId: string): GameState {
   const winner = state.players.find(p => p.id === winnerId);
   const winningTeam = state.gameMode === "2v2" ? winner?.odexTeam : undefined;

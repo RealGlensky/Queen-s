@@ -284,9 +284,42 @@ function selectBestDiscard(
   return hand[0].id;
 }
 
+function findForcedPickupCardIds(hand: PlayingCard[], topCard: PlayingCard): string[] | null {
+  if (isWildCard(topCard)) {
+    const naturalCards = hand.filter(c => !isWildCard(c) && !c.isJoker);
+    const rankGroups = new Map<string, PlayingCard[]>();
+    for (const card of naturalCards) {
+      const existing = rankGroups.get(card.rank) || [];
+      existing.push(card);
+      rankGroups.set(card.rank, existing);
+    }
+    for (const cards of rankGroups.values()) {
+      if (cards.length >= 2) return cards.slice(0, 2).map(c => c.id);
+    }
+    return null;
+  }
+  const matchingCards = hand.filter(c => c.rank === topCard.rank);
+  const wildcards = hand.filter(c => isWildCard(c));
+  if (matchingCards.length >= 2) return matchingCards.slice(0, 2).map(c => c.id);
+  if (matchingCards.length >= 1 && wildcards.length >= 1) return [matchingCards[0].id, wildcards[0].id];
+  return null;
+}
+
 export function getAIDrawDecision(state: GameState, playerId: string): AIDecision {
   const player = state.players.find(p => p.id === playerId);
   if (!player) return { type: "draw_deck" };
+
+  if (state.deck.length === 0) {
+    const pile = state.pickupPile;
+    if (pile.length > 0) {
+      const topCard = pile[pile.length - 1];
+      const forcedIds = findForcedPickupCardIds(player.hand, topCard);
+      if (forcedIds) {
+        return { type: "pickup_pile", cardIds: forcedIds };
+      }
+    }
+    return { type: "draw_deck" };
+  }
 
   let allTeamSets = player.sets;
   if (state.gameMode === "2v2") {

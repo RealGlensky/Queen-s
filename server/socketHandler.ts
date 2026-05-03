@@ -11,6 +11,7 @@ import {
   processDiscard,
   processDeclareLastCard,
   startNextRound,
+  checkAndEndIfDeckExhausted,
 } from "./gameEngine";
 import {
   executeAITurn,
@@ -870,7 +871,17 @@ function forceEndAITurn(io: Server, room: Room, aiPlayerId: string) {
   
   const currentIndex = room.gameState.players.findIndex(p => p.id === aiPlayerId);
   const nextIndex = (currentIndex + 1) % room.gameState.players.length;
-  room.gameState.currentPlayerId = room.gameState.players[nextIndex].id;
+  const nextPlayer = room.gameState.players[nextIndex];
+
+  const exhaustedState = checkAndEndIfDeckExhausted(room.gameState, nextPlayer.id);
+  if (exhaustedState) {
+    room.gameState = exhaustedState;
+    broadcastGameState(io, room);
+    persistRoom(room);
+    return;
+  }
+
+  room.gameState.currentPlayerId = nextPlayer.id;
   room.gameState.turnPhase = "draw";
   broadcastGameState(io, room);
   setTimeout(() => scheduleAITurn(io, room), 200);
