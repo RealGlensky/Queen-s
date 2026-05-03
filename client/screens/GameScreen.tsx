@@ -399,6 +399,11 @@ export default function GameScreen() {
   const otherPlayers = gameState.players.filter((p) => p.id !== myPlayer.id);
   const myPlayerIndex = gameState.players.findIndex((p) => p.id === myPlayer.id);
   const myPlayerColor = PLAYER_COLORS[myPlayerIndex % PLAYER_COLORS.length];
+  const currentTurnPlayerIndex = gameState.players.findIndex((p) => p.id === gameState.currentPlayerId);
+  const currentTurnPlayer = currentTurnPlayerIndex >= 0 ? gameState.players[currentTurnPlayerIndex] : null;
+  const currentTurnPlayerColor = currentTurnPlayer
+    ? PLAYER_COLORS[currentTurnPlayerIndex % PLAYER_COLORS.length]
+    : GameColors.gold;
   const topCard = gameState.pickupPile.length > 0 
     ? gameState.pickupPile[gameState.pickupPile.length - 1] 
     : null;
@@ -865,16 +870,25 @@ export default function GameScreen() {
 
             {/* Player area: turn indicator + actions + hand */}
             <View style={[styles.playerArea, { flex: 1 }]}>
-              {isMyTurn ? (
-                <Animated.View entering={FadeIn.duration(300)} style={styles.turnIndicator}>
-                  <ThemedText style={[styles.turnText, { fontSize: fs(14) }]}>Your Turn</ThemedText>
-                  <ThemedText style={[styles.phaseText, { fontSize: fs(11) }]}>
-                    {gameState.turnPhase === "draw" ? "Draw a card" :
-                     gameState.turnPhase === "play" ? "Lay sets or add cards" :
-                     "Discard a card"}
-                  </ThemedText>
-                </Animated.View>
-              ) : null}
+              <Animated.View key={gameState.currentPlayerId} entering={FadeIn.duration(300)} style={styles.turnIndicator}>
+                {isMyTurn ? (
+                  <>
+                    <ThemedText style={[styles.turnText, { fontSize: fs(14), color: myPlayerColor }]}>Your Turn</ThemedText>
+                    <ThemedText style={[styles.phaseText, { fontSize: fs(11) }]}>
+                      {gameState.turnPhase === "draw" ? "Draw a card" :
+                       gameState.turnPhase === "play" ? "Lay sets or add cards" :
+                       "Discard a card"}
+                    </ThemedText>
+                  </>
+                ) : (
+                  <View style={styles.turnPlayerRow}>
+                    <View style={[styles.turnPlayerDot, { backgroundColor: currentTurnPlayerColor }]} />
+                    <ThemedText style={[styles.turnPlayerText, { fontSize: fs(13), color: currentTurnPlayerColor }]}>
+                      {currentTurnPlayer?.displayName || "Player"}'s turn
+                    </ThemedText>
+                  </View>
+                )}
+              </Animated.View>
               {actionButtonsContent}
               <View style={[styles.handContainer, { paddingBottom: Spacing.xs, flex: 1, justifyContent: "flex-end" }]}>
                 {handContent}
@@ -914,16 +928,25 @@ export default function GameScreen() {
           </View>
 
           <View style={[styles.playerArea, { minHeight: Math.round(160 * scale) }]}>
-            {isMyTurn ? (
-              <Animated.View entering={FadeIn.duration(300)} style={styles.turnIndicator}>
-                <ThemedText style={[styles.turnText, { fontSize: fs(16) }]}>Your Turn</ThemedText>
-                <ThemedText style={[styles.phaseText, { fontSize: fs(12) }]}>
-                  {gameState.turnPhase === "draw" ? "Draw a card" :
-                   gameState.turnPhase === "play" ? "Lay sets or add cards" :
-                   "Discard a card"}
-                </ThemedText>
-              </Animated.View>
-            ) : null}
+            <Animated.View key={gameState.currentPlayerId} entering={FadeIn.duration(300)} style={styles.turnIndicator}>
+              {isMyTurn ? (
+                <>
+                  <ThemedText style={[styles.turnText, { fontSize: fs(16), color: myPlayerColor }]}>Your Turn</ThemedText>
+                  <ThemedText style={[styles.phaseText, { fontSize: fs(12) }]}>
+                    {gameState.turnPhase === "draw" ? "Draw a card" :
+                     gameState.turnPhase === "play" ? "Lay sets or add cards" :
+                     "Discard a card"}
+                  </ThemedText>
+                </>
+              ) : (
+                <View style={styles.turnPlayerRow}>
+                  <View style={[styles.turnPlayerDot, { backgroundColor: currentTurnPlayerColor }]} />
+                  <ThemedText style={[styles.turnPlayerText, { fontSize: fs(15), color: currentTurnPlayerColor }]}>
+                    {currentTurnPlayer?.displayName || "Player"}'s turn
+                  </ThemedText>
+                </View>
+              )}
+            </Animated.View>
             {actionButtonsContent}
             <View style={[styles.handContainer, { paddingBottom: insets.bottom + Spacing.sm, minHeight: Math.round((CardDimensions.height + Spacing.xl) * scale) }]}>
               {handContent}
@@ -1112,6 +1135,21 @@ const styles = StyleSheet.create({
   phaseText: {
     color: "rgba(255,255,255,0.6)",
     fontSize: 12,
+  },
+  turnPlayerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingVertical: 2,
+  },
+  turnPlayerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  turnPlayerText: {
+    fontWeight: "600",
+    fontSize: 15,
   },
   actionButtons: {
     flexDirection: "row",
