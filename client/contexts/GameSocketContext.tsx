@@ -29,6 +29,7 @@ interface RoomInfo {
 interface GameSocketContextType {
   connected: boolean;
   reconnecting: boolean;
+  offlinePermanent: boolean;
   roomInfo: RoomInfo | null;
   players: Player[];
   gameState: GameState | null;
@@ -87,6 +88,8 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [offlinePermanent, setOfflinePermanent] = useState(false);
+  const reconnectAttemptsRef = useRef(0);
   const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -191,6 +194,8 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
       console.log("[Socket] Connected successfully, id:", socket.id);
       setConnected(true);
       setError(null);
+      reconnectAttemptsRef.current = 0;
+      setOfflinePermanent(false);
       
       if (sessionInfoRef.current) {
         attemptRejoin(socket, sessionInfoRef.current);
@@ -210,18 +215,28 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
     socket.on("reconnect_attempt", (attemptNumber) => {
       console.log("[Socket] Reconnection attempt:", attemptNumber);
+      reconnectAttemptsRef.current = attemptNumber;
       setReconnecting(true);
+      if (attemptNumber >= 5) {
+        setOfflinePermanent(true);
+      }
     });
 
     socket.on("reconnect", () => {
       console.log("[Socket] Reconnected!");
+      reconnectAttemptsRef.current = 0;
+      setOfflinePermanent(false);
       setReconnecting(false);
     });
 
     socket.on("connect_error", (err) => {
       console.log("[Socket] Connection error:", err.message, "(retrying)");
       setConnected(false);
+      reconnectAttemptsRef.current += 1;
       setReconnecting(true);
+      if (reconnectAttemptsRef.current >= 5) {
+        setOfflinePermanent(true);
+      }
     });
 
     socket.on("message", handleMessage);
@@ -360,6 +375,10 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
     const socket = socketRef.current;
     if (!socket) return;
     
+    reconnectAttemptsRef.current = 0;
+    setOfflinePermanent(false);
+    setReconnecting(true);
+
     if (socket.connected && sessionInfoRef.current) {
       attemptRejoin(socket, sessionInfoRef.current);
     } else if (!socket.connected) {
@@ -375,6 +394,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
       value={{
         connected,
         reconnecting,
+        offlinePermanent,
         roomInfo,
         players,
         gameState,

@@ -26,7 +26,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { gameState, roomInfo, leaveRoom, connected, reconnecting } = useGameSocket();
+  const { gameState, roomInfo, leaveRoom, connected, reconnecting, offlinePermanent, forceReconnect } = useGameSocket();
   const { fs } = useFontSize();
   const hasAutoNavigated = useRef(false);
 
@@ -82,10 +82,20 @@ export default function HomeScreen() {
       <View style={styles.feltOverlay} />
 
       {isOffline ? (
-        <View style={[styles.reconnectBanner, { top: insets.top }]}>
-          <ActivityIndicator size="small" color={GameColors.gold} style={styles.reconnectSpinner} />
-          <ThemedText style={styles.reconnectText}>Connecting to server…</ThemedText>
-        </View>
+        <Pressable
+          onPress={offlinePermanent ? forceReconnect : undefined}
+          style={[styles.reconnectBanner, { top: insets.top }]}
+          testID="banner-reconnect"
+        >
+          {offlinePermanent ? (
+            <Feather name="wifi-off" size={14} color={GameColors.gold} style={styles.reconnectSpinner} />
+          ) : (
+            <ActivityIndicator size="small" color={GameColors.gold} style={styles.reconnectSpinner} />
+          )}
+          <ThemedText style={styles.reconnectText}>
+            {offlinePermanent ? "Unable to reach server — tap to retry" : "Connecting to server…"}
+          </ThemedText>
+        </Pressable>
       ) : null}
 
       <Pressable

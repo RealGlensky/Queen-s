@@ -32,6 +32,7 @@ export default function WaitingRoomScreen() {
   const {
     connected,
     reconnecting,
+    offlinePermanent,
     roomInfo,
     players,
     error,
@@ -154,10 +155,20 @@ export default function WaitingRoomScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {(!connected || reconnecting) ? (
-          <View style={styles.reconnectBanner}>
-            <ActivityIndicator size="small" color={GameColors.gold} />
-            <ThemedText style={[styles.reconnectText, { fontSize: fs(13) }]}>Connecting to server…</ThemedText>
-          </View>
+          <Pressable
+            onPress={offlinePermanent ? forceReconnect : undefined}
+            style={styles.reconnectBanner}
+            testID="banner-reconnect-waiting"
+          >
+            {offlinePermanent ? (
+              <Feather name="wifi-off" size={14} color={GameColors.gold} />
+            ) : (
+              <ActivityIndicator size="small" color={GameColors.gold} />
+            )}
+            <ThemedText style={[styles.reconnectText, { fontSize: fs(13) }]}>
+              {offlinePermanent ? "Unable to reach server — tap to retry" : "Connecting to server…"}
+            </ThemedText>
+          </Pressable>
         ) : null}
 
         <View style={styles.roomCodeContainer}>
